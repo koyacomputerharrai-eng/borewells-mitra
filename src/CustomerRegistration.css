@@ -1,0 +1,188 @@
+
+.customer-register-page {
+  min-height: 100vh;
+  padding: 35px 15px;
+  background: #f3f7fc;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  font-family: inherit;
+}
+
+.customer-register-card {
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  padding: 30px;
+  border-radius: 16px;
+  border: 1px solid #e5edf5;
+  box-shadow: 0 8px 30px rgba(20, 50, 80, 0.08);
+}
+
+.register-heading {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.register-logo {
+  width: 58px;
+  height: 58px;
+  background: #0878d1;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto auto 12px;
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.register-heading h2 {
+  margin: 0 0 6px;
+  font-size: 25px;
+  color: #153047;
+}
+
+.register-heading p {
+  margin: 0;
+  color: #748397;
+  font-size: 14px;
+}
+
+.register-field {
+  margin-bottom: 17px;
+}
+
+.register-field label {
+  display: block;
+  margin-bottom: 7px;
+  color: #243c53;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.register-field input,
+.register-field select,
+.register-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 13px;
+  border: 1px solid #d8e1eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #20364b;
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+}
+
+.register-field input:focus,
+.register-field select:focus,
+.register-field textarea:focus {
+  border-color: #0878d1;
+  box-shadow: 0 0 0 3px rgba(8, 120, 209, 0.09);
+}
+
+.register-field select:disabled {
+  background: #f1f4f7;
+  cursor: not-allowed;
+}
+
+.register-field textarea {
+  resize: vertical;
+}
+
+.register-service-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.register-service {
+  display: flex !important;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 10px;
+  border: 1px solid #d8e1eb;
+  border-radius: 9px;
+  cursor: pointer;
+  margin: 0 !important;
+  background: #fff;
+}
+
+.register-service.selected {
+  border-color: #0878d1;
+  background: #edf7ff;
+  color: #0878d1;
+}
+
+.register-service input {
+  width: auto;
+  margin: 0;
+}
+
+.register-submit {
+  width: 100%;
+  padding: 14px;
+  background: #0878d1;
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.register-submit:hover {
+  background: #0564b2;
+}
+
+.register-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.register-alert {
+  padding: 12px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.register-alert.error {
+  background: #fff0f0;
+  color: #c62828;
+}
+
+.register-alert.success {
+  background: #eaf8ef;
+  color: #168044;
+}
+
+.register-login {
+  text-align: center;
+  margin-top: 22px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.register-login button {
+  border: none;
+  background: none;
+  color: #0878d1;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+@media (max-width: 480px) {
+  .customer-register-card {
+    padding: 20px 16px;
+  }
+
+  .register-service-options {
+    grid-template-columns: 1fr;
+  }
+}

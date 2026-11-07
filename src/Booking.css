@@ -1,0 +1,245 @@
+
+/* =====================================
+   BOREWELL MITRA MP - BOOKING PAGE
+   MODERN PREMIUM DESIGN
+===================================== */
+
+.booking-page {
+  min-height: 100vh;
+  padding: 45px 18px;
+  background: linear-gradient(
+    135deg,
+    #eff6ff 0%,
+    #f8fafc 50%,
+    #e0f2fe 100%
+  );
+  font-family: Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.booking-container {
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 35px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 15px 45px rgba(15, 23, 42, 0.09);
+  box-sizing: border-box;
+}
+
+/* BACK BUTTON */
+
+.booking-back-btn {
+  display: inline-flex;
+  align-items: center;
+  width: auto !important;
+  margin: 0 0 25px !important;
+  padding: 10px 17px !important;
+  background: #eff6ff !important;
+  color: #075985 !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 9px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.booking-back-btn:hover {
+  background: #dbeafe !important;
+  transform: translateX(-3px);
+}
+
+/* HEADING */
+
+.booking-container h1 {
+  margin: 0 0 12px;
+  color: #075985;
+  text-align: center;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.booking-container > p {
+  margin: 0 0 30px;
+  color: #64748b;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* FORM */
+
+.booking-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* LABEL */
+
+.booking-container label {
+  margin-top: 12px;
+  color: #1e3a5f;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* INPUT AND SELECT */
+
+.booking-container input,
+.booking-container select {
+  width: 100%;
+  min-height: 49px;
+  padding: 12px 15px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #1e293b;
+  font-size: 15px;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.25s ease;
+}
+
+.booking-container input::placeholder {
+  color: #94a3b8;
+}
+
+.booking-container input:hover,
+.booking-container select:hover {
+  border-color: #7dd3fc;
+}
+
+.booking-container input:focus,
+.booking-container select:focus {
+  background: #ffffff;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.10);
+}
+
+/* DISABLED BLOCK */
+
+.booking-container select:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* SUBMIT BUTTON */
+
+.booking-container form > button {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 25px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 11px;
+  background: linear-gradient(
+    135deg,
+    #0369a1,
+    #075985
+  );
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 7px 18px rgba(3, 105, 161, 0.20);
+  transition: all 0.25s ease;
+}
+
+.booking-container form > button:hover {
+  background: linear-gradient(
+    135deg,
+    #075985,
+    #0c4a6e
+  );
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(3, 105, 161, 0.25);
+}
+
+.booking-container form > button:active {
+  transform: scale(0.98);
+}
+
+.booking-container button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* MESSAGE */
+
+.booking-message {
+  padding: 14px 16px;
+  margin: 15px 0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.booking-message.success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.booking-message.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+/* MOBILE RESPONSIVE */
+
+@media (max-width: 600px) {
+  .booking-page {
+    padding: 20px 12px;
+  }
+
+  .booking-container {
+    padding: 23px 17px;
+    border-radius: 15px;
+  }
+
+  .booking-container h1 {
+    font-size: 26px;
+  }
+
+  .booking-container > p {
+    font-size: 14px;
+    margin-bottom: 22px;
+  }
+
+  .booking-container label {
+    font-size: 13px;
+  }
+
+  .booking-container input,
+  .booking-container select {
+    min-height: 47px;
+    font-size: 14px;
+  }
+
+  .booking-container form > button {
+    min-height: 49px;
+    font-size: 15px;
+  }
+}
+
+/* SMALL MOBILE */
+
+@media (max-width: 360px) {
+  .booking-container {
+    padding: 20px 13px;
+  }
+
+  .booking-container h1 {
+    font-size: 23px;
+  }
+}
