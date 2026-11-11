@@ -5,7 +5,6 @@ import './CustomerRegistration.css';
 import AdminDashboard from './AdminDashboard';
 import AgentDashboard from './AgentDashboard.jsx';
 import RateList from "./RateList";
-import './Home.css';
 import Rules from "./Rules.jsx";
 import {
   Droplets, Menu, X, MapPin, Phone, ArrowRight, Drill,

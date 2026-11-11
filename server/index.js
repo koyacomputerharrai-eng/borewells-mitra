@@ -431,7 +431,7 @@ function recordAssignment(
 }
 
 // --------------------------------------------------
-// 72 HOURS EXPIRED BOOKING RETURN
+// 24 HOURS EXPIRED BOOKING RETURN
 // --------------------------------------------------
 
 function returnExpiredBookings() {
@@ -468,7 +468,7 @@ function returnExpiredBookings() {
           null,
           "समय समाप्त",
           null,
-          "72 घंटे में Agent द्वारा Booking स्वीकार नहीं की गई"
+          "24 घंटे में Agent द्वारा Booking स्वीकार नहीं की गई"
         );
 
         makeNotification(
@@ -541,7 +541,7 @@ if (!existingAdmin) {
 app.get("/api/health", (req, res) => {
   res.json({
     success: true,
-    message: "Borewell Mitra MP API चालू है",
+    message: "borewells Mitra API चालू है",
     database: "connected"
   });
 });
@@ -1446,6 +1446,68 @@ app.get(
       res.json(agents);
     } catch (error) {
       sendError(res, error);
+    }
+  }
+);
+
+// --------------------------------------------------
+// ADMIN: CREATE AGENT
+// --------------------------------------------------
+app.post(
+  "/api/admin/agents",
+  authenticateToken,
+  adminOnly,
+  async (req, res) => {
+    try {
+      const name = String(req.body.name || "").trim();
+      const agencyName = String(req.body.agency_name || req.body.agencyName || "").trim();
+      const mobile = String(req.body.mobile || "").trim();
+      const password = String(req.body.password || "");
+      const district = String(req.body.district || "").trim();
+      const block = String(req.body.block || "").trim();
+      const officeAddress = String(req.body.office_address || req.body.officeAddress || "").trim();
+
+      if (!name || !agencyName || !mobile || !password || !district || !block || !officeAddress) {
+        return res.status(400).json({ success: false, message: "Agent के सभी विवरण भरना आवश्यक है" });
+      }
+      if (!/^\d{10}$/.test(mobile)) {
+        return res.status(400).json({ success: false, message: "10 अंकों का सही मोबाइल नंबर दर्ज करें" });
+      }
+      if (password.length < 8) {
+        return res.status(400).json({ success: false, message: "पासवर्ड कम से कम 8 अक्षर का होना चाहिए" });
+      }
+      const duplicate = db.prepare("SELECT id FROM users WHERE mobile = ?").get(mobile);
+      if (duplicate) {
+        return res.status(409).json({ success: false, message: "यह मोबाइल नंबर पहले से Registered है" });
+      }
+
+      const hash = await bcrypt.hash(password, 10);
+      const result = db.prepare(`
+        INSERT INTO users (
+          name, mobile, password, role, status, district, block,
+          agency_name, office_address, is_active
+        ) VALUES (?, ?, ?, 'agent', 'approved', ?, ?, ?, ?, 1)
+      `).run(name, mobile, hash, district, block, agencyName, officeAddress);
+
+      const userId = makeAgentId(result.lastInsertRowid);
+      const referralCode = makeReferralCode(result.lastInsertRowid);
+      db.prepare("UPDATE users SET userId = ?, referral_code = ? WHERE id = ?")
+        .run(userId, referralCode, result.lastInsertRowid);
+
+      const agent = {
+        id: result.lastInsertRowid, userId, name, mobile, role: "agent",
+        status: "approved", is_active: 1, district, block,
+        agency_name: agencyName, office_address: officeAddress,
+        referral_code: referralCode
+      };
+      return res.status(201).json({
+        success: true,
+        message: "नया Agent सफलतापूर्वक बनाया गया और Active कर दिया गया।",
+        userId,
+        agent
+      });
+    } catch (error) {
+      return sendError(res, error);
     }
   }
 );
@@ -2535,6 +2597,9 @@ app.patch(
     try {
       const id = Number(req.params.id);
 
+      // Accept करने से पहले deadline जाँचें; expired booking Admin को वापस जाएगी।
+      returnExpiredBookings();
+
       const booking = db.prepare(`
         SELECT * FROM bookings
         WHERE id = ? AND assigned_agent_id = ?
@@ -2556,7 +2621,8 @@ app.patch(
 
       db.prepare(`
         UPDATE bookings
-        SET status = 'एजेंट द्वारा स्वीकार'
+        SET status = 'एजेंट द्वारा स्वीकार',
+            assignment_due_at = NULL
         WHERE id = ?
       `).run(id);
 
@@ -3021,7 +3087,7 @@ app.patch(
         SET assigned_agent_id = ?,
             status = 'एजेंट नियुक्त',
             assigned_at = CURRENT_TIMESTAMP,
-            assignment_due_at = datetime('now', '+72 hours'),
+            assignment_due_at = datetime('now', '+24 hours'),
             returned_at = NULL,
             assignment_mode = 'admin',
             assignment_count = COALESCE(assignment_count, 0) + 1
@@ -3255,7 +3321,7 @@ app.use((error, req, res, next) => {
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log("--------------------------------------");
-  console.log("BOREWELL MITRA MP SERVER STARTED");
+  console.log("borewells Mitra SERVER STARTED");
   console.log(`Local: http://localhost:${PORT}`);
   console.log(`Network: http://0.0.0.0:${PORT}`);
   console.log("--------------------------------------");
