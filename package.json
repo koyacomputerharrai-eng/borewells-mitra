@@ -1,3 +1,4 @@
+
 {
   "name": "borewell-mitra-mp",
   "version": "2.0.0",
@@ -20,9 +21,7 @@
     "html2pdf.js": "^0.14.0",
     "jsonwebtoken": "^9.0.2",
     "jspdf": "^4.2.1",
-    "leaflet": "^1.9.4",
     "lucide-react": "^0.468.0",
-    "multer": "^2.5.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "vardhan-maps": "^0.19.0"
@@ -33,3 +32,12 @@
     "vite": "^6.3.5"
   }
 }
+node_modules/
+dist/
+src/dist/
+
+*.db
+*.db-shm
+*.db-wal
+
+.env
