@@ -3329,7 +3329,8 @@ app.get("/api/public/block-banner", (req, res) => {
     const banner = db.prepare(`
       SELECT district, block, image_data, image_type, updated_at
       FROM block_banners
-      WHERE district = ? AND block = ?
+      WHERE LOWER(TRIM(district)) = LOWER(TRIM(?))
+  AND LOWER(TRIM(block)) = LOWER(TRIM(?))
     `).get(district, block);
 
     res.json({
@@ -3352,16 +3353,10 @@ app.get(
   (req, res) => {
     try {
       const banners = db.prepare(`
-  SELECT
-    id,
-    district,
-    block,
-    image_data,
-    image_type,
-    updated_at
-  FROM block_banners
-  ORDER BY district, block
-`).all();
+        SELECT id, district, block, image_type, updated_at
+        FROM block_banners
+        ORDER BY district, block
+      `).all();
 
       res.json({
         success: true,
