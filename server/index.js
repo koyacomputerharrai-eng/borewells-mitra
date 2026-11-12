@@ -3352,10 +3352,16 @@ app.get(
   (req, res) => {
     try {
       const banners = db.prepare(`
-        SELECT id, district, block, image_type, updated_at
-        FROM block_banners
-        ORDER BY district, block
-      `).all();
+  SELECT
+    id,
+    district,
+    block,
+    image_data,
+    image_type,
+    updated_at
+  FROM block_banners
+  ORDER BY district, block
+`).all();
 
       res.json({
         success: true,
