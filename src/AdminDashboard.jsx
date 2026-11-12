@@ -1,2668 +1,846 @@
-
-import "./AdminDashboard.css";
 import React, { useCallback, useEffect, useState } from "react";
 import { DISTRICTS, BLOCKS } from "./areas.js";
 import {
-  LayoutDashboard, Users, BadgeCheck, IndianRupee, ClipboardList,
-  Settings, LogOut, ArrowLeft, RefreshCw, CheckCircle2, XCircle,
-  Menu, X, ShieldCheck, Clock3, Droplets, UserCheck,
-  Handshake, Save, Search, Power, Trash2, RotateCcw
+  LayoutDashboard, Users, BadgeCheck, IndianRupee, ClipboardList, Settings,
+  LogOut, ArrowLeft, RefreshCw, CheckCircle2, XCircle, Menu, X, ShieldCheck,
+  Clock3, AlertCircle, Droplets, UserCheck, Handshake, Save, Search, Power, Trash2, RotateCcw,
+  Eye, BarChart3, MonitorSmartphone, Activity, Image as ImageIcon, UploadCloud
 } from "lucide-react";
 
-const API = "http://localhost:4000/api";
+const API = "https://borewells-mitra-api.onrender.com/api";
+const BOOKING_STATUSES = ["नई बुकिंग", "स्वीकृत", "कार्य प्रगति पर", "पूर्ण", "रद्द"];
+const INITIAL_RATE = { district: "", tehsil: "", block: "", drilling: "", repairing: "", casingPipe: "", msPipe: "", otherServices: "" };
+const INITIAL_AGENT = { name: "", agency_name: "", mobile: "", password: "", district: "", block: "", office_address: "" };
+const getBlocksForDistrict = district => { const value = BLOCKS?.[district]; return Array.isArray(value) ? value : value && typeof value === "object" ? Object.keys(value) : []; };
 
 async function apiRequest(path, options = {}, user = null) {
-  const token =
-    user?.token ||
-    localStorage.getItem("bmm-token") ||
-    localStorage.getItem("bm_token") ||
-    localStorage.getItem("token") ||
-    "";
-
+  const token = user?.token || localStorage.getItem("bmm-token") || localStorage.getItem("bm_token") || localStorage.getItem("token") || "";
   const response = await fetch(`${API}${path}`, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers
-    }
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}), ...options.headers }
   });
-
   const text = await response.text();
   let data = {};
-
-  try {
-    data = text ? JSON.parse(text) : {};
-  } catch {
-    throw new Error("Server से सही JSON उत्तर नहीं मिला।");
-  }
-
-  if (!response.ok || data.success === false) {
-    throw new Error(data.message || `Request असफल (${response.status})`);
-  }
-
+  try { data = text ? JSON.parse(text) : {}; } catch { throw new Error("Server से सही JSON उत्तर नहीं मिला।"); }
+  if (!response.ok || data.success === false) throw new Error(`${data.message || `Request असफल (${response.status})`}${data.path ? ` — ${data.path}` : ""}`);
   return data;
 }
-
-const money = value =>
-  `₹${Number(value || 0).toLocaleString("en-IN")}`;
-
-const getError = error =>
-  error?.message || "कुछ गलत हुआ। कृपया दोबारा प्रयास करें।";
-
-const getUserId = person =>
-  person?.id ?? person?.user_id ?? person?.userId;
-
-const getBookingId = booking =>
-  booking?.id ?? booking?.booking_id;
-
-const getAgentId = agent =>
-  agent?.id ?? agent?.agent_id ?? agent?.user_id ?? agent?.userId;
-
-const getServiceId = service =>
-  service?.id ?? service?.service_id;
-
-const isArchived = agent =>
-  agent?.is_archived === true ||
-  Number(agent?.is_archived) === 1 ||
-  Boolean(agent?.deleted_at || agent?.deletedAt);
-
-const isActive = agent => {
-  if (agent?.is_active !== undefined && agent?.is_active !== null) {
-    return agent.is_active === true ||
-      Number(agent.is_active) === 1;
-  }
-
-  if (agent?.active !== undefined && agent?.active !== null) {
-    return agent.active === true || Number(agent.active) === 1;
-  }
-
-  return ["approved", "active"].includes(
-    String(agent?.status || "").toLowerCase()
-  );
-};
-
-const isServiceActive = service => {
-  if (service?.active !== undefined && service?.active !== null) {
-    return service.active === true || Number(service.active) === 1;
-  }
-
-  if (service?.is_active !== undefined && service?.is_active !== null) {
-    return service.is_active === true ||
-      Number(service.is_active) === 1;
-  }
-
-  return true;
-};
-
+const money = value => `₹${Number(value || 0).toLocaleString("en-IN")}`;
+const getError = error => error?.message || "कुछ गलत हुआ। कृपया दोबारा प्रयास करें।";
+const getUserId = person => person?.id ?? person?.user_id ?? person?.userId;
+const getBookingId = booking => booking?.id ?? booking?.booking_id;
 function formatDate(value) {
   if (!value) return "—";
-
   const date = new Date(value);
-
-  return Number.isNaN(date.getTime())
-    ? String(value)
-    : date.toLocaleString("en-IN", {
-        dateStyle: "medium",
-        timeStyle: "short"
-      });
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
 }
-
 function StatCard({ title, value, icon: Icon, color }) {
-  return (
-    <div className="bmm-stat">
-      <div className={`bmm-stat-icon ${color}`}>
-        <Icon size={23} />
-      </div>
-      <div>
-        <p>{title}</p>
-        <h2>{value ?? 0}</h2>
-      </div>
-    </div>
-  );
+  return <div className="bmm-stat"><div className={`bmm-stat-icon ${color}`}><Icon size={23}/></div><div><p>{title}</p><h2>{value ?? 0}</h2></div></div>;
 }
-
 function SectionTitle({ title, subtitle, onRefresh, loading }) {
-  return (
-    <div className="bmm-section-title">
-      <div>
-        <h2>{title}</h2>
-        {subtitle && <p>{subtitle}</p>}
-      </div>
-
-      <button
-        className="bmm-btn bmm-btn-light"
-        onClick={onRefresh}
-        disabled={loading}
-      >
-        <RefreshCw
-          size={16}
-          className={loading ? "bmm-spin" : ""}
-        />
-        Refresh
-      </button>
-    </div>
-  );
+  return <div className="bmm-section-title"><div><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</div><button className="bmm-btn bmm-btn-light" onClick={onRefresh} disabled={loading}><RefreshCw size={16} className={loading ? "bmm-spin" : ""}/> Refresh</button></div>;
 }
 
-export default function AdminDashboard({
-  user,
-  onLogout,
-  onBack
-}) {
-  const [activePage, setActivePage] = useState("dashboard");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [search, setSearch] = useState("");
-
-  const [pendingUsers, setPendingUsers] = useState([]);
-  const [bookings, setBookings] = useState([]);
-  const [agents, setAgents] = useState([]);
-  const [rates, setRates] = useState([]);
-  const [services, setServices] = useState([]);
-  const [referrals, setReferrals] = useState([]);
-
-  const [serviceForm, setServiceForm] = useState({
-    name: "",
-    unit: "प्रति फीट"
-  });
-
-  const [editingServiceId, setEditingServiceId] = useState(null);
-
-  const [rateLocation, setRateLocation] = useState({
-    district: "",
-    block: ""
-  });
-
-  const [dynamicRateValues, setDynamicRateValues] = useState({});
-
+export default function AdminDashboard({ user, onLogout, onBack }) {
+  const [activePage, setActivePage] = useState("dashboard"), [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(false), [error, setError] = useState(""), [notice, setNotice] = useState(""), [search, setSearch] = useState("");
+  const [pendingUsers, setPendingUsers] = useState([]), [bookings, setBookings] = useState([]), [agents, setAgents] = useState([]), [rates, setRates] = useState([]), [referrals, setReferrals] = useState([]);
+  const [rateForm, setRateForm] = useState(INITIAL_RATE), [editingRateId, setEditingRateId] = useState(null);
+  const [expandedReferralId, setExpandedReferralId] = useState(null), [referralMembers, setReferralMembers] = useState({}), [membersLoadingId, setMembersLoadingId] = useState(null);
   const [selectedAgent, setSelectedAgent] = useState(null);
-  const [editingAgent, setEditingAgent] = useState(false);
-  const [agentForm, setAgentForm] = useState({});
-  const [agentBookings, setAgentBookings] = useState([]);
-  const [showAgentBookings, setShowAgentBookings] = useState(false);
+const [editingAgent, setEditingAgent] = useState(false);
+const [agentForm, setAgentForm] = useState({});
+const [agentBookings, setAgentBookings] = useState([]);
+const [showAgentBookings, setShowAgentBookings] = useState(false);
   const [showArchivedAgents, setShowArchivedAgents] = useState(false);
+  const [newAgentForm, setNewAgentForm] = useState(INITIAL_AGENT);
+  const [createdAgent, setCreatedAgent] = useState(null);
+  const [stats, setStats] = useState({ users: 0, pending: 0, bookings: 0, completed: 0 });
+  const [adminNotifications, setAdminNotifications] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState("");
+  const [analyticsRange, setAnalyticsRange] = useState("30d");
+  const [blockBanners, setBlockBanners] = useState([]);
+  const [bannerDistrict, setBannerDistrict] = useState("");
+  const [bannerBlock, setBannerBlock] = useState("");
+  const [bannerPreview, setBannerPreview] = useState("");
+  const [bannerLoading, setBannerLoading] = useState(false);
 
-  const [expandedReferralId, setExpandedReferralId] = useState(null);
-  const [referralMembers, setReferralMembers] = useState({});
-  const [membersLoadingId, setMembersLoadingId] = useState(null);
-
-  const [stats, setStats] = useState({
-    users: 0,
-    pending: 0,
-    bookings: 0,
-    completed: 0
-  });
-
-  const flash = message => {
-    setNotice(message);
-    setError("");
-  };
-
-  const fail = message => {
-    setError(message);
-    setNotice("");
-  };
-
-  const clearMessages = () => {
-    setError("");
-    setNotice("");
-  };
-
-  // ================= LOAD DATA =================
+  const flash = useCallback(message => { setNotice(message); setError(""); }, []);
+  const fail = useCallback(message => { setError(message); setNotice(""); }, []);
+  const clearMessages = () => { setError(""); setNotice(""); };
 
   const loadPendingUsers = useCallback(async () => {
-    const data = await apiRequest(
-      "/admin/users/pending",
-      {},
-      user
-    );
-
-    const list = Array.isArray(data)
-      ? data
-      : data.users || data.pendingUsers || [];
-
-    setPendingUsers(list);
-    return list;
+    const data = await apiRequest("/admin/users/pending", {}, user);
+    const list = Array.isArray(data) ? data : data.users || data.pendingUsers || [];
+    setPendingUsers(list); return list;
   }, [user]);
-
   const loadBookings = useCallback(async () => {
-    const [bookingData, agentData] = await Promise.all([
-      apiRequest("/admin/bookings", {}, user),
-      apiRequest("/admin/agents", {}, user)
-    ]);
-
-    setBookings(
-      Array.isArray(bookingData)
-        ? bookingData
-        : bookingData.bookings || []
-    );
-
-    setAgents(
-      Array.isArray(agentData)
-        ? agentData
-        : agentData.agents || []
-    );
+    const [bd, ad] = await Promise.all([apiRequest("/admin/bookings", {}, user), apiRequest("/admin/agents", {}, user)]);
+    setBookings(Array.isArray(bd) ? bd : bd.bookings || []);
+    setAgents(Array.isArray(ad) ? ad : ad.agents || []);
   }, [user]);
-
   const loadRates = useCallback(async () => {
-    const data = await apiRequest("/admin/rates", {}, user);
-
-    const list = Array.isArray(data)
-      ? data
-      : data.rates || [];
-
-    setRates(list);
-    return list;
+    const data = await apiRequest("/admin/rates", {}, user); setRates(Array.isArray(data) ? data : data.rates || []);
   }, [user]);
-
-  const loadServices = useCallback(async () => {
-    const data = await apiRequest("/admin/services", {}, user);
-
-    const list = Array.isArray(data)
-      ? data
-      : data.services || [];
-
-    setServices(list);
-    return list;
-  }, [user]);
-
   const loadReferrals = useCallback(async () => {
-    const data = await apiRequest(
-      "/admin/referrals",
-      {},
-      user
-    );
-
-    const list = Array.isArray(data)
-      ? data
-      : data.referrals || [];
-
-    setReferrals(list);
-    return list;
+    const data = await apiRequest("/admin/referrals", {}, user); setReferrals(Array.isArray(data) ? data : data.referrals || []);
   }, [user]);
-
+  const loadAdminNotifications = useCallback(async () => {
+    const data = await apiRequest("/admin/notifications", {}, user);
+    setAdminNotifications(Array.isArray(data) ? data : data.notifications || []);
+  }, [user]);
+  const loadAnalytics = useCallback(async (range = analyticsRange) => {
+    setAnalyticsLoading(true);
+    try {
+      const data = await apiRequest(`/admin/analytics?range=${encodeURIComponent(range)}`, {}, user);
+      const summary = data.summary || data;
+      setAnalytics({
+        totalVisitors: summary.totalVisitors ?? summary.total_visitors ?? 0,
+        totalPageViews: summary.totalPageViews ?? summary.total_page_views ?? 0,
+        todayVisitors: summary.todayVisitors ?? summary.today_visitors ?? 0,
+        onlineVisitors: summary.onlineVisitors ?? summary.online_visitors ?? 0,
+        daily: data.daily || summary.daily || [],
+        topPages: data.topPages || data.top_pages || summary.topPages || summary.top_pages || [],
+        devices: data.devices || summary.devices || []
+      });
+      setAnalyticsError("");
+    } catch (e) {
+      setAnalytics(null);
+      setAnalyticsError(getError(e));
+    } finally { setAnalyticsLoading(false); }
+  }, [analyticsRange, user]);
   const loadDashboard = useCallback(async () => {
-    setLoading(true);
-    clearMessages();
-
-    const results = await Promise.allSettled([
-      loadPendingUsers(),
-      loadBookings(),
-      loadRates(),
-      loadServices(),
-      loadReferrals()
-    ]);
-
-    const failures = results
-      .filter(result => result.status === "rejected")
-      .map(result => getError(result.reason));
-
-    if (failures.length) {
-      fail("कुछ जानकारी लोड नहीं हुई: " + failures.join(" | "));
-    }
-
+    setLoading(true); clearMessages();
+    const results = await Promise.allSettled([loadPendingUsers(), loadBookings(), loadRates(), loadReferrals()]);
+    const failures = results.filter(r => r.status === "rejected").map(r => getError(r.reason));
+    if (failures.length) fail("कुछ जानकारी लोड नहीं हुई: " + failures.join(" | "));
     setLoading(false);
-  }, [
-    loadPendingUsers,
-    loadBookings,
-    loadRates,
-    loadServices,
-    loadReferrals
-  ]);
-
-  useEffect(() => {
-    loadDashboard();
-  }, [loadDashboard]);
-
-  useEffect(() => {
-    setStats({
-      users: agents.length + pendingUsers.length,
-      pending: pendingUsers.length,
-      bookings: bookings.length,
-      completed: bookings.filter(b =>
-        ["पूर्ण", "काम पूरा", "completed", "complete"].includes(
-          String(b.status || "").toLowerCase()
-        )
-      ).length
-    });
-  }, [agents, pendingUsers, bookings]);
-
-  // ================= NAVIGATION =================
-
-  const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "approvals", label: "User Approval", icon: BadgeCheck },
-    { id: "bookings", label: "Booking Management", icon: ClipboardList },
-    { id: "rates", label: "Rate Management", icon: IndianRupee },
-    { id: "agents", label: "Agent Management", icon: UserCheck },
-    { id: "referrals", label: "Referral Management", icon: Handshake },
-    { id: "settings", label: "Settings", icon: Settings }
-  ];
-
-  const navigate = page => {
-    setActivePage(page);
-    setSidebarOpen(false);
-    setSearch("");
-    clearMessages();
-
-    if (page === "approvals") {
-      loadPendingUsers().catch(e => fail(getError(e)));
-    }
-
-    if (page === "bookings" || page === "agents") {
-      loadBookings().catch(e => fail(getError(e)));
-    }
-
-    if (page === "rates") {
-      Promise.all([loadRates(), loadServices()])
-        .catch(e => fail(getError(e)));
-    }
-
-    if (page === "referrals") {
-      loadReferrals().catch(e => fail(getError(e)));
-    }
-  };
-
-  // ================= USER APPROVAL =================
+  }, [loadPendingUsers, loadBookings, loadRates, loadReferrals]);
+  useEffect(() => { loadDashboard(); }, [loadDashboard]);
+  useEffect(() => { loadAnalytics(); }, [loadAnalytics]);
+  useEffect(() => setStats({
+    users: agents.length + pendingUsers.length, pending: pendingUsers.length, bookings: bookings.length,
+    completed: bookings.filter(b => b.status === "पूर्ण" || b.status === "काम पूरा").length
+  }), [agents, pendingUsers, bookings]);
 
   const updateUserStatus = async (person, status) => {
-    const id = getUserId(person);
-
-    if (!id) {
-      fail("User ID नहीं मिली।");
-      return;
-    }
-
-    setLoading(true);
-    clearMessages();
-
+    const id = getUserId(person); if (!id) return fail("User ID नहीं मिली।");
+    setLoading(true); clearMessages();
     try {
-      await apiRequest(
-        `/admin/users/${id}/status`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({ status })
-        },
-        user
-      );
-
-      flash(
-        status === "approved"
-          ? "यूज़र स्वीकृत हो गया।"
-          : "यूज़र की स्थिति अपडेट हो गई।"
-      );
-
-      await loadPendingUsers();
-    } catch (e) {
-      fail(getError(e));
-    } finally {
-      setLoading(false);
-    }
+      await apiRequest(`/admin/users/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }, user);
+      flash(status === "approved" ? "यूज़र स्वीकृत हो गया।" : "यूज़र की स्थिति अपडेट हो गई।"); await loadPendingUsers();
+    } catch (e) { fail(getError(e)); } finally { setLoading(false); }
+  };
+  const loadBlockBanners = async () => {
+    setBannerLoading(true);
+    try {
+      const data = await apiRequest("/admin/block-banners", {}, user);
+      setBlockBanners(Array.isArray(data) ? data : data.banners || []);
+    } catch (e) { fail(getError(e)); }
+    finally { setBannerLoading(false); }
+  };
+  const handleBannerFile = event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) return fail("केवल PNG, JPG या WEBP इमेज चुनें।");
+    if (file.size > 500 * 1024) return fail("इमेज 500 KB से छोटी होनी चाहिए।");
+    const reader = new FileReader();
+    reader.onload = () => setBannerPreview(String(reader.result || ""));
+    reader.readAsDataURL(file);
+  };
+  const saveBlockBanner = async () => {
+    if (!bannerDistrict || !bannerBlock) return fail("जिला और ब्लॉक चुनें।");
+    if (!bannerPreview) return fail("पहले Banner इमेज चुनें।");
+    setBannerLoading(true); clearMessages();
+    try {
+      await apiRequest("/admin/block-banners", { method: "POST", body: JSON.stringify({ district: bannerDistrict, block: bannerBlock, imageData: bannerPreview }) }, user);
+      flash("इस ब्लॉक का Banner सेव हो गया।");
+      setBannerPreview("");
+      await loadBlockBanners();
+    } catch (e) { fail(getError(e)); }
+    finally { setBannerLoading(false); }
+  };
+  const deleteBlockBanner = async banner => {
+    if (!window.confirm(`${banner.district} - ${banner.block} का Banner हटाएँ?`)) return;
+    setBannerLoading(true);
+    try {
+      await apiRequest(`/admin/block-banners/${banner.id}`, { method: "DELETE" }, user);
+      flash("Block Banner हटा दिया गया।");
+      await loadBlockBanners();
+    } catch (e) { fail(getError(e)); }
+    finally { setBannerLoading(false); }
   };
 
-  // ================= BOOKING ASSIGNMENT =================
-
+  // Backend में booking assignment के लिए अलग assign / unassign routes हैं।
   const updateBookingAssignment = async (booking, agentId) => {
     const id = getBookingId(booking);
-
-    if (!id) {
-      fail("Booking ID नहीं मिली।");
-      return;
-    }
-
-    setLoading(true);
-    clearMessages();
-
+    if (!id) return fail("Booking ID नहीं मिली।");
+    setLoading(true); clearMessages();
     try {
       if (agentId) {
-        await apiRequest(
-          `/admin/bookings/${id}/assign`,
-          {
-            method: "PATCH",
-            body: JSON.stringify({
-              agent_id: Number(agentId)
-            })
-          },
-          user
-        );
-      } else {
-        await apiRequest(
-          `/admin/bookings/${id}/unassign`,
-          { method: "PATCH" },
-          user
-        );
-      }
-
-      flash(
-        agentId
-          ? "Agent बुकिंग पर नियुक्त हो गया।"
-          : "Booking से Agent हटा दिया गया।"
-      );
-
-      await loadBookings();
-    } catch (e) {
-      fail(getError(e));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ================= SERVICE MANAGEMENT =================
-
-  const resetServiceForm = () => {
-    setServiceForm({
-      name: "",
-      unit: "प्रति फीट"
-    });
-    setEditingServiceId(null);
-  };
-
-  const saveService = async event => {
-    event.preventDefault();
-    clearMessages();
-
-    const name = serviceForm.name.trim();
-    const unit = serviceForm.unit.trim();
-
-    if (!name || !unit) {
-      fail("सर्विस का नाम और यूनिट भरना आवश्यक है।");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const payload = { name, unit };
-
-      if (editingServiceId) {
-        const existing = services.find(
-          item => String(getServiceId(item)) ===
-            String(editingServiceId)
-        );
-
-        await apiRequest(
-          `/admin/services/${editingServiceId}`,
-          {
-            method: "PATCH",
-            body: JSON.stringify({
-              ...payload,
-              active: isServiceActive(existing || {})
-            })
-          },
-          user
-        );
-
-        flash("सर्विस अपडेट हो गई।");
-      } else {
-        await apiRequest(
-          "/admin/services",
-          {
-            method: "POST",
-            body: JSON.stringify(payload)
-          },
-          user
-        );
-
-        flash("नई सर्विस जोड़ दी गई।");
-      }
-
-      resetServiceForm();
-      await loadServices();
-    } catch (e) {
-      fail(getError(e));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const editService = service => {
-    setEditingServiceId(getServiceId(service));
-
-    setServiceForm({
-      name: service.name || "",
-      unit: service.unit || "प्रति फीट"
-    });
-  };
-
-  const toggleService = async service => {
-    const id = getServiceId(service);
-
-    if (!id) {
-      fail("Service ID नहीं मिली।");
-      return;
-    }
-
-    const nextActive = !isServiceActive(service);
-
-    setLoading(true);
-    clearMessages();
-
-    try {
-      await apiRequest(
-        `/admin/services/${id}`,
-        {
+        await apiRequest(`/admin/bookings/${id}/assign`, {
           method: "PATCH",
-          body: JSON.stringify({
-            name: service.name,
-            unit: service.unit || "",
-            active: nextActive
-          })
-        },
-        user
-      );
-
-      flash(
-        nextActive
-          ? "सर्विस Active कर दी गई।"
-          : "सर्विस Inactive कर दी गई।"
-      );
-
-      await loadServices();
-    } catch (e) {
-      fail(getError(e));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteService = async service => {
-    const id = getServiceId(service);
-
-    if (!id) {
-      fail("Service ID नहीं मिली।");
-      return;
-    }
-
-    if (!window.confirm(
-      `"${service.name}" सर्विस Delete करना चाहते हैं?`
-    )) return;
-
-    setLoading(true);
-    clearMessages();
-
-    try {
-      await apiRequest(
-        `/admin/services/${id}`,
-        { method: "DELETE" },
-        user
-      );
-
-      flash("सर्विस Delete कर दी गई।");
-      await loadServices();
-      await loadRates();
-    } catch (e) {
-      fail(getError(e));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  // ================= DYNAMIC RATE MANAGEMENT =================
-
-  // पुराने सेव किए गए रेट को जिला और ब्लॉक के अनुसार पढ़ना
-  const buildRateValues = (district, block, rateList = rates) => {
-    const values = {};
-
-    rateList.forEach(rate => {
-      const rateDistrict = String(rate.district || "").trim();
-      const rateBlock = String(rate.block || "").trim();
-
-      if (
-        rateDistrict.toLowerCase() === district.trim().toLowerCase() &&
-        rateBlock.toLowerCase() === block.trim().toLowerCase()
-      ) {
-        const name = String(
-          rate.service || rate.service_name || ""
-        ).trim();
-
-        if (name) {
-          values[name] = String(rate.rate ?? "");
-        }
+          body: JSON.stringify({ agent_id: Number(agentId) })
+        }, user);
+      } else {
+        await apiRequest(`/admin/bookings/${id}/unassign`, { method: "PATCH" }, user);
       }
-    });
-
-    return values;
+      flash(agentId ? "Agent बुकिंग पर नियुक्त हो गया।" : "Booking से Agent हटा दिया गया।");
+      await loadBookings();
+    } catch (e) { fail(getError(e)); } finally { setLoading(false); }
   };
-
-  // जिला और ब्लॉक चुनने पर पुराने रेट दिखाएँ
-  const selectRateLocation = (district, block) => {
-    setRateLocation({ district, block });
-
-    if (!district || !block) {
-      setDynamicRateValues({});
-      return;
-    }
-
-    setDynamicRateValues(
-      buildRateValues(district, block, rates)
-    );
-  };
-
-  // सभी सर्विस रेट सेव करें
-  const saveDynamicRates = async event => {
+  const createAgent = async event => {
     event.preventDefault();
     clearMessages();
-
-    const district = rateLocation.district.trim();
-    const block = rateLocation.block.trim();
-
-    if (!district || !block) {
-      fail("जिला और ब्लॉक चुनना आवश्यक है।");
-      return;
+    const payload = {
+      name: newAgentForm.name.trim(), agency_name: newAgentForm.agency_name.trim(),
+      mobile: newAgentForm.mobile.trim(), password: newAgentForm.password,
+      district: newAgentForm.district, block: newAgentForm.block,
+      office_address: newAgentForm.office_address.trim()
+    };
+    if (!payload.name || !payload.agency_name || !payload.mobile || !payload.password || !payload.district || !payload.block || !payload.office_address) {
+      return fail("कृपया सभी फ़ील्ड भरें।");
     }
-
-    const activeServices = services.filter(isServiceActive);
-
-    if (!activeServices.length) {
-      fail("पहले कम से कम एक Active Service जोड़ें।");
-      return;
-    }
-
-    const rateItems = [];
-
-    for (const service of activeServices) {
-      const value = dynamicRateValues[service.name];
-
-      if (
-        value === undefined ||
-        String(value).trim() === "" ||
-        !Number.isFinite(Number(value)) ||
-        Number(value) < 0
-      ) {
-        fail(`${service.name} का सही रेट भरें।`);
-        return;
-      }
-
-      rateItems.push({
-        service: service.name,
-        rate: Number(value)
-      });
-    }
-
+    if (!/^\d{10}$/.test(payload.mobile)) return fail("10 अंकों का सही मोबाइल नंबर दर्ज करें।");
+    if (payload.password.length < 8) return fail("पासवर्ड कम से कम 8 अक्षर का होना चाहिए।");
     setLoading(true);
-
     try {
-      await apiRequest(
-        "/admin/rates/bulk",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            district,
-            block,
-            rates: rateItems
-          })
-        },
-        user
-      );
-
-      // सेव होने के बाद नई Rate List प्राप्त करें
-      const updatedRates = await loadRates();
-
-      // नई Rate List से इनपुट अपडेट करें
-      setDynamicRateValues(
-        buildRateValues(district, block, updatedRates)
-      );
-
-      flash(
-        `${district} - ${block} के सभी सर्विस रेट सफलतापूर्वक अपडेट हो गए।`
-      );
-
-    } catch (e) {
-      fail(getError(e));
-    } finally {
-      setLoading(false);
-    }
+      const data = await apiRequest("/admin/agents", { method: "POST", body: JSON.stringify(payload) }, user);
+      const result = data.agent || data.user || data;
+      setCreatedAgent({ userId: data.userId || result.userId || result.user_id, name: result.name || payload.name, mobile: result.mobile || payload.mobile });
+      setNewAgentForm(INITIAL_AGENT);
+      flash(data.message || "नया Agent सफलतापूर्वक बनाया गया।");
+      await loadBookings();
+    } catch (e) { fail(getError(e)); }
+    finally { setLoading(false); }
   };
 
-  // पुराना रेट Edit करने के लिए उसी जिला-ब्लॉक पर जाएँ
+  const resetRateForm = () => { setRateForm(INITIAL_RATE); setEditingRateId(null); };
+  const saveRate = async event => {
+    event.preventDefault(); clearMessages();
+    if (!rateForm.district.trim() || !rateForm.tehsil.trim() || !rateForm.block.trim()) return fail("जिला, तहसील और ब्लॉक भरना आवश्यक है।");
+    const payload = {
+      district: rateForm.district.trim(), tehsil: rateForm.tehsil.trim(), block: rateForm.block.trim(),
+      drilling: Number(rateForm.drilling || 0), repairing: Number(rateForm.repairing || 0),
+      casingPipe: Number(rateForm.casingPipe || 0), msPipe: Number(rateForm.msPipe || 0), otherServices: Number(rateForm.otherServices || 0)
+    };
+    setLoading(true);
+    try {
+      if (editingRateId) {
+        await apiRequest(`/admin/rates/${editingRateId}`, { method: "PUT", body: JSON.stringify(payload) }, user); flash("रेट अपडेट हो गया।");
+      } else {
+        await apiRequest("/admin/rates", { method: "POST", body: JSON.stringify(payload) }, user); flash("नया ब्लॉक रेट सेव हो गया।");
+      }
+      resetRateForm(); await loadRates();
+    } catch (e) { fail(getError(e)); } finally { setLoading(false); }
+  };
   const editRate = rate => {
-    const district = String(rate.district || "").trim();
-    const block = String(rate.block || "").trim();
+    setEditingRateId(rate.id ?? rate.rate_id);
+    setRateForm({
+      district: rate.district || "", tehsil: rate.tehsil || "", block: rate.block || "",
+      drilling: String(rate.drilling ?? ""), repairing: String(rate.repairing ?? ""),
+      casingPipe: String(rate.casingPipe ?? rate.casing_pipe ?? ""), msPipe: String(rate.msPipe ?? rate.ms_pipe ?? ""),
+      otherServices: String(rate.otherServices ?? rate.other_services ?? "")
+    });
+    setActivePage("rates"); window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const deleteRate = async rate => {
+    const id = rate.id ?? rate.rate_id; if (!id) return fail("Rate ID नहीं मिली।");
+    if (!window.confirm("क्या आप यह ब्लॉक रेट हटाना चाहते हैं?")) return;
+    setLoading(true); clearMessages();
+    try { await apiRequest(`/admin/rates/${id}`, { method: "DELETE" }, user); flash("रेट हटा दिया गया।"); await loadRates(); }
+    catch (e) { fail(getError(e)); } finally { setLoading(false); }
+  };
 
-    setRateLocation({ district, block });
+  // Referral partner की ID से जुड़े सभी यूज़र लोड करें
+  const loadReferralMembers = async referral => {
+    const id = referral.id ?? referral.user_id ?? referral.userId;
+    if (!id) return fail("Referral Partner की User ID नहीं मिली।");
+    if (expandedReferralId === id) { setExpandedReferralId(null); return; }
+    setExpandedReferralId(id);
+    if (Object.prototype.hasOwnProperty.call(referralMembers, id)) return;
+    setMembersLoadingId(id); clearMessages();
+    try {
+      const data = await apiRequest(`/admin/referrals/${id}/members`, {}, user);
+      const list = Array.isArray(data) ? data : data.members || data.users || [];
+      setReferralMembers(prev => ({ ...prev, [id]: list }));
+    } catch (e) { fail(getError(e)); setExpandedReferralId(null); }
+    finally { setMembersLoadingId(null); }
+  };
 
-    setDynamicRateValues(
-      buildRateValues(district, block, rates)
+  const filteredBookings = bookings.filter(b => [b.name,b.mobile,b.district,b.block,b.village,b.service,b.status].filter(Boolean).join(" ").toLowerCase().includes(search.toLowerCase()));
+  const filteredUsers = pendingUsers.filter(p => [p.name,p.mobile,p.userId,p.user_id,p.role].filter(Boolean).join(" ").toLowerCase().includes(search.toLowerCase()));
+  const navItems = [
+    { id: "dashboard", label: "01. Overview", icon: LayoutDashboard },
+    { id: "customers", label: "02. Customer Management", icon: Users },
+    { id: "agents", label: "03. Agent Management", icon: UserCheck },
+    { id: "createAgent", label: "04. Create Agent", icon: BadgeCheck },
+    { id: "bookings", label: "05. Booking Management", icon: ClipboardList },
+    { id: "rates", label: "06. Rate & Service Management", icon: IndianRupee },
+    { id: "rules", label: "07. Rules Management", icon: ShieldCheck },
+    { id: "banners", label: "08. Banner Management", icon: Droplets },
+    { id: "referrals", label: "09. Referral & Commission", icon: Handshake },
+    { id: "calculator", label: "10. Calculator Management", icon: IndianRupee },
+    { id: "reports", label: "11. Reports & Accounts", icon: ClipboardList },
+    { id: "admins", label: "12. Admin & Sub-Admin", icon: ShieldCheck },
+    { id: "settings", label: "13. Website Settings", icon: Settings },
+    { id: "notifications", label: "14. Notifications", icon: AlertCircle },
+    { id: "complaints", label: "15. Complaints", icon: AlertCircle },
+    { id: "feedback", label: "16. Feedback & Ratings", icon: CheckCircle2 },
+    { id: "blockBanners", label: "17. Block Banner Management", icon: ImageIcon }
+  ];
+  const navigate = page => {
+    setActivePage(page); setSidebarOpen(false); clearMessages();
+    if (page === "customers") loadPendingUsers().catch(e => fail(getError(e)));
+    if (page === "notifications") loadAdminNotifications().catch(e => fail(getError(e)));
+    if (page === "approvals") loadPendingUsers().catch(e => fail(getError(e)));
+    if (page === "bookings" || page === "agents") loadBookings().catch(e => fail(getError(e)));
+    if (page === "rates") loadRates().catch(e => fail(getError(e)));
+    if (page === "referrals") loadReferrals().catch(e => fail(getError(e)));
+    if (page === "blockBanners") loadBlockBanners();
+  };
+const saveAgentDetails = async event => {
+  event.preventDefault();
+
+  if (!selectedAgent?.id) {
+    return fail("Agent ID नहीं मिली।");
+  }
+
+  const payload = {
+    name: (agentForm.name || "").trim(),
+    agencyName: (agentForm.agency_name || "").trim(),
+    district: (agentForm.district || "").trim(),
+    block: (agentForm.block || "").trim()
+  };
+
+  if (!payload.name || !payload.district || !payload.block) {
+    return fail("Agent का नाम, जिला और ब्लॉक भरना आवश्यक है।");
+  }
+
+  setLoading(true);
+  clearMessages();
+
+  try {
+    await apiRequest(
+      `/admin/agents/${selectedAgent.id}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(payload)
+      },
+      user
     );
 
-    setActivePage("rates");
-    setSidebarOpen(false);
+    flash("Agent की जानकारी अपडेट हो गई।");
+    setEditingAgent(false);
+    await loadBookings();
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
+    setSelectedAgent(prev => ({
+      ...prev,
+      name: payload.name,
+      agency_name: payload.agencyName,
+      district: payload.district,
+      block: payload.block
+    }));
+  } catch (e) {
+    fail(getError(e));
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // Agent की सूची को सामान्य या archived mode में फिर से लोड करें।
+  const refreshAgentList = async (includeArchived = showArchivedAgents) => {
+    const data = await apiRequest(`/admin/agents${includeArchived ? "?includeArchived=1" : ""}`, {}, user);
+    setAgents(Array.isArray(data) ? data : data.agents || []);
   };
 
-  // सेव किए गए रेट को Delete करें
-  const deleteRate = async rate => {
-    const id = rate.id ?? rate.rate_id;
-
-    if (!id) {
-      fail("Rate ID नहीं मिली।");
-      return;
+  const getAgentRecordId = agent => agent?.id ?? agent?.agent_id ?? agent?.user_id ?? agent?.userId;
+  const isAgentArchived = agent => Boolean(
+    agent?.is_archived === true || Number(agent?.is_archived) === 1 || agent?.deleted_at || agent?.deletedAt
+  );
+  const isAgentActive = agent => {
+    if (agent?.is_active !== undefined && agent?.is_active !== null) {
+      return agent.is_active === true || Number(agent.is_active) === 1;
     }
+    return String(agent?.status || "").toLowerCase() === "approved" || String(agent?.status || "").toLowerCase() === "active";
+  };
 
-    if (
-      !window.confirm(
-        "क्या आप यह सर्विस रेट हटाना चाहते हैं?"
-      )
-    ) {
-      return;
-    }
-
-    setLoading(true);
-    clearMessages();
-
+  const toggleAgentActive = async agent => {
+    const id = getAgentRecordId(agent);
+    if (!id) return fail("Agent ID नहीं मिली।");
+    const nextActive = !isAgentActive(agent);
+    const message = nextActive ? "क्या इस Agent को Active करना चाहते हैं?" : "क्या इस Agent को Inactive करना चाहते हैं?";
+    if (!window.confirm(message)) return;
+    setLoading(true); clearMessages();
     try {
-      await apiRequest(
-        `/admin/rates/${id}`,
-        { method: "DELETE" },
-        user
-      );
-
-      const updatedRates = await loadRates();
-
-      setDynamicRateValues(
-        buildRateValues(
-          rateLocation.district || rate.district || "",
-          rateLocation.block || rate.block || "",
-          updatedRates
-        )
-      );
-
-      flash("सर्विस रेट हटा दिया गया।");
-
-    } catch (e) {
-      fail(getError(e));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  // ================= AGENT MANAGEMENT =================
-
-  const toggleAgentStatus = async agent => {
-    const id = getAgentId(agent);
-
-    if (!id) {
-      fail("Agent ID नहीं मिली।");
-      return;
-    }
-
-    if (String(agent.status || "").toLowerCase() === "pending") {
-      fail("पहले Agent को Approve करें।");
-      return;
-    }
-
-    const nextActive = !isActive(agent);
-
-    setLoading(true);
-    clearMessages();
-
-    try {
-      await apiRequest(
-        `/admin/agents/${id}/status`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({
-            is_active: nextActive,
-            active: nextActive,
-            status: nextActive ? "approved" : "inactive"
-          })
-        },
-        user
-      );
-
-      flash(
-        nextActive
-          ? "Agent Active कर दिया गया।"
-          : "Agent Inactive कर दिया गया।"
-      );
-
-      await loadBookings();
-    } catch (e) {
-      fail(getError(e));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const openAgentEdit = agent => {
-    setSelectedAgent(agent);
-
-    setAgentForm({
-      name: agent.name || "",
-      mobile: agent.mobile || agent.phone || "",
-      district: agent.district || "",
-      block: agent.block || agent.tehsil || "",
-      address: agent.address || "",
-      status: agent.status || "approved"
-    });
-
-    setEditingAgent(true);
-    setShowAgentBookings(false);
-  };
-
-  const saveAgentEdit = async event => {
-    event.preventDefault();
-
-    if (!selectedAgent) return;
-
-    const id = getAgentId(selectedAgent);
-
-    if (!id) {
-      fail("Agent ID नहीं मिली।");
-      return;
-    }
-
-    setLoading(true);
-    clearMessages();
-
-    try {
-      await apiRequest(
-        `/admin/agents/${id}`,
-        {
-          method: "PATCH",
-          body: JSON.stringify(agentForm)
-        },
-        user
-      );
-
-      flash("Agent की जानकारी अपडेट हो गई।");
-
-      setEditingAgent(false);
-      setSelectedAgent(null);
-
-      await loadBookings();
-    } catch (e) {
-      fail(getError(e));
-    } finally {
-      setLoading(false);
-    }
+      await apiRequest(`/admin/agents/${id}/active`, {
+        method: "PATCH",
+        body: JSON.stringify({ is_active: nextActive })
+      }, user);
+      flash(nextActive ? "Agent Active कर दिया गया।" : "Agent Inactive कर दिया गया।");
+      await refreshAgentList(showArchivedAgents);
+      if (selectedAgent && String(getAgentRecordId(selectedAgent)) === String(id)) {
+        setSelectedAgent(prev => ({ ...prev, is_active: nextActive ? 1 : 0 }));
+      }
+    } catch (e) { fail(getError(e)); }
+    finally { setLoading(false); }
   };
 
   const archiveAgent = async agent => {
-    const id = getAgentId(agent);
-
-    if (!id) {
-      fail("Agent ID नहीं मिली।");
-      return;
-    }
-
-    if (!window.confirm(
-      `${agent.name || "इस Agent"} को Archive करना चाहते हैं?`
-    )) return;
-
-    setLoading(true);
-    clearMessages();
-
+    const id = getAgentRecordId(agent);
+    if (!id) return fail("Agent ID नहीं मिली।");
+    if (!window.confirm(`${agent.name || "इस Agent"} को सूची से हटाना चाहते हैं? इसे बाद में Restore किया जा सकेगा।`)) return;
+    setLoading(true); clearMessages();
     try {
-      await apiRequest(
-        `/admin/agents/${id}/archive`,
-        { method: "PATCH" },
-        user
-      );
-
-      flash("Agent Archive कर दिया गया।");
-      setSelectedAgent(null);
-
-      await loadBookings();
-    } catch (e) {
-      fail(getError(e));
-    } finally {
-      setLoading(false);
-    }
+      await apiRequest(`/admin/agents/${id}`, { method: "DELETE" }, user);
+      flash("Agent Archive कर दिया गया। Restore विकल्प से वापस ला सकते हैं।");
+      if (selectedAgent && String(getAgentRecordId(selectedAgent)) === String(id)) {
+        setSelectedAgent(null); setShowAgentBookings(false); setAgentBookings([]);
+      }
+      await refreshAgentList(showArchivedAgents);
+    } catch (e) { fail(getError(e)); }
+    finally { setLoading(false); }
   };
 
   const restoreAgent = async agent => {
-    const id = getAgentId(agent);
-
-    if (!id) {
-      fail("Agent ID नहीं मिली।");
-      return;
-    }
-
-    setLoading(true);
-    clearMessages();
-
+    const id = getAgentRecordId(agent);
+    if (!id) return fail("Agent ID नहीं मिली।");
+    if (!window.confirm(`${agent.name || "इस Agent"} को Restore करना चाहते हैं?`)) return;
+    setLoading(true); clearMessages();
     try {
-      await apiRequest(
-        `/admin/agents/${id}/restore`,
-        { method: "PATCH" },
-        user
-      );
-
-      flash("Agent Restore कर दिया गया।");
-
-      await loadBookings();
-    } catch (e) {
-      fail(getError(e));
-    } finally {
-      setLoading(false);
-    }
+      await apiRequest(`/admin/agents/${id}/restore`, { method: "PATCH" }, user);
+      flash("Agent Restore हो गया।");
+      await refreshAgentList(showArchivedAgents);
+    } catch (e) { fail(getError(e)); }
+    finally { setLoading(false); }
   };
 
-  const openAgentBookings = async agent => {
-    const id = getAgentId(agent);
-
-    if (!id) {
-      fail("Agent ID नहीं मिली।");
-      return;
-    }
-
-    setSelectedAgent(agent);
-    setShowAgentBookings(true);
-    setEditingAgent(false);
-    setLoading(true);
-    clearMessages();
-
-    try {
-      const data = await apiRequest(
-        `/admin/agents/${id}/bookings`,
-        {},
-        user
-      );
-
-      setAgentBookings(
-        Array.isArray(data)
-          ? data
-          : data.bookings || []
-      );
-    } catch (e) {
-      fail(getError(e));
-      setAgentBookings([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const closeAgentDetails = () => {
-    setSelectedAgent(null);
-    setEditingAgent(false);
-    setShowAgentBookings(false);
-    setAgentBookings([]);
-  };
-
-  // ================= REFERRAL MANAGEMENT =================
-
-  const loadReferralMembers = async referral => {
-    const id =
-      referral.id ??
-      referral.referral_id ??
-      referral.user_id;
-
-    if (!id) {
-      fail("Referral ID नहीं मिली।");
-      return;
-    }
-
-    setMembersLoadingId(id);
-    clearMessages();
-
-    try {
-      const data = await apiRequest(
-        `/admin/referrals/${id}/members`,
-        {},
-        user
-      );
-
-      const members = Array.isArray(data)
-        ? data
-        : data.members || data.referrals || [];
-
-      setReferralMembers(prev => ({
-        ...prev,
-        [id]: members
-      }));
-
-      setExpandedReferralId(id);
-    } catch (e) {
-      fail(getError(e));
-    } finally {
-      setMembersLoadingId(null);
-    }
-  };
-
-  const toggleReferralMembers = referral => {
-    const id =
-      referral.id ??
-      referral.referral_id ??
-      referral.user_id;
-
-    if (!id) return;
-
-    if (String(expandedReferralId) === String(id)) {
-      setExpandedReferralId(null);
-      return;
-    }
-
-    if (referralMembers[id]) {
-      setExpandedReferralId(id);
-      return;
-    }
-
-    loadReferralMembers(referral);
-  };
-
-  const updateReferralCommission = async (referral, amount) => {
-    const id = referral.id ?? referral.referral_id;
-
-    if (!id) {
-      fail("Referral ID नहीं मिली।");
-      return;
-    }
-
-    const commission = Number(amount);
-
-    if (!Number.isFinite(commission) || commission < 0) {
-      fail("सही कमीशन राशि भरें।");
-      return;
-    }
-
-    setLoading(true);
-    clearMessages();
-
-    try {
-      await apiRequest(
-        `/admin/referrals/${id}/commission`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({
-            commission,
-            amount: commission
-          })
-        },
-        user
-      );
-
-      flash("Referral Commission अपडेट हो गया।");
-
-      await loadReferrals();
-    } catch (e) {
-      fail(getError(e));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ================= SEARCH & HELPERS =================
-
-  const matchesSearch = item => {
-    if (!search.trim()) return true;
-
-    const query = search.toLowerCase();
-
-    return Object.values(item || {}).some(value =>
-      String(value ?? "").toLowerCase().includes(query)
-    );
-  };
-
-  const visibleAgents = agents.filter(agent => {
-    const archiveMatch = showArchivedAgents
-      ? isArchived(agent)
-      : !isArchived(agent);
-
-    return archiveMatch && matchesSearch(agent);
-  });
-
-  const visibleBookings = bookings.filter(matchesSearch);
-  const visiblePendingUsers = pendingUsers.filter(matchesSearch);
-  const visibleRates = rates.filter(matchesSearch);
-  const visibleReferrals = referrals.filter(matchesSearch);
-
-  const approvedActiveAgents = agents.filter(agent =>
-    !isArchived(agent) &&
-    isActive(agent) &&
-    String(agent.status || "").toLowerCase() !== "pending"
-  );
-
-  const getPersonName = person =>
-    person?.name ||
-    person?.full_name ||
-    person?.customer_name ||
-    "—";
-
-  const getPersonMobile = person =>
-    person?.mobile ||
-    person?.phone ||
-    person?.mobile_number ||
-    person?.customer_mobile ||
-    "—";
-
-  const getBookingStatus = booking =>
-    booking?.status || "Pending";
-
-  const getBookingService = booking =>
-    booking?.service ||
-    booking?.service_name ||
-    booking?.service_type ||
-    "—";
-
-  const getBookingDistrict = booking =>
-    booking?.district || "—";
-
-  const getBookingBlock = booking =>
-    booking?.block || booking?.tehsil || "—";
-
-  const getBookingAddress = booking =>
-    booking?.address || "—";
-
-  const getAssignedAgent = booking =>
-    booking?.agent_name ||
-    booking?.assigned_agent_name ||
-    booking?.agent?.name ||
-    "अभी नियुक्त नहीं";
-
-  const getAssignedAgentMobile = booking =>
-    booking?.agent_mobile ||
-    booking?.assigned_agent_mobile ||
-    booking?.agent?.mobile ||
-    booking?.agent_phone ||
-    "—";
-
-  const getReferralName = referral =>
-    referral?.name || referral?.referrer_name || "—";
-
-  const getReferralCode = referral =>
-    referral?.referral_code || referral?.code || "—";
-
-  const getReferralCommission = referral =>
-    referral?.commission ??
-    referral?.commission_amount ??
-    referral?.amount ??
-    0;
-
-  const getRateServiceName = rate =>
-    rate?.service || rate?.service_name || "—";
-
-  const getRateUnit = rate => {
-    const service = services.find(item =>
-      String(item.name || "").toLowerCase() ===
-      String(getRateServiceName(rate)).toLowerCase()
-    );
-
-    return service?.unit || "—";
-  };
-
-  const getReferralMembers = referral => {
-    const id =
-      referral.id ??
-      referral.referral_id ??
-      referral.user_id;
-
-    return referralMembers[id] || [];
-  };
-
-  // ================= DASHBOARD =================
-
-  const renderDashboard = () => (
-    <>
-      <SectionTitle
-        title="Admin Dashboard"
-        subtitle="Borewell Mitra MP — Website Overview"
-        onRefresh={loadDashboard}
-        loading={loading}
-      />
-
-      <div className="bmm-stats-grid">
-        <StatCard
-          title="Total Users"
-          value={stats.users}
-          icon={Users}
-          color="blue"
-        />
-
-        <StatCard
-          title="Pending Approvals"
-          value={stats.pending}
-          icon={Clock3}
-          color="orange"
-        />
-
-        <StatCard
-          title="Total Bookings"
-          value={stats.bookings}
-          icon={ClipboardList}
-          color="purple"
-        />
-
-        <StatCard
-          title="Completed Bookings"
-          value={stats.completed}
-          icon={CheckCircle2}
-          color="green"
-        />
-      </div>
-
-      <div className="bmm-dashboard-grid">
-        <div className="bmm-card">
-          <h3>Quick Navigation</h3>
-
-          <div className="bmm-quick-grid">
-            {navItems.slice(1).map(item => {
-              const Icon = item.icon;
-
-              return (
-                <button
-                  key={item.id}
-                  className="bmm-quick-item"
-                  onClick={() => navigate(item.id)}
-                >
-                  <Icon size={22} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="bmm-card">
-          <h3>Booking Overview</h3>
-
-          <div className="bmm-overview-row">
-            <span>Total Bookings</span>
-            <strong>{bookings.length}</strong>
-          </div>
-
-          <div className="bmm-overview-row">
-            <span>Pending Bookings</span>
-            <strong>
-              {bookings.filter(b =>
-                String(b.status || "")
-                  .toLowerCase()
-                  .includes("pending")
-              ).length}
-            </strong>
-          </div>
-
-          <div className="bmm-overview-row">
-            <span>Active Agents</span>
-            <strong>{approvedActiveAgents.length}</strong>
-          </div>
-
-          <div className="bmm-overview-row">
-            <span>Total Services</span>
-            <strong>{services.length}</strong>
-          </div>
-        </div>
-      </div>
-
-      <div className="bmm-card">
-        <h3>Recent Bookings</h3>
-
-        <div className="bmm-table-wrap">
-          <table className="bmm-table">
-            <thead>
-              <tr>
-                <th>Booking ID</th>
-                <th>Customer</th>
-                <th>Mobile</th>
-                <th>Service</th>
-                <th>District</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {bookings.slice(0, 6).map((booking, index) => (
-                <tr key={getBookingId(booking) || index}>
-                  <td>
-                    {booking.booking_code ||
-                      booking.bookingId ||
-                      getBookingId(booking) ||
-                      "—"}
-                  </td>
-                  <td>{getPersonName(booking)}</td>
-                  <td>{getPersonMobile(booking)}</td>
-                  <td>{getBookingService(booking)}</td>
-                  <td>{getBookingDistrict(booking)}</td>
-                  <td>
-                    <span className="bmm-badge">
-                      {getBookingStatus(booking)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-
-              {!bookings.length && (
-                <tr>
-                  <td colSpan={6}>अभी कोई Booking उपलब्ध नहीं है।</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </>
-  );
-
-  // ================= USER APPROVAL =================
-
-  const renderApprovals = () => (
-    <>
-      <SectionTitle
-        title="User Approval"
-        subtitle="नए Customer और Agent अकाउंट की जाँच एवं स्वीकृति"
-        onRefresh={loadPendingUsers}
-        loading={loading}
-      />
-
-      <div className="bmm-card">
-        <div className="bmm-toolbar">
-          <h3>Pending Users ({visiblePendingUsers.length})</h3>
-
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="नाम / मोबाइल / जिला खोजें"
-          />
-        </div>
-
-        <div className="bmm-table-wrap">
-          <table className="bmm-table">
-            <thead>
-              <tr>
-                <th>नाम</th>
-                <th>मोबाइल</th>
-                <th>यूज़र प्रकार</th>
-                <th>जिला</th>
-                <th>ब्लॉक</th>
-                <th>स्थिति</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {visiblePendingUsers.map((person, index) => (
-                <tr key={getUserId(person) || index}>
-                  <td><strong>{getPersonName(person)}</strong></td>
-                  <td>{getPersonMobile(person)}</td>
-                  <td>{person.role || person.user_type || "Customer"}</td>
-                  <td>{person.district || "—"}</td>
-                  <td>{person.block || person.tehsil || "—"}</td>
-                  <td>
-                    <span className="bmm-badge bmm-warning">
-                      Pending
-                    </span>
-                  </td>
-                  <td>
-                    <div className="bmm-actions">
-                      <button
-                        className="bmm-btn bmm-btn-success"
-                        disabled={loading}
-                        onClick={() =>
-                          updateUserStatus(person, "approved")
-                        }
-                      >
-                        <CheckCircle2 size={15} />
-                        Approve
-                      </button>
-
-                      <button
-                        className="bmm-btn bmm-btn-danger"
-                        disabled={loading}
-                        onClick={() =>
-                          updateUserStatus(person, "rejected")
-                        }
-                      >
-                        <XCircle size={15} />
-                        Reject
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-
-              {!visiblePendingUsers.length && (
-                <tr>
-                  <td colSpan={7}>कोई Pending User नहीं है।</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </>
-  );
-
-  // ================= BOOKING MANAGEMENT =================
-
-  const renderBookings = () => (
-    <>
-      <SectionTitle
-        title="Booking Management"
-        subtitle="सभी Customer Bookings और Agent Assignment"
-        onRefresh={loadBookings}
-        loading={loading}
-      />
-
-      <div className="bmm-card">
-        <div className="bmm-toolbar">
-          <h3>Total Bookings ({visibleBookings.length})</h3>
-
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Booking / Customer / Mobile खोजें"
-          />
-        </div>
-
-        <div className="bmm-table-wrap">
-          <table className="bmm-table">
-            <thead>
-              <tr>
-                <th>Booking ID</th>
-                <th>Customer</th>
-                <th>Mobile</th>
-                <th>Service</th>
-                <th>District / Block</th>
-                <th>Address</th>
-                <th>Agent</th>
-                <th>Agent Mobile</th>
-                <th>Status</th>
-                <th>Agent Assign</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {visibleBookings.map((booking, index) => (
-                <tr key={getBookingId(booking) || index}>
-                  <td>
-                    {booking.booking_code ||
-                      booking.bookingId ||
-                      getBookingId(booking) ||
-                      "—"}
-                  </td>
-
-                  <td><strong>{getPersonName(booking)}</strong></td>
-                  <td>{getPersonMobile(booking)}</td>
-                  <td>{getBookingService(booking)}</td>
-
-                  <td>
-                    {getBookingDistrict(booking)} / {getBookingBlock(booking)}
-                  </td>
-
-                  <td>{getBookingAddress(booking)}</td>
-                  <td>{getAssignedAgent(booking)}</td>
-                  <td>{getAssignedAgentMobile(booking)}</td>
-
-                  <td>
-                    <span className="bmm-badge">
-                      {getBookingStatus(booking)}
-                    </span>
-                  </td>
-
-                  <td>
-                    <select
-                      value={
-                        booking.agent_id ||
-                        booking.assigned_agent_id ||
-                        ""
-                      }
-                      onChange={e =>
-                        updateBookingAssignment(booking, e.target.value)
-                      }
-                      disabled={loading}
-                    >
-                      <option value="">-- Agent चुनें --</option>
-
-                      {approvedActiveAgents.map(agent => (
-                        <option
-                          key={getAgentId(agent)}
-                          value={getAgentId(agent)}
-                        >
-                          {getPersonName(agent)} - {getPersonMobile(agent)}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                </tr>
-              ))}
-
-              {!visibleBookings.length && (
-                <tr>
-                  <td colSpan={10}>कोई Booking उपलब्ध नहीं है।</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </>
-  );
-
-  // ================= RATE & SERVICE MANAGEMENT =================
-
-  const renderRates = () => {
-    const activeServices = services.filter(isServiceActive);
-
-    return (
-      <>
-        <SectionTitle
-          title="Rate & Service Management"
-          subtitle="सर्विस जोड़ें और हर जिला-ब्लॉक का अलग रेट तय करें"
-          onRefresh={() =>
-            Promise.all([loadRates(), loadServices()])
-              .catch(e => fail(getError(e)))
-          }
-          loading={loading}
-        />
-
-        <div className="bmm-card">
-          <h3>Service Management</h3>
-
-          <p className="bmm-muted">
-            नई सर्विस जोड़ें, नाम बदलें या Active / Inactive करें।
-          </p>
-
-          <form className="bmm-form-grid" onSubmit={saveService}>
-            <label>
-              सर्विस का नाम
-
-              <input
-                value={serviceForm.name}
-                onChange={e =>
-                  setServiceForm(prev => ({
-                    ...prev,
-                    name: e.target.value
-                  }))
-                }
-                placeholder="जैसे: Borewell Drilling"
-                required
-              />
-            </label>
-
-            <label>
-              रेट यूनिट
-
-              <input
-                value={serviceForm.unit}
-                onChange={e =>
-                  setServiceForm(prev => ({
-                    ...prev,
-                    unit: e.target.value
-                  }))
-                }
-                placeholder="जैसे: प्रति फीट"
-                required
-              />
-            </label>
-
-            <div className="bmm-form-actions">
-              <button
-                type="submit"
-                className="bmm-btn bmm-btn-primary"
-                disabled={loading}
-              >
-                <Save size={16} />
-                {editingServiceId
-                  ? "सर्विस अपडेट करें"
-                  : "नई सर्विस जोड़ें"}
-              </button>
-
-              {editingServiceId && (
-                <button
-                  type="button"
-                  className="bmm-btn bmm-btn-light"
-                  onClick={resetServiceForm}
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
-          </form>
-
-          <div className="bmm-table-wrap" style={{ marginTop: 20 }}>
-            <table className="bmm-table">
-              <thead>
-                <tr>
-                  <th>सर्विस</th>
-                  <th>यूनिट</th>
-                  <th>स्थिति</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {services.map(service => (
-                  <tr key={getServiceId(service)}>
-                    <td><strong>{service.name}</strong></td>
-                    <td>{service.unit || "—"}</td>
-
-                    <td>
-                      <span
-                        className={`bmm-badge ${
-                          isServiceActive(service)
-                            ? "bmm-success"
-                            : "bmm-warning"
-                        }`}
-                      >
-                        {isServiceActive(service) ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-
-                    <td>
-                      <div className="bmm-actions">
-                        <button
-                          type="button"
-                          className="bmm-btn bmm-btn-light"
-                          onClick={() => editService(service)}
-                        >
-                          Edit
-                        </button>
-
-                        <button
-                          type="button"
-                          className={`bmm-btn ${
-                            isServiceActive(service)
-                              ? "bmm-btn-danger"
-                              : "bmm-btn-success"
-                          }`}
-                          disabled={loading}
-                          onClick={() => toggleService(service)}
-                        >
-                          <Power size={14} />
-                          {isServiceActive(service) ? "Inactive" : "Active"}
-                        </button>
-
-                        <button
-                          type="button"
-                          className="bmm-btn bmm-btn-danger"
-                          disabled={loading}
-                          onClick={() => deleteService(service)}
-                        >
-                          <Trash2 size={14} />
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-
-                {!services.length && (
-                  <tr>
-                    <td colSpan={4}>अभी कोई सर्विस नहीं है।</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="bmm-card">
-          <h3>District → Block Rate Management</h3>
-
-          <form onSubmit={saveDynamicRates}>
-            <div className="bmm-form-grid">
-              <label>
-                जिला चुनें
-
-                <select
-                  value={rateLocation.district}
-                  onChange={e =>
-                    selectRateLocation(e.target.value, "")
-                  }
-                  required
-                >
-                  <option value="">-- जिला चुनें --</option>
-
-                  {DISTRICTS.map(district => (
-                    <option key={district} value={district}>
-                      {district}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                ब्लॉक चुनें
-
-                <select
-                  value={rateLocation.block}
-                  onChange={e =>
-                    selectRateLocation(
-                      rateLocation.district,
-                      e.target.value
-                    )
-                  }
-                  disabled={!rateLocation.district}
-                  required
-                >
-                  <option value="">-- ब्लॉक चुनें --</option>
-
-                  {(BLOCKS[rateLocation.district] || []).map(block => (
-                    <option key={block} value={block}>
-                      {block}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
-            {rateLocation.district && rateLocation.block && (
-              <div className="bmm-dynamic-rates">
-                <h3>
-                  {rateLocation.district} — {rateLocation.block} के सर्विस रेट
-                </h3>
-
-                {!activeServices.length ? (
-                  <p className="bmm-muted">
-                    पहले Service Management में Active सर्विस जोड़ें।
-                  </p>
-                ) : (
-                  <div className="bmm-rate-grid">
-                    {activeServices.map(service => (
-                      <label key={getServiceId(service)}>
-                        <span>
-                          {service.name}
-                          <small>
-                            {service.unit || "यूनिट निर्धारित नहीं"}
-                          </small>
-                        </span>
-
-                        <div className="bmm-rate-input">
-                          <span>₹</span>
-
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            required
-                            placeholder="रेट भरें"
-                            value={
-                              dynamicRateValues[service.name] ?? ""
-                            }
-                            onChange={e =>
-                              setDynamicRateValues(prev => ({
-                                ...prev,
-                                [service.name]: e.target.value
-                              }))
-                            }
-                          />
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  className="bmm-btn bmm-btn-primary"
-                  disabled={loading || !activeServices.length}
-                >
-                  <Save size={16} />
-                  सभी रेट सेव करें
-                </button>
-              </div>
-            )}
-          </form>
-        </div>
-
-        <div className="bmm-card">
-          <h3>सभी सेव किए गए रेट ({visibleRates.length})</h3>
-
-          <div className="bmm-toolbar">
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="जिला / ब्लॉक / सर्विस खोजें"
-            />
-          </div>
-
-          <div className="bmm-table-wrap">
-            <table className="bmm-table">
-              <thead>
-                <tr>
-                  <th>जिला</th>
-                  <th>ब्लॉक</th>
-                  <th>सर्विस</th>
-                  <th>यूनिट</th>
-                  <th>रेट</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {visibleRates.map((rate, index) => (
-                  <tr key={rate.id ?? rate.rate_id ?? index}>
-                    <td>{rate.district || "—"}</td>
-                    <td><strong>{rate.block || "—"}</strong></td>
-                    <td>{getRateServiceName(rate)}</td>
-                    <td>{getRateUnit(rate)}</td>
-                    <td>{money(rate.rate)}</td>
-
-                    <td>
-                      <div className="bmm-actions">
-                        <button
-                          className="bmm-btn bmm-btn-light"
-                          onClick={() => editRate(rate)}
-                        >
-                          Edit
-                        </button>
-
-                        <button
-                          className="bmm-btn bmm-btn-danger"
-                          disabled={loading}
-                          onClick={() => deleteRate(rate)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-
-                {!visibleRates.length && (
-                  <tr>
-                    <td colSpan={6}>अभी कोई रेट उपलब्ध नहीं है।</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </>
-    );
-  };
-
-  // ================= AGENT MANAGEMENT =================
-
-  const renderAgents = () => (
-    <>
+  const renderDashboard = () => <>
+    <SectionTitle title="Admin Dashboard" subtitle="Borewells Mitra — सिस्टम की मुख्य जानकारी" onRefresh={loadDashboard} loading={loading}/>
+    <div className="bmm-stats-grid">
+      <StatCard title="कुल यूज़र" value={stats.users} icon={Users} color="blue"/><StatCard title="Approval Pending" value={stats.pending} icon={Clock3} color="orange"/>
+      <StatCard title="कुल Booking" value={stats.bookings} icon={ClipboardList} color="purple"/><StatCard title="पूरी हुई Booking" value={stats.completed} icon={CheckCircle2} color="green"/>
+    </div>
+    <div className="bmm-section-title bmm-analytics-heading"><div><h2><Eye size={20}/> Visitor Analytics</h2><p>वेबसाइट पर आने वाले वास्तविक Visitors और Page Views</p></div><div className="bmm-analytics-controls"><select value={analyticsRange} onChange={e => setAnalyticsRange(e.target.value)}><option value="7d">पिछले 7 दिन</option><option value="30d">पिछले 30 दिन</option><option value="90d">पिछले 90 दिन</option><option value="all">शुरू से अब तक</option></select><button className="bmm-btn bmm-btn-light" onClick={() => loadAnalytics()} disabled={analyticsLoading}><RefreshCw size={15} className={analyticsLoading ? "bmm-spin" : ""}/> Refresh</button></div></div>
+    {analyticsError ? <div className="bmm-card bmm-analytics-unavailable"><strong>Analytics Tracking API अभी उपलब्ध नहीं है।</strong><p className="bmm-muted">{analyticsError} वास्तविक Visitor गिनने के लिए Backend में tracking API और वेबसाइट के सभी pages पर tracking जोड़नी होगी।</p></div> : <><div className="bmm-stats-grid bmm-analytics-grid"><StatCard title="कुल Visitors" value={analytics?.totalVisitors ?? "—"} icon={Users} color="blue"/><StatCard title="कुल Page Views" value={analytics?.totalPageViews ?? "—"} icon={Eye} color="purple"/><StatCard title="आज के Visitors" value={analytics?.todayVisitors ?? "—"} icon={BarChart3} color="green"/><StatCard title="अभी Online" value={analytics?.onlineVisitors ?? "—"} icon={Activity} color="orange"/></div><div className="bmm-analytics-columns"><div className="bmm-card"><h3>दैनिक Visitors</h3>{!analytics?.daily?.length ? <p className="bmm-muted">अभी दैनिक Visitor रिपोर्ट उपलब्ध नहीं है।</p> : <div className="bmm-bars">{analytics.daily.map((day,i) => { const count = Number(day.visitors ?? day.count ?? 0); const max = Math.max(1,...analytics.daily.map(x => Number(x.visitors ?? x.count ?? 0))); return <div className="bmm-bar-item" key={day.date || i}><div className="bmm-bar-value">{count}</div><div className="bmm-bar-track"><div className="bmm-bar-fill" style={{height:`${Math.max(4,(count/max)*100)}%`}}/></div><small>{day.label || day.date || "—"}</small></div>; })}</div>}</div><div className="bmm-card"><h3>सबसे ज्यादा देखे गए Pages</h3>{!analytics?.topPages?.length ? <p className="bmm-muted">Page रिपोर्ट उपलब्ध नहीं है।</p> : <div className="bmm-table-wrap"><table className="bmm-table"><thead><tr><th>Page</th><th>Views</th></tr></thead><tbody>{analytics.topPages.map((page,i)=><tr key={page.path || page.url || i}><td>{page.title || page.path || page.url || "—"}</td><td>{Number(page.views ?? page.pageViews ?? page.page_views ?? 0).toLocaleString("en-IN")}</td></tr>)}</tbody></table></div>}</div></div><div className="bmm-card"><h3><MonitorSmartphone size={17}/> Device Breakdown</h3>{!analytics?.devices?.length ? <p className="bmm-muted">Device report उपलब्ध नहीं है।</p> : <div className="bmm-device-list">{analytics.devices.map((device,i)=><div key={device.device || device.name || i}><span>{device.device || device.name || "Other"}</span><strong>{Number(device.visitors ?? device.count ?? 0).toLocaleString("en-IN")}</strong></div>)}</div>}</div></>}
+    <div className="bmm-card"><h3>Quick Actions</h3><div className="bmm-quick-actions">
+      <button className="bmm-btn bmm-btn-primary" onClick={() => navigate("bookings")}><ClipboardList size={17}/> Bookings देखें</button>
+      <button className="bmm-btn bmm-btn-primary" onClick={() => navigate("approvals")}><BadgeCheck size={17}/> User Approval</button>
+      <button className="bmm-btn bmm-btn-primary" onClick={() => navigate("rates")}><IndianRupee size={17}/> Block Rates</button>
+      <button className="bmm-btn bmm-btn-primary" onClick={() => navigate("referrals")}><Handshake size={17}/> Referrals</button>
+    </div></div>
+    <div className="bmm-card"><h3>हाल की Bookings</h3>{!bookings.length ? <p className="bmm-muted">अभी कोई Booking उपलब्ध नहीं है।</p> :
+      <div className="bmm-table-wrap"><table className="bmm-table"><thead><tr><th>Booking ID</th><th>ग्राहक</th><th>क्षेत्र</th><th>सेवा</th><th>Status</th></tr></thead>
+        <tbody>{bookings.slice(0,5).map(b => <tr key={getBookingId(b)}><td>#{getBookingId(b)}</td><td>{b.name}<br/>{b.mobile}</td><td>{b.district} / {b.block}</td><td>{b.service}</td><td><span className="bmm-badge">{b.status}</span></td></tr>)}</tbody>
+      </table></div>}</div>
+  </>;
+
+  const renderApprovals = () => <>
+    <SectionTitle title="User Approval" subtitle="नए यूज़र की जाँच करके स्वीकृत करें" onRefresh={() => loadPendingUsers().catch(e => fail(getError(e)))} loading={loading}/>
+    <div className="bmm-toolbar"><Search size={18}/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="नाम, मोबाइल या User ID खोजें"/></div>
+    <div className="bmm-card">{!filteredUsers.length ? <p className="bmm-muted">कोई Pending User नहीं मिला।</p> :
+      <div className="bmm-table-wrap"><table className="bmm-table"><thead><tr><th>यूज़र</th><th>User ID</th><th>Role</th><th>स्थिति</th><th>Action</th></tr></thead>
+        <tbody>{filteredUsers.map(p => <tr key={getUserId(p)}><td>{p.name}<br/>{p.mobile}</td><td>{p.userId || p.user_id || "—"}</td><td>{p.role || "customer"}</td><td>{p.status || "pending"}</td>
+          <td><div className="bmm-actions"><button className="bmm-btn bmm-btn-success" disabled={loading} onClick={() => updateUserStatus(p,"approved")}><CheckCircle2 size={15}/> Approve</button>
+          <button className="bmm-btn bmm-btn-danger" disabled={loading} onClick={() => updateUserStatus(p,"rejected")}><XCircle size={15}/> Reject</button></div></td></tr>)}</tbody>
+      </table></div>}</div>
+  </>;
+
+  const renderBookings = () => <>
+    <SectionTitle title="Booking Management" subtitle="Booking देखें, एजेंट चुनें और काम की स्थिति अपडेट करें" onRefresh={() => loadBookings().catch(e => fail(getError(e)))} loading={loading}/>
+    <div className="bmm-toolbar"><Search size={18}/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="ग्राहक, मोबाइल, जिला या Booking खोजें"/></div>
+    <div className="bmm-card">{!filteredBookings.length ? <p className="bmm-muted">कोई Booking नहीं मिली।</p> :
+      <div className="bmm-table-wrap"><table className="bmm-table"><thead><tr><th>Booking</th><th>ग्राहक / स्थान</th><th>सेवा</th><th>Agent Assign</th><th>Status</th></tr></thead>
+        <tbody>{filteredBookings.map(b => <tr key={getBookingId(b)}><td><strong>#{getBookingId(b)}</strong><br/><small>{b.created_at || ""}</small></td>
+          <td>{b.name}<br/>{b.mobile}<br/><small>{[b.district,b.block,b.village].filter(Boolean).join(" / ")}</small></td><td>{b.service || "—"}</td>
+          <td><select value={b.assigned_agent_id ?? ""} onChange={e => updateBookingAssignment(b, e.target.value)} disabled={loading}>
+            <option value="">Agent चुनें / हटाएँ</option>{agents.filter(a => a.status === "approved" && (a.is_active === 1 || a.is_active === true || a.is_active == null) && !a.deleted_at).map(a => <option key={a.id} value={a.id}>{a.name} — {a.mobile}</option>)}</select></td>
+          <td><span className="bmm-badge">{b.status || "नई बुकिंग"}</span></td></tr>)}</tbody>
+      </table></div>}</div>
+  </>;
+
+  const renderRates = () => <>
+    <SectionTitle title="Rate Management" subtitle="हर जिला, तहसील और ब्लॉक के लिए अलग रेट सेव करें" onRefresh={() => loadRates().catch(e => fail(getError(e)))} loading={loading}/>
+    <div className="bmm-card"><h3>{editingRateId ? "रेट में बदलाव करें" : "नया ब्लॉक रेट जोड़ें"}</h3>
+      <form className="bmm-form-grid" onSubmit={saveRate}>
+        <label>जिला<select value={rateForm.district} onChange={e => setRateForm(p => ({...p,district:e.target.value,tehsil:"",block:""}))} required><option value="">-- जिला चुनें --</option>{DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}</select></label>
+        <label>तहसील<input value={rateForm.tehsil} onChange={e => setRateForm(p => ({...p,tehsil:e.target.value,block:""}))} placeholder="तहसील का नाम" required/></label>
+        <label>ब्लॉक<select value={rateForm.block} onChange={e => setRateForm(p => ({...p,block:e.target.value}))} required disabled={!rateForm.district}><option value="">-- ब्लॉक चुनें --</option>{(BLOCKS[rateForm.district] || []).map(b => <option key={b} value={b}>{b}</option>)}</select></label>
+        {[["drilling","Drilling Rate (₹)"],["repairing","Repairing Rate (₹)"],["casingPipe","Casing Pipe Rate (₹)"],["msPipe","MS Pipe Rate (₹)"],["otherServices","Other Services Rate (₹)"]].map(([field,label]) => <label key={field}>{label}<input type="number" min="0" step="0.01" value={rateForm[field]} onChange={e => setRateForm(p => ({...p,[field]:e.target.value}))} placeholder="0"/></label>)}
+        <div className="bmm-form-actions"><button className="bmm-btn bmm-btn-primary" disabled={loading} type="submit"><Save size={16}/>{editingRateId ? " रेट अपडेट करें" : " रेट सेव करें"}</button>{editingRateId && <button className="bmm-btn bmm-btn-light" type="button" onClick={resetRateForm}>Cancel</button>}</div>
+      </form>
+    </div>
+    <div className="bmm-card"><h3>सभी Block Rates ({rates.length})</h3>{!rates.length ? <p className="bmm-muted">रेट उपलब्ध नहीं हैं। ऊपर से रेट जोड़ें।</p> :
+      <div className="bmm-table-wrap"><table className="bmm-table"><thead><tr><th>जिला / तहसील / ब्लॉक</th><th>Drilling</th><th>Repairing</th><th>Casing Pipe</th><th>MS Pipe</th><th>Other</th><th>Action</th></tr></thead>
+        <tbody>{rates.map(r => <tr key={r.id ?? r.rate_id}><td>{r.district}<br/>{r.tehsil}<br/><strong>{r.block}</strong></td><td>{money(r.drilling)}</td><td>{money(r.repairing)}</td><td>{money(r.casingPipe ?? r.casing_pipe)}</td><td>{money(r.msPipe ?? r.ms_pipe)}</td><td>{money(r.otherServices ?? r.other_services)}</td>
+          <td><div className="bmm-actions"><button className="bmm-btn bmm-btn-light" onClick={() => editRate(r)}>Edit</button><button className="bmm-btn bmm-btn-danger" onClick={() => deleteRate(r)}>Delete</button></div></td></tr>)}</tbody>
+      </table></div>}</div>
+  </>;
+
+  const renderAgents = () => {
+    const list = agents
+      .filter(a => showArchivedAgents ? isAgentArchived(a) : !isAgentArchived(a))
+      .filter(a => [a.name, a.mobile, a.userId, a.user_id, a.status, a.district, a.block]
+        .filter(Boolean).join(" ").toLowerCase().includes(search.toLowerCase()));
+
+    const openAgent = a => {
+      setSelectedAgent(a);
+      setEditingAgent(false);
+      setAgentForm({
+        name: a.name || "",
+        mobile: a.mobile || "",
+        agency_name: a.agency_name || a.agencyName || "",
+        district: a.district || "",
+        block: a.block || "",
+        office_address: a.office_address || a.officeAddress || ""
+      });
+
+      const agentIds = [
+        a.id, a.user_id, a.userId, a.agent_id, a.agentId
+      ].filter(value => value !== undefined && value !== null).map(String);
+
+      const history = bookings.filter(b => {
+        const assignedIds = [
+          b.assigned_agent_id, b.agent_id, b.assignedAgentId,
+          b.agentId, b.agent_user_id, b.assigned_agent_user_id
+        ].filter(value => value !== undefined && value !== null).map(String);
+
+        return assignedIds.some(id => agentIds.includes(id));
+      });
+
+      setAgentBookings(history);
+      setShowAgentBookings(true);
+    };
+
+    const getBookingStatus = b =>
+      String(b.status || b.booking_status || b.bookingStatus || "").trim().toLowerCase();
+
+    const isSuccessfulBooking = b => {
+      const status = getBookingStatus(b);
+      return ["पूर्ण", "काम पूरा", "complete", "completed", "success", "successful"].includes(status);
+    };
+
+    const isCancelledBooking = b => {
+      const status = getBookingStatus(b);
+      return ["रद्द", "cancelled", "canceled", "reject", "rejected"].includes(status);
+    };
+
+    const totalAgentBookings = agentBookings.length;
+    const successAgentBookings = agentBookings.filter(isSuccessfulBooking).length;
+    const pendingAgentBookings = agentBookings.filter(
+      b => !isSuccessfulBooking(b) && !isCancelledBooking(b)
+    ).length;
+
+    return <>
       <SectionTitle
         title="Agent Management"
-        subtitle="Agent की जानकारी, स्थिति और Booking History"
-        onRefresh={loadBookings}
+        subtitle="एजेंट की जानकारी, कुल बुकिंग और बुकिंग हिस्ट्री"
+        onRefresh={() => loadBookings().catch(e => fail(getError(e)))}
         loading={loading}
       />
 
-      {selectedAgent && editingAgent && (
-        <div className="bmm-card">
-          <div className="bmm-toolbar">
-            <h3>Agent Edit — {getPersonName(selectedAgent)}</h3>
-
-            <button
-              className="bmm-btn bmm-btn-light"
-              onClick={closeAgentDetails}
-            >
-              <X size={16} />
-              Close
-            </button>
-          </div>
-
-          <form className="bmm-form-grid" onSubmit={saveAgentEdit}>
-            <label>
-              नाम
-
-              <input
-                value={agentForm.name || ""}
-                onChange={e =>
-                  setAgentForm(prev => ({
-                    ...prev,
-                    name: e.target.value
-                  }))
-                }
-                required
-              />
-            </label>
-
-            <label>
-              मोबाइल नंबर
-
-              <input
-                value={agentForm.mobile || ""}
-                onChange={e =>
-                  setAgentForm(prev => ({
-                    ...prev,
-                    mobile: e.target.value
-                  }))
-                }
-                required
-              />
-            </label>
-
-            <label>
-              जिला
-
-              <select
-                value={agentForm.district || ""}
-                onChange={e =>
-                  setAgentForm(prev => ({
-                    ...prev,
-                    district: e.target.value,
-                    block: ""
-                  }))
-                }
-              >
-                <option value="">जिला चुनें</option>
-                {DISTRICTS.map(d => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              ब्लॉक
-
-              <select
-                value={agentForm.block || ""}
-                onChange={e =>
-                  setAgentForm(prev => ({
-                    ...prev,
-                    block: e.target.value
-                  }))
-                }
-              >
-                <option value="">ब्लॉक चुनें</option>
-                {(BLOCKS[agentForm.district] || []).map(b => (
-                  <option key={b} value={b}>{b}</option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              पता
-
-              <input
-                value={agentForm.address || ""}
-                onChange={e =>
-                  setAgentForm(prev => ({
-                    ...prev,
-                    address: e.target.value
-                  }))
-                }
-              />
-            </label>
-
-            <label>
-              स्थिति
-
-              <select
-                value={agentForm.status || "approved"}
-                onChange={e =>
-                  setAgentForm(prev => ({
-                    ...prev,
-                    status: e.target.value
-                  }))
-                }
-              >
-                <option value="approved">Approved</option>
-                <option value="pending">Pending</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </label>
-
-            <div className="bmm-form-actions">
-              <button
-                type="submit"
-                className="bmm-btn bmm-btn-primary"
-                disabled={loading}
-              >
-                <Save size={16} />
-                Save Changes
-              </button>
-
-              <button
-                type="button"
-                className="bmm-btn bmm-btn-light"
-                onClick={closeAgentDetails}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+      <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginBottom:16}}>
+        <div className="bmm-toolbar" style={{marginBottom:0,flex:1}}>
+          <Search size={18}/>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Agent नाम, मोबाइल या क्षेत्र खोजें" />
         </div>
-      )}
+        <button type="button" className={`bmm-btn ${showArchivedAgents ? "bmm-btn-primary" : "bmm-btn-light"}`} disabled={loading}
+          onClick={async () => {
+            const next = !showArchivedAgents;
+            setShowArchivedAgents(next);
+            setSelectedAgent(null); setShowAgentBookings(false); setAgentBookings([]);
+            setLoading(true); clearMessages();
+            try {
+              const data = await apiRequest(`/admin/agents${next ? "?includeArchived=1" : ""}`, {}, user);
+              setAgents(Array.isArray(data) ? data : data.agents || []);
+            } catch (e) { fail(getError(e)); }
+            finally { setLoading(false); }
+          }}>
+          {showArchivedAgents ? "सामान्य Agents देखें" : "Deleted / Archived देखें"}
+        </button>
+      </div>
 
-      {selectedAgent && showAgentBookings && (
-        <div className="bmm-card">
-          <div className="bmm-toolbar">
-            <div>
-              <h3>Booking History</h3>
-              <p>{getPersonName(selectedAgent)}</p>
-              <p>{getPersonMobile(selectedAgent)}</p>
-            </div>
-
-            <button
-              className="bmm-btn bmm-btn-light"
-              onClick={closeAgentDetails}
-            >
-              <X size={16} /> Close
-            </button>
-          </div>
-
+      <div className="bmm-card">
+        {!list.length ? (
+          <p className="bmm-muted">{showArchivedAgents ? "कोई Archived Agent नहीं मिला।" : "Agent List खाली है या Backend से Agent API का उत्तर नहीं मिला।"}</p>
+        ) : (
           <div className="bmm-table-wrap">
             <table className="bmm-table">
               <thead>
                 <tr>
-                  <th>Booking ID</th>
-                  <th>Customer</th>
-                  <th>Mobile</th>
-                  <th>Service</th>
-                  <th>जिला</th>
-                  <th>ब्लॉक</th>
-                  <th>स्थिति</th>
-                  <th>तारीख</th>
+                  <th>Agent</th>
+                  <th>User ID</th>
+                  <th>क्षेत्र</th>
+                  <th>Status</th>
+                  <th>Active / Inactive</th>
+                  <th>Delete / Restore</th>
+                  <th>विवरण</th>
                 </tr>
               </thead>
-
               <tbody>
-                {agentBookings.map((booking, index) => (
-                  <tr key={getBookingId(booking) || index}>
+                {list.map(a => (
+                  <tr key={getUserId(a)}>
+                    <td><b>{a.name || "—"}</b><br/>{a.mobile || "—"}</td>
+                    <td>{a.userId || a.user_id || "—"}</td>
+                    <td>{a.district || "—"}<br/>{a.block || "—"}</td>
                     <td>
-                      {booking.booking_code ||
-                        getBookingId(booking) ||
-                        "—"}
+                      <span className="bmm-badge" style={{background:isAgentArchived(a) ? "#f1f5f9" : isAgentActive(a) ? "#e1f8eb" : "#fff0dc",color:isAgentArchived(a) ? "#64748b" : isAgentActive(a) ? "#14834a" : "#b96900"}}>
+                        {isAgentArchived(a) ? "Archived" : isAgentActive(a) ? "Active" : "Inactive"}
+                      </span>
                     </td>
-                    <td>{getPersonName(booking)}</td>
-                    <td>{getPersonMobile(booking)}</td>
-                    <td>{getBookingService(booking)}</td>
-                    <td>{getBookingDistrict(booking)}</td>
-                    <td>{getBookingBlock(booking)}</td>
-                    <td>{getBookingStatus(booking)}</td>
                     <td>
-                      {formatDate(
-                        booking.created_at || booking.createdAt
+                      {!isAgentArchived(a) && <button type="button" className={`bmm-btn ${isAgentActive(a) ? "bmm-btn-danger" : "bmm-btn-success"}`} disabled={loading} onClick={() => toggleAgentActive(a)}>
+                        <Power size={14}/>{isAgentActive(a) ? "Inactive करें" : "Active करें"}
+                      </button>}
+                    </td>
+                    <td>
+                      {isAgentArchived(a) ? (
+                        <button type="button" className="bmm-btn bmm-btn-success" disabled={loading} onClick={() => restoreAgent(a)}><RotateCcw size={14}/> Restore</button>
+                      ) : (
+                        <button type="button" className="bmm-btn bmm-btn-danger" disabled={loading} onClick={() => archiveAgent(a)}><Trash2 size={14}/> Delete</button>
                       )}
+                    </td>
+                    <td>
+                      {!isAgentArchived(a) && <button type="button" className="bmm-btn bmm-btn-primary" onClick={() => openAgent(a)}>विवरण / Booking History</button>}
                     </td>
                   </tr>
                 ))}
-
-                {!agentBookings.length && (
-                  <tr>
-                    <td colSpan={8}>इस Agent की Booking उपलब्ध नहीं है।</td>
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      <div className="bmm-card">
-        <div className="bmm-toolbar">
-          <h3>
-            {showArchivedAgents ? "Archived Agents" : "All Agents"}
-            {" "}({visibleAgents.length})
-          </h3>
+      {selectedAgent && showAgentBookings && (
+        <div className="bmm-card" style={{marginTop:16}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+            <div>
+              <h3 style={{margin:"0 0 8px"}}>{selectedAgent.name || "Agent"} की जानकारी</h3>
+              <p className="bmm-muted" style={{margin:"0 0 12px"}}>
+                मोबाइल: {selectedAgent.mobile || "—"} | User ID: {selectedAgent.userId || selectedAgent.user_id || selectedAgent.id || "—"}
+              </p>
+              <button
+                type="button"
+                onClick={() => setEditingAgent(v => !v)}
+                style={{
+                  display:"inline-flex", alignItems:"center", justifyContent:"center", gap:9,
+                  padding:"11px 20px", border:"1px solid #2563eb", borderRadius:10,
+                  background:editingAgent ? "#eff6ff" : "linear-gradient(135deg,#2563eb,#1d4ed8)",
+                  color:editingAgent ? "#1d4ed8" : "#fff", fontSize:14, fontWeight:600,
+                  cursor:"pointer", boxShadow:"0 4px 12px rgba(37,99,235,0.18)"
+                }}
+              >
+                <Save size={17}/>{editingAgent ? "Edit बंद करें" : "Agent Details Edit"}
+              </button>
+            </div>
 
-          <div className="bmm-actions">
             <button
+              type="button"
               className="bmm-btn bmm-btn-light"
-              onClick={() => setShowArchivedAgents(!showArchivedAgents)}
+              onClick={() => {
+                setSelectedAgent(null);
+                setShowAgentBookings(false);
+                setAgentBookings([]);
+                setEditingAgent(false);
+              }}
             >
-              <RotateCcw size={15} />
-              {showArchivedAgents ? "Active Agents" : "Archived Agents"}
+              बंद करें
             </button>
-
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Agent नाम / मोबाइल खोजें"
-            />
           </div>
-        </div>
 
-        <div className="bmm-table-wrap">
-          <table className="bmm-table">
-            <thead>
-              <tr>
-                <th>Agent ID</th>
-                <th>नाम</th>
-                <th>मोबाइल</th>
-                <th>जिला</th>
-                <th>ब्लॉक</th>
-                <th>स्थिति</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {visibleAgents.map((agent, index) => (
-                <tr key={getAgentId(agent) || index}>
-                  <td>{agent.user_code || agent.userId || getAgentId(agent)}</td>
-
-                  <td><strong>{getPersonName(agent)}</strong></td>
-                  <td>{getPersonMobile(agent)}</td>
-                  <td>{agent.district || "—"}</td>
-                  <td>{agent.block || agent.tehsil || "—"}</td>
-
-                  <td>
-                    <span
-                      className={`bmm-badge ${
-                        isActive(agent) ? "bmm-success" : "bmm-warning"
-                      }`}
-                    >
-                      {isActive(agent) ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-
-                  <td>
-                    <div className="bmm-actions">
-                      {!isArchived(agent) ? (
-                        <>
-                          <button
-                            className="bmm-btn bmm-btn-light"
-                            onClick={() => openAgentEdit(agent)}
-                          >
-                            Edit
-                          </button>
-
-                          <button
-                            className={`bmm-btn ${
-                              isActive(agent)
-                                ? "bmm-btn-danger"
-                                : "bmm-btn-success"
-                            }`}
-                            disabled={
-                              loading ||
-                              String(agent.status || "").toLowerCase() === "pending"
-                            }
-                            onClick={() => toggleAgentStatus(agent)}
-                          >
-                            <Power size={14} />
-                            {isActive(agent) ? "Inactive" : "Active"}
-                          </button>
-
-                          <button
-                            className="bmm-btn bmm-btn-light"
-                            onClick={() => openAgentBookings(agent)}
-                          >
-                            <ClipboardList size={14} />
-                            Bookings
-                          </button>
-
-                          <button
-                            className="bmm-btn bmm-btn-danger"
-                            disabled={loading}
-                            onClick={() => archiveAgent(agent)}
-                          >
-                            <Trash2 size={14} />
-                            Archive
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          className="bmm-btn bmm-btn-success"
-                          disabled={loading}
-                          onClick={() => restoreAgent(agent)}
-                        >
-                          <RotateCcw size={14} />
-                          Restore
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-
-              {!visibleAgents.length && (
-                <tr>
-                  <td colSpan={7}>कोई Agent उपलब्ध नहीं है।</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </>
-  );
-
-  // ================= REFERRAL MANAGEMENT =================
-
-  const renderReferrals = () => (
-    <>
-      <SectionTitle
-        title="Referral Management"
-        subtitle="Referral Members और Commission Management"
-        onRefresh={loadReferrals}
-        loading={loading}
-      />
-
-      <div className="bmm-card">
-        <div className="bmm-toolbar">
-          <h3>Total Referrals ({visibleReferrals.length})</h3>
-
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="नाम / Referral Code खोजें"
-          />
-        </div>
-
-        <div className="bmm-table-wrap">
-          <table className="bmm-table">
-            <thead>
-              <tr>
-                <th>नाम</th>
-                <th>मोबाइल</th>
-                <th>Referral Code</th>
-                <th>Members</th>
-                <th>Commission ₹</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {visibleReferrals.map((referral, index) => {
-                const id =
-                  referral.id ??
-                  referral.referral_id ??
-                  referral.user_id;
-
-                return (
-                  <React.Fragment key={id || index}>
-                    <tr>
-                      <td><strong>{getReferralName(referral)}</strong></td>
-                      <td>{getPersonMobile(referral)}</td>
-                      <td>{getReferralCode(referral)}</td>
-                      <td>
-                        <button
-                          className="bmm-btn bmm-btn-light"
-                          onClick={() => toggleReferralMembers(referral)}
-                          disabled={membersLoadingId === id}
-                        >
-                          {membersLoadingId === id
-                            ? "Loading..."
-                            : "View Members"}
-                        </button>
-                      </td>
-
-                      <td>
-                        <input
-                          type="number"
-                          min="0"
-                          defaultValue={getReferralCommission(referral)}
-                          id={`commission-${id}`}
-                          style={{ width: 100 }}
-                        />
-                      </td>
-
-                      <td>
-                        <div className="bmm-actions">
-                          <button
-                            className="bmm-btn bmm-btn-primary"
-                            disabled={loading}
-                            onClick={() => {
-                              const input = document.getElementById(
-                                `commission-${id}`
-                              );
-
-                              updateReferralCommission(
-                                referral,
-                                input?.value
-                              );
-                            }}
-                          >
-                            <Save size={14} />
-                            Save
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-
-                    {String(expandedReferralId) === String(id) && (
-                      <tr>
-                        <td colSpan={6}>
-                          <div className="bmm-card">
-                            <h3>
-                              {getReferralName(referral)} के Referral Members
-                            </h3>
-
-                            <div className="bmm-table-wrap">
-                              <table className="bmm-table">
-                                <thead>
-                                  <tr>
-                                    <th>नाम</th>
-                                    <th>मोबाइल</th>
-                                    <th>जिला</th>
-                                    <th>ब्लॉक</th>
-                                    <th>Service</th>
-                                    <th>स्थिति</th>
-                                  </tr>
-                                </thead>
-
-                                <tbody>
-                                  {getReferralMembers(referral).map(
-                                    (member, memberIndex) => (
-                                      <tr key={
-                                        member.id ||
-                                        member.user_id ||
-                                        memberIndex
-                                      }>
-                                        <td>{getPersonName(member)}</td>
-                                        <td>{getPersonMobile(member)}</td>
-                                        <td>{member.district || "—"}</td>
-                                        <td>{member.block || "—"}</td>
-                                        <td>{getBookingService(member)}</td>
-                                        <td>
-                                          {member.status || "Pending"}
-                                        </td>
-                                      </tr>
-                                    )
-                                  )}
-
-                                  {!getReferralMembers(referral).length && (
-                                    <tr>
-                                      <td colSpan={6}>
-                                        कोई Referral Member नहीं मिला।
-                                      </td>
-                                    </tr>
-                                  )}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-
-              {!visibleReferrals.length && (
-                <tr>
-                  <td colSpan={6}>कोई Referral उपलब्ध नहीं है।</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </>
-  );
-
-  // ================= SETTINGS =================
-
-  const renderSettings = () => (
-    <>
-      <SectionTitle
-        title="Admin Settings"
-        subtitle="Admin Account और Website Information"
-        onRefresh={loadDashboard}
-        loading={loading}
-      />
-
-      <div className="bmm-card">
-        <h3>Admin Account</h3>
-
-        <div className="bmm-overview-row">
-          <span>नाम</span>
-          <strong>{user?.name || user?.full_name || "Admin"}</strong>
-        </div>
-
-        <div className="bmm-overview-row">
-          <span>मोबाइल</span>
-          <strong>{user?.mobile || user?.phone || "—"}</strong>
-        </div>
-
-        <div className="bmm-overview-row">
-          <span>User ID</span>
-          <strong>{user?.userId || user?.user_id || user?.id || "—"}</strong>
-        </div>
-
-        <div className="bmm-overview-row">
-          <span>Role</span>
-          <strong>{user?.role || "Admin"}</strong>
-        </div>
-      </div>
-
-      <div className="bmm-card">
-        <h3>Website Information</h3>
-
-        <div className="bmm-overview-row">
-          <span>Website</span>
-          <strong>Borewell Mitra MP</strong>
-        </div>
-
-        <div className="bmm-overview-row">
-          <span>Service Areas</span>
-          <strong>मध्य प्रदेश</strong>
-        </div>
-
-        <div className="bmm-overview-row">
-          <span>Total Districts</span>
-          <strong>{DISTRICTS.length}</strong>
-        </div>
-
-        <div className="bmm-overview-row">
-          <span>Total Services</span>
-          <strong>{services.length}</strong>
-        </div>
-      </div>
-
-      <div className="bmm-card">
-        <h3>Account Actions</h3>
-
-        <div className="bmm-actions">
-          {onBack && (
-            <button
-              className="bmm-btn bmm-btn-light"
-              onClick={onBack}
-            >
-              <ArrowLeft size={16} />
-              Back to Website
-            </button>
+          {editingAgent && (
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12,marginTop:16}}>
+              <input placeholder="Agent का नाम" value={agentForm.name || ""} onChange={e => setAgentForm(p => ({...p,name:e.target.value}))}/>
+              <input placeholder="मोबाइल नंबर" value={agentForm.mobile || ""} onChange={e => setAgentForm(p => ({...p,mobile:e.target.value}))}/>
+              <input placeholder="Agency Name" value={agentForm.agency_name || ""} onChange={e => setAgentForm(p => ({...p,agency_name:e.target.value}))}/>
+              <input placeholder="जिला" value={agentForm.district || ""} onChange={e => setAgentForm(p => ({...p,district:e.target.value}))}/>
+              <input placeholder="ब्लॉक" value={agentForm.block || ""} onChange={e => setAgentForm(p => ({...p,block:e.target.value}))}/>
+              <input placeholder="ऑफिस का पता" value={agentForm.office_address || ""} onChange={e => setAgentForm(p => ({...p,office_address:e.target.value}))}/>
+              <button type="button" className="bmm-btn bmm-btn-primary" onClick={saveAgentDetails} disabled={loading} style={{gridColumn:"1 / -1"}}>
+                <Save size={16}/>{loading ? "सेव हो रहा है..." : "Save Agent Details"}
+              </button>
+            </div>
           )}
 
-          <button
-            className="bmm-btn bmm-btn-danger"
-            onClick={onLogout}
-          >
-            <LogOut size={16} />
-            Logout
-          </button>
+          <hr style={{margin:"18px 0",opacity:.2}}/>
+          <h3>Agent Booking Summary</h3>
+          <div className="bmm-stats-grid" style={{gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",marginBottom:20}}>
+            <StatCard title="Total Booking" value={totalAgentBookings} icon={ClipboardList} color="purple"/>
+            <StatCard title="Pending Booking" value={pendingAgentBookings} icon={Clock3} color="orange"/>
+            <StatCard title="Success Booking" value={successAgentBookings} icon={CheckCircle2} color="green"/>
+          </div>
+
+          <h3>Agent की पूरी Booking History ({totalAgentBookings})</h3>
+          {!agentBookings.length ? (
+            <p className="bmm-muted">इस Agent की कोई Booking नहीं मिली। अगर बुकिंग मौजूद है तो Backend के assigned agent ID field की जाँच करें।</p>
+          ) : (
+            <div className="bmm-table-wrap">
+              <table className="bmm-table">
+                <thead>
+                  <tr>
+                    <th>Booking No.</th>
+                    <th>तारीख</th>
+                    <th>Customer</th>
+                    <th>क्षेत्र</th>
+                    <th>Service</th>
+                    <th>Status</th>
+                    <th>Amount</th>
+                    <th>Commission</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {agentBookings.map((b, index) => (
+                    <tr key={getBookingId(b) || index}>
+                      <td>{b.booking_number || b.booking_no || getBookingId(b) || "—"}</td>
+                      <td>{formatDate(b.created_at || b.createdAt || b.booking_date)}</td>
+                      <td>{b.customer_name || b.name || "—"}<br/>{b.customer_mobile || b.mobile || "—"}</td>
+                      <td>{[b.district,b.block,b.village].filter(Boolean).join(" / ") || "—"}</td>
+                      <td>{b.service || b.service_type || b.service_name || "—"}</td>
+                      <td><span className="bmm-badge">{b.status || b.booking_status || "—"}</span></td>
+                      <td>{money(b.amount ?? b.total_amount ?? b.price)}</td>
+                      <td>{money(b.commission ?? b.agent_commission ?? b.commission_amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-      </div>
-    </>
-  );
-
-  // ================= MAIN RENDER =================
-
-  const renderPage = () => {
-    switch (activePage) {
-      case "approvals":
-        return renderApprovals();
-
-      case "bookings":
-        return renderBookings();
-
-      case "rates":
-        return renderRates();
-
-      case "agents":
-        return renderAgents();
-
-      case "referrals":
-        return renderReferrals();
-
-      case "settings":
-        return renderSettings();
-
-      default:
-        return renderDashboard();
-    }
+      )}
+    </>;
   };
 
-  return (
-    <div className="bmm-admin-layout">
 
-      {/* MOBILE HEADER */}
+    const renderReferrals = () => <>
+    <SectionTitle title="Referral Management" subtitle="Referral ID, उससे जुड़े यूज़र और जुड़ने की तारीख" onRefresh={() => loadReferrals().catch(e => fail(getError(e)))} loading={loading}/>
+    <div className="bmm-card"><h3>सभी Referral Partners ({referrals.length})</h3>
+      {!referrals.length ? <p className="bmm-muted">Referral रिकॉर्ड नहीं मिले। Backend API और Referral Partner की स्थिति जाँचें।</p> :
+        <div className="bmm-table-wrap"><table className="bmm-table"><thead><tr><th>Referral Partner</th><th>Referral ID</th><th>कुल जुड़े यूज़र</th><th>विवरण</th></tr></thead>
+          <tbody>{referrals.map(item => {
+            const id = item.id ?? item.user_id ?? item.userId;
+            const code = item.referralCode ?? item.referral_code ?? item.referral_id ?? "—";
+            const members = referralMembers[id] || [];
+            const count = Number(item.referral_count ?? item.total_referred ?? item.member_count ?? members.length);
+            return <React.Fragment key={id ?? code}>
+              <tr><td><strong>{item.name || item.referrer_name || "—"}</strong><br/>{item.mobile || "—"}</td><td>{code}</td><td>{count}</td>
+                <td><button className="bmm-btn bmm-btn-primary" disabled={!id || membersLoadingId === id} onClick={() => loadReferralMembers(item)}>{membersLoadingId === id ? "लोड हो रहा है..." : expandedReferralId === id ? "विवरण छिपाएँ" : "यूज़र देखें"}</button></td></tr>
+              {expandedReferralId === id && <tr><td colSpan={4}><div style={{padding:"10px 0"}}><h3>Referral ID: {code} — जुड़े हुए यूज़र</h3>
+                {membersLoadingId === id ? <p className="bmm-muted">यूज़र की जानकारी लोड हो रही है...</p> : !members.length ? <p className="bmm-muted">इस Referral ID से कोई यूज़र नहीं जुड़ा है।</p> :
+                  <div className="bmm-table-wrap"><table className="bmm-table"><thead><tr><th>नाम</th><th>मोबाइल</th><th>User ID</th><th>Role</th><th>स्थिति</th><th>जुड़ने की तारीख</th></tr></thead>
+                    <tbody>{members.map((p,i) => <tr key={p.id ?? p.user_id ?? p.userId ?? i}><td>{p.name || "—"}</td><td>{p.mobile || "—"}</td><td>{p.userId || p.user_id || "—"}</td><td>{p.role || "customer"}</td><td>{p.status || "—"}</td><td>{formatDate(p.created_at || p.createdAt)}</td></tr>)}</tbody>
+                  </table></div>}</div></td></tr>}
+            </React.Fragment>;
+          })}</tbody></table></div>}
+    </div>
+  </>;
 
-      <div className="bmm-mobile-header">
-        <button
-          className="bmm-menu-button"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
+  const renderSettings = () => <><SectionTitle title="Settings" subtitle="Admin और API की स्थिति" onRefresh={loadDashboard} loading={loading}/><div className="bmm-card">
+    <div className="bmm-setting-row"><ShieldCheck size={22}/><div><strong>Admin Session</strong><p>{user?.name || "Borewell Mitra Admin"}</p></div></div>
+    <div className="bmm-setting-row"><Droplets size={22}/><div><strong>Backend API</strong><p>{API}</p></div></div>
+    <p className="bmm-muted">पासवर्ड को Frontend में न रखें। Admin credentials केवल Backend में सुरक्षित रखें।</p>
+  </div></>;
 
-        <div>
-          <strong>Borewell Mitra MP</strong>
-          <small>Admin Panel</small>
-        </div>
+  const renderBlockBanners = () => <>
+    <SectionTitle title="Block Banner Management" subtitle="हर जिले और ब्लॉक के लिए अलग Banner अपलोड और मैनेज करें" onRefresh={loadBlockBanners} loading={bannerLoading}/>
+    <div className="bmm-card">
+      <h3><ImageIcon size={18} style={{verticalAlign:"middle",marginRight:8}}/> नया Block Banner अपलोड करें</h3>
+      <div className="bmm-form-grid">
+        <label>जिला<select value={bannerDistrict} onChange={e=>{setBannerDistrict(e.target.value);setBannerBlock("");}}><option value="">-- जिला चुनें --</option>{[...DISTRICTS].sort((a,b)=>String(a).localeCompare(String(b),"hi")).map(d=><option key={d} value={d}>{d}</option>)}</select></label>
+        <label>ब्लॉक<select value={bannerBlock} onChange={e=>setBannerBlock(e.target.value)} disabled={!bannerDistrict}><option value="">-- ब्लॉक चुनें --</option>{getBlocksForDistrict(bannerDistrict).map(b=><option key={b} value={b}>{b}</option>)}</select></label>
+        <label>Banner इमेज (PNG/JPG/WEBP, अधिकतम 500 KB)<input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleBannerFile}/></label>
+        <div className="bmm-form-actions"><button className="bmm-btn bmm-btn-primary" type="button" disabled={bannerLoading} onClick={saveBlockBanner}><UploadCloud size={16}/> {bannerLoading ? "सेव हो रहा है..." : "Banner सेव करें"}</button><button className="bmm-btn bmm-btn-light" type="button" onClick={()=>{setBannerPreview("");setBannerDistrict("");setBannerBlock("");}}>Reset</button></div>
       </div>
+      {bannerPreview && <div style={{marginTop:18}}><p className="bmm-muted">Preview</p><img src={bannerPreview} alt="Banner Preview" style={{width:"100%",maxWidth:650,maxHeight:220,objectFit:"contain",borderRadius:10,border:"1px solid #e3e8f0"}}/></div>}
+    </div>
+    <div className="bmm-card"><h3>सेव किए गए Block Banners ({blockBanners.length})</h3>
+      {bannerLoading && !blockBanners.length ? <p className="bmm-muted">लोड हो रहा है...</p> : !blockBanners.length ? <p className="bmm-muted">अभी कोई Block Banner सेव नहीं है।</p> :
+        <div className="bmm-table-wrap"><table className="bmm-table"><thead><tr><th>जिला</th><th>ब्लॉक</th><th>Banner</th><th>Action</th></tr></thead><tbody>{blockBanners.map(b=><tr key={b.id}><td>{b.district}</td><td>{b.block}</td><td>{(b.image_data || b.imageData || b.image_url || b.imageUrl) ? <img src={b.image_data || b.imageData || b.image_url || b.imageUrl} alt={`${b.block} Banner`} style={{width:180,maxHeight:65,objectFit:"cover",borderRadius:6}}/> : "—"}</td><td><button className="bmm-btn bmm-btn-danger" onClick={()=>deleteBlockBanner(b)}><Trash2 size={14}/> Delete</button></td></tr>)}</tbody></table></div>}
+    </div>
+  </>;
 
-      {/* SIDEBAR */}
+  const renderExtraSection = (page) => {
+    const sections = {
+      customers: { title: "Customer Management", subtitle: "ग्राहक पंजीकरण और उपलब्ध Approval रिकॉर्ड", body: <>
+        <div className="bmm-card"><h3>Pending Customer / User Approvals ({pendingUsers.length})</h3>
+          {!pendingUsers.length ? <p className="bmm-muted">कोई Pending Approval उपलब्ध नहीं है।</p> : <div className="bmm-table-wrap"><table className="bmm-table"><thead><tr><th>नाम</th><th>मोबाइल</th><th>User ID</th><th>Role</th><th>Action</th></tr></thead><tbody>{pendingUsers.map(p => <tr key={getUserId(p)}><td>{p.name || "—"}</td><td>{p.mobile || "—"}</td><td>{p.userId || p.user_id || "—"}</td><td>{p.role || "customer"}</td><td><div className="bmm-actions"><button className="bmm-btn bmm-btn-success" onClick={() => updateUserStatus(p,"approved")}>Approve</button><button className="bmm-btn bmm-btn-danger" onClick={() => updateUserStatus(p,"rejected")}>Reject</button></div></td></tr>)}</tbody></table></div>}
+        </div><p className="bmm-muted">नोट: मौजूदा Backend केवल Pending Users की सूची देता है। सभी Customers की पूरी सूची और Profile Edit के लिए अलग API जोड़ना बाकी है।</p>
+      </> },
+      createAgent: { title: "Create Agent", subtitle: "Admin द्वारा नया Agent पंजीकरण", body: <>
+        {createdAgent && <div className="bmm-card" style={{border:"1px solid #a8e5bf",background:"#f0fff5"}}><h3>Agent सफलतापूर्वक बन गया</h3><p><strong>Agent ID:</strong> {createdAgent.userId || "—"}</p><p><strong>नाम:</strong> {createdAgent.name} · <strong>मोबाइल:</strong> {createdAgent.mobile}</p><p className="bmm-muted">यह ID Agent को सुरक्षित रूप से दे दें।</p><button className="bmm-btn bmm-btn-light" onClick={() => setCreatedAgent(null)}>ठीक है</button></div>}
+        <div className="bmm-card"><h3>नया Agent पंजीकरण</h3><p className="bmm-muted">Admin द्वारा बनाया गया Agent तुरंत Approved और Active रहेगा। पासवर्ड Agent को सुरक्षित तरीके से दें।</p>
+          <form className="bmm-form-grid" onSubmit={createAgent}>
+            <label>Agent का पूरा नाम<input value={newAgentForm.name} onChange={e=>setNewAgentForm(p=>({...p,name:e.target.value}))} placeholder="पूरा नाम" required /></label>
+            <label>Agency का नाम<input value={newAgentForm.agency_name} onChange={e=>setNewAgentForm(p=>({...p,agency_name:e.target.value}))} placeholder="Agency Name" required /></label>
+            <label>मोबाइल नंबर<input type="tel" inputMode="numeric" maxLength={10} value={newAgentForm.mobile} onChange={e=>setNewAgentForm(p=>({...p,mobile:e.target.value.replace(/\D/g,"").slice(0,10)}))} placeholder="10 अंकों का मोबाइल" required /></label>
+            <label>Login Password<input type="password" minLength={8} autoComplete="new-password" value={newAgentForm.password} onChange={e=>setNewAgentForm(p=>({...p,password:e.target.value}))} placeholder="कम से कम 8 अक्षर" required /></label>
+            <label>जिला<select value={newAgentForm.district} onChange={e=>setNewAgentForm(p=>({...p,district:e.target.value,block:""}))} required><option value="">-- जिला चुनें --</option>{[...DISTRICTS].sort((a,b)=>String(a).localeCompare(String(b),"hi")).map(d=><option key={d} value={d}>{d}</option>)}</select></label>
+            <label>ब्लॉक / तहसील<select value={newAgentForm.block} onChange={e=>setNewAgentForm(p=>({...p,block:e.target.value}))} required disabled={!newAgentForm.district}><option value="">-- ब्लॉक चुनें --</option>{getBlocksForDistrict(newAgentForm.district).map(b=><option key={b} value={b}>{b}</option>)}</select></label>
+            <label style={{gridColumn:"1/-1"}}>Office Address<textarea rows={3} value={newAgentForm.office_address} onChange={e=>setNewAgentForm(p=>({...p,office_address:e.target.value}))} placeholder="एजेंसी / ऑफिस का पूरा पता" required /></label>
+            <div className="bmm-form-actions"><button className="bmm-btn bmm-btn-primary" type="submit" disabled={loading}><Save size={16}/> {loading ? "Agent बनाया जा रहा है..." : "Agent Create करें"}</button><button className="bmm-btn bmm-btn-light" type="button" disabled={loading} onClick={()=>{setNewAgentForm(INITIAL_AGENT);setCreatedAgent(null);clearMessages();}}>Reset</button><button className="bmm-btn bmm-btn-light" type="button" onClick={()=>navigate("agents")}>Agent Management</button></div>
+          </form>
+        </div>
+      </> },
+      rules: { title: "Rules Management", subtitle: "वेबसाइट और Agent के नियम", body: <div className="bmm-card"><h3>वर्तमान Agent Rule</h3><p>नया Assigned Booking मिलने के बाद Agent को <strong>24 घंटे</strong> के भीतर स्वीकार करना होगा। समय पूरा होने पर Booking Admin के पास वापस जाएगी।</p><p className="bmm-muted">नोट: आपके Backend में Rules CRUD API उपलब्ध नहीं है। नियम को Dashboard से Save/Edit करने के लिए Backend API और database migration जोड़ना आवश्यक है।</p></div> },
+      banners: { title: "Banner Management", subtitle: "Home Page के प्रचार बैनर", body: <div className="bmm-card"><h3>Banner Control</h3><p className="bmm-muted">Banner जोड़ने, बदलने, क्रम बदलने और हटाने के लिए अभी Backend में Banner API / Storage उपलब्ध नहीं है। इस सेक्शन का UI/API integration अगला काम रहेगा।</p></div> },
+      calculator: { title: "Calculator Management", subtitle: "Calculator की सेव की गई गणनाएँ", body: <div className="bmm-card"><h3>Calculator Records</h3><p className="bmm-muted">Customer Calculator के Saved Records और PDF History दिखाने के लिए Backend में Admin Calculator Records API जोड़ना बाकी है।</p></div> },
+      reports: { title: "Reports & Accounts", subtitle: "Booking, Agent और Commission की रिपोर्ट", body: <div className="bmm-card"><h3>वर्तमान रिपोर्ट सारांश</h3><div className="bmm-stats-grid"><div className="bmm-stat"><div><p>Total Bookings</p><h2>{bookings.length}</h2></div></div><div className="bmm-stat"><div><p>Completed</p><h2>{bookings.filter(b => ["पूर्ण","काम पूरा"].includes(b.status)).length}</h2></div></div><div className="bmm-stat"><div><p>Agents</p><h2>{agents.length}</h2></div></div><div className="bmm-stat"><div><p>Rates</p><h2>{rates.length}</h2></div></div></div><p className="bmm-muted">PDF / Excel Export और वास्तविक आय-व्यय Ledger के लिए Reports API जोड़ना बाकी है।</p></div> },
+      admins: { title: "Admin Security", subtitle: "Single Main Admin — केवल एक Admin Account", body: <div className="bmm-card"><h3><ShieldCheck size={19}/> केवल एक Main Admin</h3><p>इस वेबसाइट में केवल एक Main Admin Account रहेगा। उसी Admin के पास Bookings, Agents, Customers, Rates, Commissions, Website और सभी Settings का पूरा अधिकार होगा।</p><ul className="bmm-security-list"><li>Sub-Admin Account बनाने की सुविधा नहीं होगी।</li><li>दूसरा Admin Account Register या Create नहीं किया जा सकेगा।</li><li>Admin Login और Password Backend पर सुरक्षित रखे जाएँगे।</li><li>महत्वपूर्ण बदलावों का Activity Log रखा जाएगा।</li></ul><p className="bmm-muted">यह Dashboard में तय की गई व्यवस्था है। Backend में भी एक ही Admin को enforce करने के लिए Admin registration/role APIs की जाँच जरूरी है।</p></div> },
+      notifications: { title: "Notifications", subtitle: "Backend से प्राप्त Admin Alerts", body: <div className="bmm-card"><h3>Notifications ({adminNotifications.length})</h3>{!adminNotifications.length ? <p className="bmm-muted">कोई Notification नहीं मिली।</p> : <div className="bmm-table-wrap"><table className="bmm-table"><thead><tr><th>शीर्षक</th><th>विवरण</th><th>तारीख</th><th>स्थिति</th><th>Action</th></tr></thead><tbody>{adminNotifications.map(n => <tr key={n.id}><td>{n.title || n.type || "Notification"}</td><td>{n.message || "—"}</td><td>{formatDate(n.created_at)}</td><td>{Number(n.is_read) ? "पढ़ी गई" : "नई"}</td><td>{!Number(n.is_read) && <button className="bmm-btn bmm-btn-primary" onClick={async()=>{try{await apiRequest(`/admin/notifications/${n.id}/read`,{method:"PATCH"},user);await loadAdminNotifications();flash("Notification पढ़ी गई।")}catch(e){fail(getError(e))}}}>Read</button>}</td></tr>)}</tbody></table></div>}</div> },
+      complaints: { title: "Complaints", subtitle: "Agent और Customer की शिकायतें", body: <div className="bmm-card"><h3>Complaint Management</h3><p className="bmm-muted">Agent Dashboard में Complaint सुविधा है, लेकिन Admin के लिए सभी शिकायतें देखने और Status बदलने का API अभी उपलब्ध Backend में नहीं मिला।</p></div> },
+      feedback: { title: "Feedback & Ratings", subtitle: "Customer Feedback और 5-Star Rating", body: <div className="bmm-card"><h3>Customer Feedback</h3><p className="bmm-muted">Feedback और Rating को सेव/Approve/Reply करने के लिए Backend में संबंधित table और Admin API जोड़ना बाकी है।</p></div> },
+    };
+    const section = sections[page];
+    if (!section) return null;
+    return <><SectionTitle title={section.title} subtitle={section.subtitle} onRefresh={() => page === "customers" ? loadPendingUsers().catch(e=>fail(getError(e))) : page === "notifications" ? loadAdminNotifications().catch(e=>fail(getError(e))) : loadDashboard()} loading={loading}/>{section.body}</>;
+  };
 
+  return <div className="bmm-admin">
+    <style>{`
+      .bmm-admin{min-height:100vh;background:#f3f6fb;color:#172033;font-family:Inter,Arial,sans-serif}.bmm-layout{display:flex;min-height:100vh}
+      .bmm-sidebar{width:260px;flex-shrink:0;background:#101b34;color:#fff;padding:22px 14px;display:flex;flex-direction:column}.bmm-brand{display:flex;gap:12px;align-items:center;padding:8px 10px 24px;border-bottom:1px solid #293650;margin-bottom:18px}
+      .bmm-brand-icon{background:#1677ff;border-radius:12px;width:43px;height:43px;display:grid;place-items:center}.bmm-brand h2{font-size:16px;margin:0 0 4px}.bmm-brand p{font-size:12px;color:#aebbd2;margin:0}
+      .bmm-nav{display:grid;gap:6px;overflow-y:auto;max-height:calc(100vh - 190px);padding-right:3px}.bmm-nav button{display:flex;align-items:center;gap:12px;border:0;background:transparent;color:#c4cde0;text-align:left;padding:12px;border-radius:9px;cursor:pointer;font-size:13px}.bmm-nav button:hover,.bmm-nav button.active{background:#1d3154;color:#fff}.bmm-nav button.active{box-shadow:inset 3px 0 #45a1ff}
+      .bmm-sidebar-bottom{margin-top:auto;display:grid;gap:8px;padding-top:20px}.bmm-sidebar-bottom button{display:flex;align-items:center;gap:10px;background:transparent;color:#d6deed;border:1px solid #34435f;padding:11px;border-radius:8px;cursor:pointer}
+      .bmm-main{flex:1;min-width:0;padding:28px}.bmm-topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;gap:12px}.bmm-topbar h1{font-size:23px;margin:0}.bmm-topbar p{font-size:13px;color:#78859b;margin:5px 0 0}
+      .bmm-icon-btn{border:1px solid #dce3ee;background:#fff;border-radius:9px;padding:9px;display:none;cursor:pointer}.bmm-section-title{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:22px}.bmm-section-title h2{font-size:22px;margin:0 0 6px}.bmm-section-title p{margin:0;color:#7a879b;font-size:13px}
+      .bmm-stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:22px}.bmm-stat,.bmm-card{background:#fff;border:1px solid #e6ebf3;border-radius:14px;box-shadow:0 3px 14px #17203308}.bmm-stat{display:flex;gap:14px;align-items:center;padding:20px}
+      .bmm-stat-icon{width:46px;height:46px;display:grid;place-items:center;border-radius:12px}.bmm-stat-icon.blue{background:#e6f0ff;color:#1769d2}.bmm-stat-icon.orange{background:#fff0dc;color:#b96900}.bmm-stat-icon.purple{background:#f0eaff;color:#7542d8}.bmm-stat-icon.green{background:#e1f8eb;color:#14834a}
+      .bmm-stat p{font-size:12px;color:#77849a;margin:0 0 5px}.bmm-stat h2{font-size:24px;margin:0}.bmm-card{padding:20px;margin-bottom:20px;min-width:0}.bmm-card h3{font-size:16px;margin:0 0 18px}.bmm-quick-actions{display:flex;flex-wrap:wrap;gap:10px}
+      .bmm-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:8px;padding:10px 13px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap}.bmm-btn:disabled{opacity:.55;cursor:not-allowed}.bmm-btn-primary{background:#1769e0;color:#fff}.bmm-btn-success{background:#e2f8ea;color:#087a3f}.bmm-btn-danger{background:#ffebeb;color:#b42318}.bmm-btn-light{background:#edf2f8;color:#31425b}
+      .bmm-toolbar{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e0e7f1;border-radius:10px;padding:0 13px;margin-bottom:16px;max-width:460px}.bmm-toolbar input{width:100%;border:0;outline:0;padding:13px 0;background:transparent;font-size:13px}
+      .bmm-table-wrap{width:100%;overflow-x:auto}.bmm-table{border-collapse:collapse;width:100%;font-size:12px;min-width:700px}.bmm-table th{text-align:left;background:#f6f8fc;color:#62718a;font-weight:700}.bmm-table td,.bmm-table th{padding:13px 12px;border-bottom:1px solid #edf0f5;vertical-align:middle;line-height:1.6}.bmm-table td{color:#354158}
+      .bmm-table select,.bmm-form-grid input,.bmm-form-grid select{border:1px solid #dce4ef;border-radius:8px;padding:9px;background:#fff;max-width:190px;font-size:12px;color:#243047}.bmm-actions{display:flex;gap:6px;flex-wrap:wrap}.bmm-badge{display:inline-block;border-radius:30px;background:#e9f2ff;color:#155bc0;padding:5px 9px;font-size:11px}.bmm-muted{color:#7a879b;font-size:13px;line-height:1.7}
+      .bmm-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.bmm-form-grid label{display:grid;gap:7px;font-size:12px;font-weight:600;color:#536179}.bmm-form-grid input,.bmm-form-grid select{max-width:none;width:100%;box-sizing:border-box}.bmm-form-actions{grid-column:1/-1;display:flex;gap:10px}
+      .bmm-alert{border-radius:9px;padding:12px 14px;margin-bottom:18px;font-size:13px;line-height:1.6}.bmm-alert.error{background:#fff0f0;border:1px solid #ffd4d4;color:#a11b1b}.bmm-alert.success{background:#e9f9ef;border:1px solid #c4efd3;color:#087a3f}.bmm-setting-row{display:flex;align-items:center;gap:13px;padding:15px 0;border-bottom:1px solid #edf0f5}.bmm-setting-row p{margin:5px 0 0;color:#78859b;font-size:13px}
+      .bmm-analytics-heading{margin:26px 0 14px}.bmm-analytics-heading h2{display:flex;align-items:center;gap:8px}.bmm-analytics-controls{display:flex;gap:8px;align-items:center}.bmm-analytics-controls select{border:1px solid #dce4ef;border-radius:8px;padding:9px;background:#fff;color:#243047;font-size:12px}.bmm-analytics-unavailable{border-color:#f2d49a;background:#fffaf0}.bmm-analytics-grid{margin-bottom:16px}.bmm-analytics-columns{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}.bmm-analytics-columns .bmm-card{min-width:0}.bmm-bars{height:190px;display:flex;align-items:flex-end;gap:10px;overflow-x:auto;padding:8px 2px 0}.bmm-bar-item{min-width:30px;flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px}.bmm-bar-value{font-size:10px;color:#64748b}.bmm-bar-track{height:130px;width:100%;max-width:34px;background:#edf2f8;border-radius:7px 7px 3px 3px;display:flex;align-items:flex-end;overflow:hidden}.bmm-bar-fill{width:100%;background:linear-gradient(180deg,#48a3ff,#1769e0);border-radius:7px 7px 0 0}.bmm-bar-item small{font-size:9px;color:#718096;white-space:nowrap}.bmm-device-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.bmm-device-list>div{display:flex;justify-content:space-between;gap:10px;background:#f6f8fc;border-radius:8px;padding:12px;font-size:12px}.bmm-security-list{color:#354158;font-size:13px;line-height:2;padding-left:20px}
+      .bmm-spin{animation:bmmspin 1s linear infinite}@keyframes bmmspin{to{transform:rotate(360deg)}}@media(max-width:1050px){.bmm-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.bmm-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+      @media(max-width:760px){.bmm-analytics-heading{align-items:flex-start;flex-direction:column}.bmm-analytics-controls{width:100%;flex-wrap:wrap}.bmm-analytics-columns{grid-template-columns:1fr}.bmm-device-list{grid-template-columns:1fr}.bmm-sidebar{position:fixed;z-index:50;top:0;bottom:0;left:0;transform:translateX(-100%);transition:transform .2s;width:260px}.bmm-sidebar.open{transform:translateX(0)}.bmm-main{padding:16px}.bmm-icon-btn{display:inline-flex}.bmm-topbar h1{font-size:18px}.bmm-stats-grid{grid-template-columns:1fr 1fr;gap:10px}.bmm-stat{padding:13px;gap:9px}.bmm-stat-icon{width:37px;height:37px}.bmm-stat h2{font-size:20px}.bmm-stat p{font-size:11px}.bmm-section-title h2{font-size:19px}.bmm-section-title p{font-size:12px}.bmm-form-grid{grid-template-columns:1fr}.bmm-form-actions{grid-column:auto}}
+      @media(max-width:420px){.bmm-stats-grid{grid-template-columns:1fr}.bmm-section-title{align-items:flex-start}.bmm-section-title .bmm-btn{padding:9px}.bmm-quick-actions .bmm-btn{width:100%}}
+    `}</style>
+    <div className="bmm-layout">
       <aside className={`bmm-sidebar ${sidebarOpen ? "open" : ""}`}>
-        <div className="bmm-sidebar-brand">
-          <div className="bmm-brand-icon">
-            <Droplets size={28} />
-          </div>
-
-          <div>
-            <h2>Borewell Mitra</h2>
-            <p>MP Admin Panel</p>
-          </div>
-        </div>
-
-        <div className="bmm-admin-profile">
-          <div className="bmm-admin-avatar">
-            <ShieldCheck size={25} />
-          </div>
-
-          <div>
-            <strong>{user?.name || "Administrator"}</strong>
-            <span>Super Admin</span>
-          </div>
-        </div>
-
-        <nav className="bmm-sidebar-nav">
-          <p className="bmm-nav-heading">MAIN MENU</p>
-
-          {navItems.map(item => {
-            const Icon = item.icon;
-
-            return (
-              <button
-                key={item.id}
-                className={
-                  activePage === item.id
-                    ? "bmm-nav-item active"
-                    : "bmm-nav-item"
-                }
-                onClick={() => navigate(item.id)}
-              >
-                <Icon size={19} />
-                <span>{item.label}</span>
-
-                {item.id === "approvals" && pendingUsers.length > 0 && (
-                  <span className="bmm-nav-count">
-                    {pendingUsers.length}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="bmm-sidebar-bottom">
-          {onBack && (
-            <button
-              className="bmm-nav-item"
-              onClick={onBack}
-            >
-              <ArrowLeft size={18} />
-              Website पर वापस जाएँ
-            </button>
-          )}
-
-          <button
-            className="bmm-nav-item bmm-logout"
-            onClick={onLogout}
-          >
-            <LogOut size={18} />
-            Logout
-          </button>
-        </div>
+        <div className="bmm-brand"><div className="bmm-brand-icon"><Droplets size={25}/></div><div><h2>Borewells Mitra</h2><p>Admin Control Panel</p></div></div>
+        <nav className="bmm-nav">{navItems.map(item => { const Icon = item.icon; return <button key={item.id} className={activePage === item.id ? "active" : ""} onClick={() => navigate(item.id)}><Icon size={18}/>{item.label}</button>; })}</nav>
+        <div className="bmm-sidebar-bottom"><button onClick={onBack}><ArrowLeft size={17}/> वेबसाइट पर वापस</button><button onClick={onLogout}><LogOut size={17}/> Logout</button></div>
       </aside>
-
-      {sidebarOpen && (
-        <div
-          className="bmm-sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* MAIN CONTENT */}
-
-      <main className="bmm-admin-main">
-
-        <header className="bmm-topbar">
-          <div>
-            <h2>
-              {navItems.find(item => item.id === activePage)?.label}
-            </h2>
-            <p>Welcome to Borewell Mitra MP Admin Panel</p>
-          </div>
-
-          <div className="bmm-topbar-actions">
-            <button
-              className="bmm-btn bmm-btn-light"
-              onClick={loadDashboard}
-              disabled={loading}
-            >
-              <RefreshCw
-                size={16}
-                className={loading ? "bmm-spin" : ""}
-              />
-              Refresh
-            </button>
-
-            <div className="bmm-topbar-user">
-              <ShieldCheck size={19} />
-              <span>Admin</span>
-            </div>
-          </div>
-        </header>
-
-        <div className="bmm-admin-content">
-
-          {error && (
-            <div className="bmm-alert bmm-alert-error">
-              <XCircle size={19} />
-              <span>{error}</span>
-              <button onClick={() => setError("")}>
-                <X size={17} />
-              </button>
-            </div>
-          )}
-
-          {notice && (
-            <div className="bmm-alert bmm-alert-success">
-              <CheckCircle2 size={19} />
-              <span>{notice}</span>
-              <button onClick={() => setNotice("")}>
-                <X size={17} />
-              </button>
-            </div>
-          )}
-
-          {loading && (
-            <div className="bmm-loading">
-              <RefreshCw size={17} className="bmm-spin" />
-              Processing...
-            </div>
-          )}
-
-          {renderPage()}
-
-          <footer className="bmm-admin-footer">
-            <p>
-              © {new Date().getFullYear()} Borewell Mitra MP.
-              All Rights Reserved.
-            </p>
-          </footer>
-
-        </div>
+      <main className="bmm-main">
+        <header className="bmm-topbar"><div style={{display:"flex",alignItems:"center",gap:12}}><button className="bmm-icon-btn" onClick={() => setSidebarOpen(v => !v)}>{sidebarOpen ? <X size={19}/> : <Menu size={19}/>}</button><div><h1>Borewells Mitra</h1><p>Welcome, {user?.name || "Admin"}</p></div></div>
+          <button className="bmm-btn bmm-btn-light" onClick={loadDashboard} disabled={loading}><RefreshCw size={16} className={loading ? "bmm-spin" : ""}/> Refresh All</button></header>
+        {error && <div className="bmm-alert error"><AlertCircle size={17} style={{verticalAlign:"middle",marginRight:7}}/>{error}</div>}
+        {notice && <div className="bmm-alert success"><CheckCircle2 size={17} style={{verticalAlign:"middle",marginRight:7}}/>{notice}</div>}
+        {activePage === "dashboard" && renderDashboard()}{activePage === "customers" && renderExtraSection("customers")}
+        {activePage === "agents" && renderAgents()}{activePage === "createAgent" && renderExtraSection("createAgent")}
+        {activePage === "bookings" && renderBookings()}{activePage === "rates" && renderRates()}
+        {activePage === "rules" && renderExtraSection("rules")}{activePage === "banners" && renderExtraSection("banners")}
+        {activePage === "referrals" && renderReferrals()}{activePage === "calculator" && renderExtraSection("calculator")}
+        {activePage === "reports" && renderExtraSection("reports")}{activePage === "admins" && renderExtraSection("admins")}
+        {activePage === "settings" && renderSettings()}{activePage === "notifications" && renderExtraSection("notifications")}
+        {activePage === "complaints" && renderExtraSection("complaints")}{activePage === "feedback" && renderExtraSection("feedback")}
+        {activePage === "blockBanners" && renderBlockBanners()}
+        <footer style={{textAlign:"center",color:"#98a3b5",fontSize:11,padding:"20px 0 5px"}}>© {new Date().getFullYear()} Borewells Mitra · Admin Panel</footer>
       </main>
     </div>
-  );
+  </div>;
 }

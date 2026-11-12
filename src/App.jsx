@@ -6,6 +6,8 @@ import AdminDashboard from './AdminDashboard';
 import AgentDashboard from './AgentDashboard.jsx';
 import RateList from "./RateList";
 import Rules from "./Rules.jsx";
+import AgentContact from './AgentContact.jsx';
+import Calculator from './Calculator.jsx';
 import {
   Droplets, Menu, X, MapPin, Phone, ArrowRight, Drill,
   ShieldCheck, Users, ClipboardList, LogIn, LogOut,
@@ -60,10 +62,46 @@ function dashboardPage(role) {
   if (role === 'agent') return 'agent';
   return 'dashboard';
 }
+// सभी Pages के URL
+const PAGE_URLS = {
+  home: '/',
+  rates: '/rates',
+  'agent-contact': '/agents',
+  calculator: '/calculator',
+  booking: '/booking',
+  'booking-status': '/booking-status',
+  rules: '/rules',
+  auth: '/login',
+  dashboard: '/customer-dashboard',
+  agent: '/agent-dashboard',
+  admin: '/admin-dashboard'
+};
 
+// URL से Page पहचानना
+function getPageFromURL() {
+  const path = window.location.pathname.replace(/\/+$/, '') || '/';
+
+  const routes = {
+    '/': 'home',
+    '/rates': 'rates',
+    '/agents': 'agent-contact',
+    '/agent-contact': 'agent-contact',
+    '/calculator': 'calculator',
+    '/booking': 'booking',
+    '/booking-status': 'booking-status',
+    '/rules': 'rules',
+    '/login': 'auth',
+    '/register': 'auth',
+    '/customer-dashboard': 'dashboard',
+    '/agent-dashboard': 'agent',
+    '/admin-dashboard': 'admin'
+  };
+
+  return routes[path] || 'home';
+}
 export default function App() {
 
-  const [page, setPage] = useState('home');
+  const [page, setPage] = useState(getPageFromURL);
 
   const [user, setUser] = useState(() => {
     try {
@@ -140,11 +178,31 @@ export default function App() {
   }
 
   function go(next) {
-    setPage(next);
+  const url = PAGE_URLS[next] || '/';
+
+  window.history.pushState({}, '', url);
+
+  setPage(next);
+  setMenuOpen(false);
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
+// Browser Back और Forward URL Control
+useEffect(() => {
+  function handlePopState() {
+    setPage(getPageFromURL());
     setMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  window.addEventListener('popstate', handlePopState);
+
+  return () => {
+    window.removeEventListener('popstate', handlePopState);
+  };
+}, []);
   const setField = (setter, field, value) => {
     setter(old => ({
       ...old,
@@ -732,23 +790,10 @@ export default function App() {
         {/* RULES & CONDITIONS */}
         {page === 'rules' && <Rules />}
 
-        {/* AGENT CONTACT */}
-        {page === 'agent-contact' && (
-          <section className="section container">
-
-            <SectionTitle
-              eyebrow="AGENT NETWORK"
-              title="एजेंट संपर्क"
-              subtitle="अपने जिले और ब्लॉक के स्वीकृत एवं सक्रिय एजेंटों से संपर्क करें।"
-            />
-
-            <AgentList
-              agents={publicAgents}
-              loading={agentsLoading}
-            />
-
-          </section>
-        )}
+        {/* NEW AGENT CONTACT */}
+{page === 'agent-contact' && (
+  <AgentContact />
+)}
 
         {/* CALCULATOR */}
         {page === 'calculator' && <Calculator />}
@@ -1917,99 +1962,6 @@ function AgentList({ agents = [], loading = false, limit }) {
   );
 }
 
-/* =====================================
-   CALCULATOR
-===================================== */
-
-function Calculator() {
-
-  const [depth, setDepth] = useState('');
-  const [rate, setRate] = useState('');
-  const [extra, setExtra] = useState('0');
-
-  const total =
-    (Number(depth) || 0) * (Number(rate) || 0) +
-    (Number(extra) || 0);
-
-  return (
-    <section className="section container narrow">
-
-      <SectionTitle
-        eyebrow="BOREWELL ESTIMATE"
-        title="बोरवेल कैलकुलेटर"
-        subtitle="गहराई और प्रति फुट रेट डालकर अनुमान देखें।"
-      />
-
-      <div className="form-card">
-
-        <label>
-          बोरवेल की गहराई (फुट)
-
-          <input
-            type="number"
-            min="0"
-            value={depth}
-            onChange={e => setDepth(e.target.value)}
-            placeholder="उदाहरण: 300"
-          />
-        </label>
-
-        <label>
-          प्रति फुट रेट (₹)
-
-          <input
-            type="number"
-            min="0"
-            value={rate}
-            onChange={e => setRate(e.target.value)}
-            placeholder="प्रति फुट रेट"
-          />
-        </label>
-
-        <label>
-          अन्य खर्च (₹)
-
-          <input
-            type="number"
-            min="0"
-            value={extra}
-            onChange={e => setExtra(e.target.value)}
-          />
-        </label>
-
-        <div className="referral-box">
-
-          <div>
-            <span className="eyebrow">कुल अनुमान</span>
-
-            <h3>
-              ₹ {total.toLocaleString('en-IN')}
-            </h3>
-
-            <p>
-              यह प्रारंभिक गणना है; अंतिम रेट एजेंट/एडमिन से पुष्टि करें।
-            </p>
-          </div>
-
-        </div>
-
-        <button
-          type="button"
-          className="btn outline"
-          onClick={() => {
-            setDepth('');
-            setRate('');
-            setExtra('0');
-          }}
-        >
-          रीसेट करें
-        </button>
-
-      </div>
-
-    </section>
-  );
-}
 
 /* =====================================
    PUBLIC BOOKING STATUS

@@ -146,7 +146,21 @@ ON agent_profile_requests(status);
 CREATE INDEX IF NOT EXISTS idx_agent_profile_requests_agent
 ON agent_profile_requests(agent_id);
 `);
+// --------------------------------------------------
+// BLOCK WISE BANNER TABLE
+// --------------------------------------------------
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS block_banners (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    district TEXT NOT NULL,
+    block TEXT NOT NULL,
+    image_data TEXT NOT NULL,
+    image_type TEXT NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(district, block)
+  );
+`);
 // --------------------------------------------------
 // SAFE DATABASE MIGRATION
 // --------------------------------------------------
@@ -958,13 +972,20 @@ app.get("/api/rates", (req, res) => {
 
 
 // --------------------------------------------------
-// PUBLIC AREA-WISE ACTIVE AGENTS
+// PUBLIC: APPROVED ACTIVE AGENTS BY DISTRICT + BLOCK
 // --------------------------------------------------
 
 app.get("/api/public/agents", (req, res) => {
   try {
     const district = String(req.query.district || "").trim();
     const block = String(req.query.block || "").trim();
+
+    if (!district || !block) {
+      return res.status(400).json({
+        success: false,
+        message: "पहले District और Block चुनें"
+      });
+    }
 
     const agents = db.prepare(`
       SELECT
@@ -980,10 +1001,10 @@ app.get("/api/public/agents", (req, res) => {
         AND status = 'approved'
         AND is_active = 1
         AND deleted_at IS NULL
-        AND (? = '' OR district = ?)
-        AND (? = '' OR block = ?)
-      ORDER BY district, block, agency_name
-    `).all(district, district, block, block);
+        AND district = ?
+        AND block = ?
+      ORDER BY agency_name, name
+    `).all(district, block);
 
     res.json({
       success: true,
@@ -993,7 +1014,6 @@ app.get("/api/public/agents", (req, res) => {
     sendError(res, error);
   }
 });
-
 // --------------------------------------------------
 // PUBLIC BOOKING
 // --------------------------------------------------
@@ -3289,7 +3309,162 @@ registerReferralRoutes(
   authenticateToken,
   adminOnly
 );
+// --------------------------------------------------
+// PUBLIC: GET BLOCK BANNER
+// --------------------------------------------------
 
+app.get("/api/public/block-banner", (req, res) => {
+  try {
+    const district = String(req.query.district || "").trim();
+    const block = String(req.query.block || "").trim();
+
+    if (!district || !block) {
+      return res.status(400).json({
+        success: false,
+        message: "District और Block आवश्यक हैं"
+      });
+    }
+
+    const banner = db.prepare(`
+      SELECT district, block, image_data, image_type, updated_at
+      FROM block_banners
+      WHERE district = ? AND block = ?
+    `).get(district, block);
+
+    res.json({
+      success: true,
+      banner: banner || null
+    });
+  } catch (error) {
+    sendError(res, error);
+  }
+});
+
+// --------------------------------------------------
+// ADMIN: ALL BLOCK BANNERS
+// --------------------------------------------------
+
+app.get(
+  "/api/admin/block-banners",
+  authenticateToken,
+  adminOnly,
+  (req, res) => {
+    try {
+      const banners = db.prepare(`
+        SELECT id, district, block, image_type, updated_at
+        FROM block_banners
+        ORDER BY district, block
+      `).all();
+
+      res.json({
+        success: true,
+        banners
+      });
+    } catch (error) {
+      sendError(res, error);
+    }
+  }
+);
+
+// --------------------------------------------------
+// ADMIN: UPLOAD / UPDATE BLOCK BANNER
+// --------------------------------------------------
+
+app.post(
+  "/api/admin/block-banners",
+  authenticateToken,
+  adminOnly,
+  (req, res) => {
+    try {
+      const district = String(req.body.district || "").trim();
+      const block = String(req.body.block || "").trim();
+      const imageData = String(req.body.imageData || "").trim();
+
+      if (!district || !block || !imageData) {
+        return res.status(400).json({
+          success: false,
+          message: "District, Block और Banner Image आवश्यक हैं"
+        });
+      }
+
+      if (imageData.length > 750000) {
+        return res.status(400).json({
+          success: false,
+          message: "Image का आकार अधिक है। 500 KB से छोटी Image चुनें।"
+        });
+      }
+
+      const match = imageData.match(
+        /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/
+      );
+
+      if (!match) {
+        return res.status(400).json({
+          success: false,
+          message: "केवल PNG, JPG या WEBP Image स्वीकार है"
+        });
+      }
+
+      const imageType = match[1];
+
+      db.prepare(`
+        INSERT INTO block_banners (
+          district,
+          block,
+          image_data,
+          image_type,
+          updated_at
+        )
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+
+        ON CONFLICT(district, block)
+        DO UPDATE SET
+          image_data = excluded.image_data,
+          image_type = excluded.image_type,
+          updated_at = CURRENT_TIMESTAMP
+      `).run(district, block, imageData, imageType);
+
+      res.json({
+        success: true,
+        message: `${district} - ${block} का Banner Save हो गया`
+      });
+    } catch (error) {
+      sendError(res, error);
+    }
+  }
+);
+
+// --------------------------------------------------
+// ADMIN: DELETE BLOCK BANNER
+// --------------------------------------------------
+
+app.delete(
+  "/api/admin/block-banners/:id",
+  authenticateToken,
+  adminOnly,
+  (req, res) => {
+    try {
+      const result = db.prepare(`
+        DELETE FROM block_banners
+        WHERE id = ?
+      `).run(Number(req.params.id));
+
+      if (!result.changes) {
+        return res.status(404).json({
+          success: false,
+          message: "Banner नहीं मिला"
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Block Banner Delete हो गया"
+      });
+    } catch (error) {
+      sendError(res, error);
+    }
+  }
+);
 // --------------------------------------------------
 // 404 ROUTE
 // --------------------------------------------------
