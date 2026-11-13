@@ -14,7 +14,7 @@ import {
 
 import { DISTRICTS, BLOCKS } from "./areas.js";
 
-const API = `${window.location.protocol}//${window.location.hostname}:4000/api`;
+const API = "https://borewells-mitra-api.onrender.com/api";
 
 function getBlocks(district) {
   const list = BLOCKS?.[district];
