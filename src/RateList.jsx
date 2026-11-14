@@ -69,57 +69,56 @@ export default function RateList() {
   // LOAD ACTIVE SERVICES
   // --------------------------------
 
-  useEffect(() => {
-    let active = true;
+  const loadServices = useCallback(async (signal, silent = false) => {
+    try {
+      const response = await fetch(
+        `${API}/services`,
+        signal ? { signal } : {}
+      );
 
-    async function loadServices() {
-      try {
-        const response = await fetch(`${API}/services`);
+      const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error("Services लोड नहीं हुईं");
-        }
+      if (!response.ok) {
+        throw new Error(data.message || "Services लोड नहीं हुईं");
+      }
 
-        const data = await response.json();
+      const list = Array.isArray(data)
+        ? data
+        : Array.isArray(data.services)
+        ? data.services
+        : [];
 
-        if (!Array.isArray(data)) {
-          throw new Error("Invalid Services Response");
-        }
-
-        if (active) {
-          setServices(data);
-          setServicesLoaded(true);
-        }
-      } catch (err) {
+      setServices(list);
+      setServicesLoaded(true);
+    } catch (err) {
+      if (err.name !== "AbortError") {
         console.error("Services API Error:", err);
-
-        if (active) {
+        // Background refresh में पुरानी सही सूची न हटाएँ।
+        if (!silent) {
           setServices([]);
           setServicesLoaded(false);
+          setError("नई Services सर्वर से नहीं मिल पाईं। कृपया दोबारा रिफ्रेश करें।");
         }
       }
     }
-
-    loadServices();
-
-    return () => {
-      active = false;
-    };
   }, []);
+
 
   // --------------------------------
   // LOAD DISTRICT / BLOCK RATES
   // --------------------------------
 
   const loadRates = useCallback(
-    async (signal) => {
+    async (signal, silent = false) => {
       if (!district || !block) {
         setRates([]);
         return;
       }
 
-      setLoading(true);
-      setError("");
+      if (!silent) {
+        setLoading(true);
+        setError("");
+      }
 
       try {
         const params = new URLSearchParams({
@@ -151,19 +150,28 @@ export default function RateList() {
         if (err.name !== "AbortError") {
           console.error("Rates API Error:", err);
 
-          setRates([]);
-          setError(
-            "रेट सर्वर से नहीं मिल पाए। कृपया दोबारा प्रयास करें।"
-          );
+          // Background refresh में पहले से दिख रहे रेट सुरक्षित रखें।
+          if (!silent) {
+            setRates([]);
+            setError(
+              "रेट सर्वर से नहीं मिल पाए। कृपया दोबारा प्रयास करें।"
+            );
+          }
         }
       } finally {
-        if (!signal?.aborted) {
+        if (!signal?.aborted && !silent) {
           setLoading(false);
         }
       }
     },
     [district, block]
   );
+
+  const refreshAll = useCallback(() => {
+    setError("");
+    loadServices();
+    loadRates();
+  }, [loadServices, loadRates]);
 
   // --------------------------------
   // RESET WHEN DISTRICT CHANGES
@@ -189,10 +197,24 @@ export default function RateList() {
 
     const controller = new AbortController();
 
+    // क्षेत्र चुनते ही Services और Rates दोनों लोड करें।
+    loadServices(controller.signal);
     loadRates(controller.signal);
 
-    return () => controller.abort();
-  }, [district, block, loadRates]);
+    // Admin में Service या Rate बदलने पर अधिकतम 10 सेकंड में
+    // Homepage की सूची अपने-आप अपडेट हो जाएगी।
+    const refreshTimer = window.setInterval(() => {
+      if (!controller.signal.aborted) {
+        loadServices(undefined, true);
+        loadRates(undefined, true);
+      }
+    }, 10000);
+
+    return () => {
+      window.clearInterval(refreshTimer);
+      controller.abort();
+    };
+  }, [district, block, loadRates, loadServices]);
 
   // --------------------------------
   // COMBINE SERVICES + RATES
@@ -361,7 +383,7 @@ export default function RateList() {
           <button
             type="button"
             className="rl-refresh"
-            onClick={() => loadRates()}
+            onClick={refreshAll}
             disabled={loading || !district || !block}
           >
             <RefreshCw

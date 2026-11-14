@@ -9,7 +9,9 @@ import {
 
 const API = "https://borewells-mitra-api.onrender.com/api";
 const BOOKING_STATUSES = ["नई बुकिंग", "स्वीकृत", "कार्य प्रगति पर", "पूर्ण", "रद्द"];
-const INITIAL_RATE = { district: "", tehsil: "", block: "", drilling: "", repairing: "", casingPipe: "", msPipe: "", otherServices: "" };
+const INITIAL_RATE = { district: "", block: "", service: "", rate: "" };
+const INITIAL_SERVICE = { name: "", unit: "प्रति फुट", customUnit: "" };
+const SERVICE_UNITS = ["प्रति फुट", "Feet", "Meter", "Nos", "Job", "Per Unit", "Kg", "Hour", "Day"];
 const INITIAL_AGENT = { name: "", agency_name: "", mobile: "", password: "", district: "", block: "", office_address: "" };
 const getBlocksForDistrict = district => { const value = BLOCKS?.[district]; return Array.isArray(value) ? value : value && typeof value === "object" ? Object.keys(value) : []; };
 
@@ -46,6 +48,9 @@ export default function AdminDashboard({ user, onLogout, onBack }) {
   const [loading, setLoading] = useState(false), [error, setError] = useState(""), [notice, setNotice] = useState(""), [search, setSearch] = useState("");
   const [pendingUsers, setPendingUsers] = useState([]), [bookings, setBookings] = useState([]), [agents, setAgents] = useState([]), [rates, setRates] = useState([]), [referrals, setReferrals] = useState([]);
   const [rateForm, setRateForm] = useState(INITIAL_RATE), [editingRateId, setEditingRateId] = useState(null);
+  const [services, setServices] = useState([]);
+  const [serviceForm, setServiceForm] = useState(INITIAL_SERVICE);
+  const [editingServiceId, setEditingServiceId] = useState(null);
   const [expandedReferralId, setExpandedReferralId] = useState(null), [referralMembers, setReferralMembers] = useState({}), [membersLoadingId, setMembersLoadingId] = useState(null);
   const [selectedAgent, setSelectedAgent] = useState(null);
 const [editingAgent, setEditingAgent] = useState(false);
@@ -84,6 +89,10 @@ const [showAgentBookings, setShowAgentBookings] = useState(false);
   const loadRates = useCallback(async () => {
     const data = await apiRequest("/admin/rates", {}, user); setRates(Array.isArray(data) ? data : data.rates || []);
   }, [user]);
+  const loadServices = useCallback(async () => {
+    const data = await apiRequest("/admin/services", {}, user);
+    setServices((Array.isArray(data) ? data : data.services || []).sort((a, b) => Number(a.id) - Number(b.id)));
+  }, [user]);
   const loadReferrals = useCallback(async () => {
     const data = await apiRequest("/admin/referrals", {}, user); setReferrals(Array.isArray(data) ? data : data.referrals || []);
   }, [user]);
@@ -113,11 +122,11 @@ const [showAgentBookings, setShowAgentBookings] = useState(false);
   }, [analyticsRange, user]);
   const loadDashboard = useCallback(async () => {
     setLoading(true); clearMessages();
-    const results = await Promise.allSettled([loadPendingUsers(), loadBookings(), loadRates(), loadReferrals()]);
+    const results = await Promise.allSettled([loadPendingUsers(), loadBookings(), loadRates(), loadServices(), loadReferrals()]);
     const failures = results.filter(r => r.status === "rejected").map(r => getError(r.reason));
     if (failures.length) fail("कुछ जानकारी लोड नहीं हुई: " + failures.join(" | "));
     setLoading(false);
-  }, [loadPendingUsers, loadBookings, loadRates, loadReferrals]);
+  }, [loadPendingUsers, loadBookings, loadRates, loadServices, loadReferrals]);
   useEffect(() => { loadDashboard(); }, [loadDashboard]);
   useEffect(() => { loadAnalytics(); }, [loadAnalytics]);
   useEffect(() => setStats({
@@ -218,39 +227,75 @@ const [showAgentBookings, setShowAgentBookings] = useState(false);
   };
 
   const resetRateForm = () => { setRateForm(INITIAL_RATE); setEditingRateId(null); };
+  const resetServiceForm = () => { setServiceForm(INITIAL_SERVICE); setEditingServiceId(null); };
+  const saveService = async event => {
+    event.preventDefault(); clearMessages();
+    const unit = serviceForm.unit === "__custom__" ? serviceForm.customUnit.trim() : serviceForm.unit.trim();
+    const payload = { name: serviceForm.name.trim(), unit };
+    if (!payload.name || !payload.unit) return fail("Service का नाम और Unit भरना आवश्यक है।");
+    setLoading(true);
+    try {
+      if (editingServiceId) {
+        await apiRequest(`/admin/services/${editingServiceId}`, { method: "PATCH", body: JSON.stringify(payload) }, user);
+        flash("Service अपडेट हो गई और पुराने जुड़े Rates सुरक्षित रखे गए।");
+      } else {
+        await apiRequest("/admin/services", { method: "POST", body: JSON.stringify(payload) }, user);
+        flash("नई Service जोड़ दी गई।");
+      }
+      resetServiceForm(); await loadServices();
+    } catch (e) { fail(getError(e)); } finally { setLoading(false); }
+  };
+  const editService = service => {
+    const knownUnit = SERVICE_UNITS.includes(service.unit);
+    setEditingServiceId(service.id);
+    setServiceForm({ name: service.name || "", unit: knownUnit ? service.unit : "__custom__", customUnit: knownUnit ? "" : (service.unit || "") });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const toggleService = async service => {
+    const active = !(Number(service.active) === 1 || service.active === true);
+    setLoading(true); clearMessages();
+    try {
+      await apiRequest(`/admin/services/${service.id}`, { method: "PATCH", body: JSON.stringify({ active }) }, user);
+      flash(active ? "Service Active कर दी गई।" : "Service Inactive कर दी गई। पुराने Rates सुरक्षित हैं।");
+      await loadServices();
+    } catch (e) { fail(getError(e)); } finally { setLoading(false); }
+  };
+  const deleteService = async service => {
+    if (!window.confirm(`क्या आप “${service.name}” Service हटाना चाहते हैं? जिन Services के Rates/Requests मौजूद हैं, Backend उन्हें हटाने से रोकेगा।`)) return;
+    setLoading(true); clearMessages();
+    try {
+      await apiRequest(`/admin/services/${service.id}`, { method: "DELETE" }, user);
+      flash("Service हटा दी गई।"); await loadServices();
+    } catch (e) { fail(getError(e)); } finally { setLoading(false); }
+  };
   const saveRate = async event => {
     event.preventDefault(); clearMessages();
-    if (!rateForm.district.trim() || !rateForm.tehsil.trim() || !rateForm.block.trim()) return fail("जिला, तहसील और ब्लॉक भरना आवश्यक है।");
-    const payload = {
-      district: rateForm.district.trim(), tehsil: rateForm.tehsil.trim(), block: rateForm.block.trim(),
-      drilling: Number(rateForm.drilling || 0), repairing: Number(rateForm.repairing || 0),
-      casingPipe: Number(rateForm.casingPipe || 0), msPipe: Number(rateForm.msPipe || 0), otherServices: Number(rateForm.otherServices || 0)
-    };
+    const payload = { district: rateForm.district.trim(), block: rateForm.block.trim(), service: rateForm.service.trim(), rate: Number(rateForm.rate) };
+    if (!payload.district || !payload.block || !payload.service || rateForm.rate === "" || !Number.isFinite(payload.rate) || payload.rate < 0) {
+      return fail("जिला, ब्लॉक, Service और सही Rate भरना आवश्यक है।");
+    }
     setLoading(true);
     try {
       if (editingRateId) {
-        await apiRequest(`/admin/rates/${editingRateId}`, { method: "PUT", body: JSON.stringify(payload) }, user); flash("रेट अपडेट हो गया।");
+        await apiRequest(`/admin/rates/${editingRateId}`, { method: "PUT", body: JSON.stringify(payload) }, user);
+        flash("Block-wise Rate अपडेट हो गया।");
       } else {
-        await apiRequest("/admin/rates", { method: "POST", body: JSON.stringify(payload) }, user); flash("नया ब्लॉक रेट सेव हो गया।");
+        await apiRequest("/admin/rates", { method: "POST", body: JSON.stringify(payload) }, user);
+        flash("Block-wise Rate सेव हो गया।");
       }
       resetRateForm(); await loadRates();
     } catch (e) { fail(getError(e)); } finally { setLoading(false); }
   };
   const editRate = rate => {
     setEditingRateId(rate.id ?? rate.rate_id);
-    setRateForm({
-      district: rate.district || "", tehsil: rate.tehsil || "", block: rate.block || "",
-      drilling: String(rate.drilling ?? ""), repairing: String(rate.repairing ?? ""),
-      casingPipe: String(rate.casingPipe ?? rate.casing_pipe ?? ""), msPipe: String(rate.msPipe ?? rate.ms_pipe ?? ""),
-      otherServices: String(rate.otherServices ?? rate.other_services ?? "")
-    });
+    setRateForm({ district: rate.district || "", block: rate.block || "", service: rate.service || rate.service_name || "", rate: String(rate.rate ?? "") });
     setActivePage("rates"); window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const deleteRate = async rate => {
     const id = rate.id ?? rate.rate_id; if (!id) return fail("Rate ID नहीं मिली।");
-    if (!window.confirm("क्या आप यह ब्लॉक रेट हटाना चाहते हैं?")) return;
+    if (!window.confirm("क्या आप यह Block-wise Rate हटाना चाहते हैं?")) return;
     setLoading(true); clearMessages();
-    try { await apiRequest(`/admin/rates/${id}`, { method: "DELETE" }, user); flash("रेट हटा दिया गया।"); await loadRates(); }
+    try { await apiRequest(`/admin/rates/${id}`, { method: "DELETE" }, user); flash("Rate हटा दिया गया।"); await loadRates(); }
     catch (e) { fail(getError(e)); } finally { setLoading(false); }
   };
 
@@ -297,7 +342,7 @@ const [showAgentBookings, setShowAgentBookings] = useState(false);
     if (page === "notifications") loadAdminNotifications().catch(e => fail(getError(e)));
     if (page === "approvals") loadPendingUsers().catch(e => fail(getError(e)));
     if (page === "bookings" || page === "agents") loadBookings().catch(e => fail(getError(e)));
-    if (page === "rates") loadRates().catch(e => fail(getError(e)));
+    if (page === "rates") { loadRates().catch(e => fail(getError(e))); loadServices().catch(e => fail(getError(e))); }
     if (page === "referrals") loadReferrals().catch(e => fail(getError(e)));
     if (page === "blockBanners") loadBlockBanners();
   };
@@ -462,21 +507,38 @@ const saveAgentDetails = async event => {
   </>;
 
   const renderRates = () => <>
-    <SectionTitle title="Rate Management" subtitle="हर जिला, तहसील और ब्लॉक के लिए अलग रेट सेव करें" onRefresh={() => loadRates().catch(e => fail(getError(e)))} loading={loading}/>
-    <div className="bmm-card"><h3>{editingRateId ? "रेट में बदलाव करें" : "नया ब्लॉक रेट जोड़ें"}</h3>
-      <form className="bmm-form-grid" onSubmit={saveRate}>
-        <label>जिला<select value={rateForm.district} onChange={e => setRateForm(p => ({...p,district:e.target.value,tehsil:"",block:""}))} required><option value="">-- जिला चुनें --</option>{DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}</select></label>
-        <label>तहसील<input value={rateForm.tehsil} onChange={e => setRateForm(p => ({...p,tehsil:e.target.value,block:""}))} placeholder="तहसील का नाम" required/></label>
-        <label>ब्लॉक<select value={rateForm.block} onChange={e => setRateForm(p => ({...p,block:e.target.value}))} required disabled={!rateForm.district}><option value="">-- ब्लॉक चुनें --</option>{(BLOCKS[rateForm.district] || []).map(b => <option key={b} value={b}>{b}</option>)}</select></label>
-        {[["drilling","Drilling Rate (₹)"],["repairing","Repairing Rate (₹)"],["casingPipe","Casing Pipe Rate (₹)"],["msPipe","MS Pipe Rate (₹)"],["otherServices","Other Services Rate (₹)"]].map(([field,label]) => <label key={field}>{label}<input type="number" min="0" step="0.01" value={rateForm[field]} onChange={e => setRateForm(p => ({...p,[field]:e.target.value}))} placeholder="0"/></label>)}
-        <div className="bmm-form-actions"><button className="bmm-btn bmm-btn-primary" disabled={loading} type="submit"><Save size={16}/>{editingRateId ? " रेट अपडेट करें" : " रेट सेव करें"}</button>{editingRateId && <button className="bmm-btn bmm-btn-light" type="button" onClick={resetRateForm}>Cancel</button>}</div>
+    <SectionTitle title="Rate & Service Management" subtitle="पहले Service जोड़ें, फिर हर District और Block के लिए अलग Rate सेट करें" onRefresh={() => Promise.all([loadServices(), loadRates()]).catch(e => fail(getError(e)))} loading={loading}/>
+    <div className="bmm-card">
+      <h3>{editingServiceId ? "Service में बदलाव करें" : "Add Service / नई Service जोड़ें"}</h3>
+      <form className="bmm-form-grid" onSubmit={saveService}>
+        <label>Service Name<input value={serviceForm.name} onChange={e => setServiceForm(p => ({ ...p, name: e.target.value }))} placeholder="जैसे Borewell Drilling" required /></label>
+        <label>Qnt / Unit<select value={serviceForm.unit} onChange={e => setServiceForm(p => ({ ...p, unit: e.target.value }))}>
+          {SERVICE_UNITS.map(unit => <option key={unit} value={unit}>{unit}</option>)}<option value="__custom__">Custom Unit लिखें</option>
+        </select></label>
+        {serviceForm.unit === "__custom__" && <label>Custom Unit<input value={serviceForm.customUnit} onChange={e => setServiceForm(p => ({ ...p, customUnit: e.target.value }))} placeholder="अपनी Unit लिखें" required /></label>}
+        <div className="bmm-form-actions"><button className="bmm-btn bmm-btn-primary" type="submit" disabled={loading}><Save size={16}/>{editingServiceId ? " Service Update करें" : " Add Service"}</button>{editingServiceId && <button className="bmm-btn bmm-btn-light" type="button" onClick={resetServiceForm}>Cancel</button>}</div>
       </form>
     </div>
-    <div className="bmm-card"><h3>सभी Block Rates ({rates.length})</h3>{!rates.length ? <p className="bmm-muted">रेट उपलब्ध नहीं हैं। ऊपर से रेट जोड़ें।</p> :
-      <div className="bmm-table-wrap"><table className="bmm-table"><thead><tr><th>जिला / तहसील / ब्लॉक</th><th>Drilling</th><th>Repairing</th><th>Casing Pipe</th><th>MS Pipe</th><th>Other</th><th>Action</th></tr></thead>
-        <tbody>{rates.map(r => <tr key={r.id ?? r.rate_id}><td>{r.district}<br/>{r.tehsil}<br/><strong>{r.block}</strong></td><td>{money(r.drilling)}</td><td>{money(r.repairing)}</td><td>{money(r.casingPipe ?? r.casing_pipe)}</td><td>{money(r.msPipe ?? r.ms_pipe)}</td><td>{money(r.otherServices ?? r.other_services)}</td>
-          <td><div className="bmm-actions"><button className="bmm-btn bmm-btn-light" onClick={() => editRate(r)}>Edit</button><button className="bmm-btn bmm-btn-danger" onClick={() => deleteRate(r)}>Delete</button></div></td></tr>)}</tbody>
-      </table></div>}</div>
+    <div className="bmm-card"><h3>Services List ({services.length})</h3>{!services.length ? <p className="bmm-muted">अभी कोई Service नहीं है। ऊपर से नई Service जोड़ें।</p> :
+      <div className="bmm-table-wrap"><table className="bmm-table"><thead><tr><th>Service Name</th><th>Qnt / Unit</th><th>Status</th><th>Action</th></tr></thead><tbody>{services.map(service => {
+        const active = Number(service.active) === 1 || service.active === true;
+        return <tr key={service.id}><td><strong>{service.name}</strong></td><td>{service.unit || "—"}</td><td><span className="bmm-badge">{active ? "Active" : "Inactive"}</span></td><td><div className="bmm-actions"><button className="bmm-btn bmm-btn-light" onClick={() => editService(service)}>Edit</button><button className="bmm-btn bmm-btn-light" onClick={() => toggleService(service)} disabled={loading}>{active ? "Inactive करें" : "Active करें"}</button><button className="bmm-btn bmm-btn-danger" onClick={() => deleteService(service)} disabled={loading}>Delete</button></div></td></tr>;
+      })}</tbody></table></div>}</div>
+    <div className="bmm-card"><h3>{editingRateId ? "Block-wise Rate Edit करें" : "Add Block-wise Rate"}</h3>
+      <form className="bmm-form-grid" onSubmit={saveRate}>
+        <label>District / जिला<select value={rateForm.district} onChange={e => setRateForm(p => ({ ...p, district: e.target.value, block: "" }))} required><option value="">-- जिला चुनें --</option>{[...DISTRICTS].sort((a,b) => String(a).localeCompare(String(b), "hi")).map(d => <option key={d} value={d}>{d}</option>)}</select></label>
+        <label>Block / ब्लॉक<select value={rateForm.block} onChange={e => setRateForm(p => ({ ...p, block: e.target.value }))} required disabled={!rateForm.district}><option value="">-- ब्लॉक चुनें --</option>{getBlocksForDistrict(rateForm.district).map(b => <option key={b} value={b}>{b}</option>)}</select></label>
+        <label>Service<select value={rateForm.service} onChange={e => setRateForm(p => ({ ...p, service: e.target.value }))} required><option value="">-- Service चुनें --</option>{services.map(service => <option key={service.id} value={service.name}>{service.name} ({service.unit}){Number(service.active) === 1 ? "" : " — Inactive"}</option>)}</select></label>
+        <label>Rate (₹)<input type="number" min="0" step="0.01" value={rateForm.rate} onChange={e => setRateForm(p => ({ ...p, rate: e.target.value }))} placeholder="Rate दर्ज करें" required /></label>
+        <div className="bmm-form-actions"><button className="bmm-btn bmm-btn-primary" disabled={loading || !services.length} type="submit"><Save size={16}/>{editingRateId ? " Rate Update करें" : " Rate Save करें"}</button>{editingRateId && <button className="bmm-btn bmm-btn-light" type="button" onClick={resetRateForm}>Cancel</button>}</div>
+      </form>
+      {!services.length && <p className="bmm-muted">Rate सेट करने से पहले कम से कम एक Service जोड़ें।</p>}
+    </div>
+    <div className="bmm-card"><h3>सभी District / Block Wise Rates ({rates.length})</h3>{!rates.length ? <p className="bmm-muted">अभी कोई Rate उपलब्ध नहीं है। ऊपर से Rate जोड़ें।</p> :
+      <div className="bmm-table-wrap"><table className="bmm-table"><thead><tr><th>District</th><th>Block</th><th>Service</th><th>Qnt / Unit</th><th>Rate</th><th>Action</th></tr></thead><tbody>{rates.map(r => {
+        const service = services.find(item => item.name === (r.service || r.service_name));
+        return <tr key={r.id ?? r.rate_id}><td>{r.district}</td><td><strong>{r.block}</strong></td><td>{r.service || r.service_name || "—"}</td><td>{service?.unit || r.unit || "—"}</td><td>{money(r.rate)}</td><td><div className="bmm-actions"><button className="bmm-btn bmm-btn-light" onClick={() => editRate(r)}>Edit</button><button className="bmm-btn bmm-btn-danger" onClick={() => deleteRate(r)}>Delete</button></div></td></tr>;
+      })}</tbody></table></div>}</div>
   </>;
 
   const renderAgents = () => {
