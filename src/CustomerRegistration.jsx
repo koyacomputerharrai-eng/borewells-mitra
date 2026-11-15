@@ -1,13 +1,13 @@
-
+﻿
 import React, { useState } from "react";
 import { DISTRICTS, BLOCKS } from "./areas.js";
 import "./CustomerRegistration.css";
 
-const API = "http://localhost:4000/api";
+const API = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "http://localhost:4000/api" : "/api";
 
 const SERVICES = [
-  { value: "New Borewell", label: "नया बोरवेल" },
-  { value: "Repairing", label: "बोरवेल रिपेयरिंग" }
+  { value: "New Borewell", label: "à¤¨à¤¯à¤¾ à¤¬à¥‹à¤°à¤µà¥‡à¤²" },
+  { value: "Repairing", label: "à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤°à¤¿à¤ªà¥‡à¤¯à¤°à¤¿à¤‚à¤—" }
 ];
 
 export default function CustomerRegistration({ onSuccess, onLogin }) {
@@ -49,22 +49,22 @@ export default function CustomerRegistration({ onSuccess, onLogin }) {
     setSuccess("");
 
     if (!/^[6-9]\d{9}$/.test(form.mobile)) {
-      setError("कृपया सही 10 अंकों का मोबाइल नंबर दर्ज करें।");
+      setError("à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¸à¤¹à¥€ 10 à¤…à¤‚à¤•à¥‹à¤‚ à¤•à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚à¥¤");
       return;
     }
 
     if (form.password.length < 6) {
-      setError("पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।");
+      setError("à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤•à¤® à¤¸à¥‡ à¤•à¤® 6 à¤…à¤•à¥à¤·à¤°à¥‹à¤‚ à¤•à¤¾ à¤¹à¥‹à¤¨à¤¾ à¤šà¤¾à¤¹à¤¿à¤à¥¤");
       return;
     }
 
     if (!form.district || !form.block) {
-      setError("कृपया जिला और ब्लॉक चुनें।");
+      setError("à¤•à¥ƒà¤ªà¤¯à¤¾ à¤œà¤¿à¤²à¤¾ à¤”à¤° à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚à¥¤");
       return;
     }
 
     if (!form.service) {
-      setError("कृपया अपनी सेवा चुनें।");
+      setError("à¤•à¥ƒà¤ªà¤¯à¤¾ à¤…à¤ªà¤¨à¥€ à¤¸à¥‡à¤µà¤¾ à¤šà¥à¤¨à¥‡à¤‚à¥¤");
       return;
     }
 
@@ -88,12 +88,12 @@ export default function CustomerRegistration({ onSuccess, onLogin }) {
         throw new Error(
           data.message ||
           data.error ||
-          "पंजीकरण नहीं हो सका।"
+          "à¤ªà¤‚à¤œà¥€à¤•à¤°à¤£ à¤¨à¤¹à¥€à¤‚ à¤¹à¥‹ à¤¸à¤•à¤¾à¥¤"
         );
       }
 
       setSuccess(
-        data.message || "आपका अकाउंट सफलतापूर्वक बन गया है।"
+        data.message || "à¤†à¤ªà¤•à¤¾ à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤¬à¤¨ à¤—à¤¯à¤¾ à¤¹à¥ˆà¥¤"
       );
 
       if (onSuccess) {
@@ -112,7 +112,7 @@ export default function CustomerRegistration({ onSuccess, onLogin }) {
 
     } catch (err) {
       setError(
-        err.message || "सर्वर से संपर्क नहीं हो सका।"
+        err.message || "à¤¸à¤°à¥à¤µà¤° à¤¸à¥‡ à¤¸à¤‚à¤ªà¤°à¥à¤• à¤¨à¤¹à¥€à¤‚ à¤¹à¥‹ à¤¸à¤•à¤¾à¥¤"
       );
     } finally {
       setLoading(false);
@@ -126,11 +126,11 @@ export default function CustomerRegistration({ onSuccess, onLogin }) {
         <div className="register-heading">
           <div className="register-logo">BM</div>
 
-          <h2>अपना ग्राहक अकाउंट बनाएँ</h2>
+          <h2>à¤…à¤ªà¤¨à¤¾ à¤—à¥à¤°à¤¾à¤¹à¤• à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤¬à¤¨à¤¾à¤à¤</h2>
 
           <p>
-            Borewell Mitra MP से जुड़ें और
-            अपनी सेवाओं का लाभ लें।
+            Borewell Mitra MP à¤¸à¥‡ à¤œà¥à¤¡à¤¼à¥‡à¤‚ à¤”à¤°
+            à¤…à¤ªà¤¨à¥€ à¤¸à¥‡à¤µà¤¾à¤“à¤‚ à¤•à¤¾ à¤²à¤¾à¤­ à¤²à¥‡à¤‚à¥¤
           </p>
         </div>
 
@@ -148,30 +148,30 @@ export default function CustomerRegistration({ onSuccess, onLogin }) {
 
         <form onSubmit={handleSubmit}>
 
-          {/* पूरा नाम */}
+          {/* à¤ªà¥‚à¤°à¤¾ à¤¨à¤¾à¤® */}
 
           <div className="register-field">
-            <label>पूरा नाम *</label>
+            <label>à¤ªà¥‚à¤°à¤¾ à¤¨à¤¾à¤® *</label>
 
             <input
               type="text"
               name="name"
-              placeholder="अपना पूरा नाम लिखें"
+              placeholder="à¤…à¤ªà¤¨à¤¾ à¤ªà¥‚à¤°à¤¾ à¤¨à¤¾à¤® à¤²à¤¿à¤–à¥‡à¤‚"
               value={form.name}
               onChange={handleChange}
               required
             />
           </div>
 
-          {/* मोबाइल नंबर */}
+          {/* à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° */}
 
           <div className="register-field">
-            <label>मोबाइल नंबर *</label>
+            <label>à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° *</label>
 
             <input
               type="tel"
               name="mobile"
-              placeholder="10 अंकों का मोबाइल नंबर"
+              placeholder="10 à¤…à¤‚à¤•à¥‹à¤‚ à¤•à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤°"
               value={form.mobile}
               onChange={(e) => {
                 const value = e.target.value
@@ -191,15 +191,15 @@ export default function CustomerRegistration({ onSuccess, onLogin }) {
             />
           </div>
 
-          {/* पासवर्ड - मोबाइल के तुरंत बाद */}
+          {/* à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ - à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤•à¥‡ à¤¤à¥à¤°à¤‚à¤¤ à¤¬à¤¾à¤¦ */}
 
           <div className="register-field">
-            <label>पासवर्ड बनाएँ *</label>
+            <label>à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤¬à¤¨à¤¾à¤à¤ *</label>
 
             <input
               type="password"
               name="password"
-              placeholder="कम से कम 6 अक्षर"
+              placeholder="à¤•à¤® à¤¸à¥‡ à¤•à¤® 6 à¤…à¤•à¥à¤·à¤°"
               value={form.password}
               onChange={handleChange}
               minLength={6}
@@ -207,10 +207,10 @@ export default function CustomerRegistration({ onSuccess, onLogin }) {
             />
           </div>
 
-          {/* जिला */}
+          {/* à¤œà¤¿à¤²à¤¾ */}
 
           <div className="register-field">
-            <label>जिला चुनें *</label>
+            <label>à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚ *</label>
 
             <select
               name="district"
@@ -219,7 +219,7 @@ export default function CustomerRegistration({ onSuccess, onLogin }) {
               required
             >
               <option value="">
-                -- अपना जिला चुनें --
+                -- à¤…à¤ªà¤¨à¤¾ à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚ --
               </option>
 
               {DISTRICTS.map((district) => (
@@ -233,10 +233,10 @@ export default function CustomerRegistration({ onSuccess, onLogin }) {
             </select>
           </div>
 
-          {/* ब्लॉक */}
+          {/* à¤¬à¥à¤²à¥‰à¤• */}
 
           <div className="register-field">
-            <label>ब्लॉक चुनें *</label>
+            <label>à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚ *</label>
 
             <select
               name="block"
@@ -247,8 +247,8 @@ export default function CustomerRegistration({ onSuccess, onLogin }) {
             >
               <option value="">
                 {form.district
-                  ? "-- अपना ब्लॉक चुनें --"
-                  : "-- पहले जिला चुनें --"}
+                  ? "-- à¤…à¤ªà¤¨à¤¾ à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚ --"
+                  : "-- à¤ªà¤¹à¤²à¥‡ à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚ --"}
               </option>
 
               {blocks.map((block) => (
@@ -262,10 +262,10 @@ export default function CustomerRegistration({ onSuccess, onLogin }) {
             </select>
           </div>
 
-          {/* सेवा */}
+          {/* à¤¸à¥‡à¤µà¤¾ */}
 
           <div className="register-field">
-            <label>सेवा चुनें *</label>
+            <label>à¤¸à¥‡à¤µà¤¾ à¤šà¥à¤¨à¥‡à¤‚ *</label>
 
             <div className="register-service-options">
 
@@ -306,20 +306,20 @@ export default function CustomerRegistration({ onSuccess, onLogin }) {
             disabled={loading}
           >
             {loading
-              ? "पंजीकरण हो रहा है..."
-              : "रजिस्टर करें"}
+              ? "à¤ªà¤‚à¤œà¥€à¤•à¤°à¤£ à¤¹à¥‹ à¤°à¤¹à¤¾ à¤¹à¥ˆ..."
+              : "à¤°à¤œà¤¿à¤¸à¥à¤Ÿà¤° à¤•à¤°à¥‡à¤‚"}
           </button>
 
         </form>
 
         <div className="register-login">
-          पहले से अकाउंट है?
+          à¤ªà¤¹à¤²à¥‡ à¤¸à¥‡ à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤¹à¥ˆ?
 
           <button
             type="button"
             onClick={onLogin}
           >
-            लॉगिन करें
+            à¤²à¥‰à¤—à¤¿à¤¨ à¤•à¤°à¥‡à¤‚
           </button>
         </div>
 

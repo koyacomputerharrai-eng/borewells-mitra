@@ -1,9 +1,9 @@
-
+﻿
 import React, { useEffect, useMemo, useState } from "react";
 import { DISTRICTS, BLOCKS } from "./areas";
 import { MapPin, IndianRupee, RefreshCw, Search } from "lucide-react";
 
-const API = "http://localhost:4000/api";
+const API = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "http://localhost:4000/api" : "/api";
 
 function getName(item) {
   if (typeof item === "string") return item;
@@ -58,7 +58,7 @@ export default function RateList() {
         const response = await fetch(`${API}/services`);
         const data = await response.json();
 
-        if (!response.ok) throw new Error("Services लोड नहीं हुईं");
+        if (!response.ok) throw new Error("Services à¤²à¥‹à¤¡ à¤¨à¤¹à¥€à¤‚ à¤¹à¥à¤ˆà¤‚");
 
         setServices(Array.isArray(data) ? data : data.services || []);
       } catch (err) {
@@ -73,7 +73,7 @@ export default function RateList() {
 
   async function loadRates() {
     if (!district || !block) {
-      setError("कृपया पहले जिला और ब्लॉक चुनें।");
+      setError("à¤•à¥ƒà¤ªà¤¯à¤¾ à¤ªà¤¹à¤²à¥‡ à¤œà¤¿à¤²à¤¾ à¤”à¤° à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚à¥¤");
       return;
     }
 
@@ -87,12 +87,12 @@ export default function RateList() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "रेट लोड नहीं हो पाए");
+        throw new Error(data.message || "à¤°à¥‡à¤Ÿ à¤²à¥‹à¤¡ à¤¨à¤¹à¥€à¤‚ à¤¹à¥‹ à¤ªà¤¾à¤");
       }
 
       setRates(Array.isArray(data) ? data : data.rates || []);
     } catch (err) {
-      setError(err.message || "Server से संपर्क नहीं हो पाया");
+      setError(err.message || "Server à¤¸à¥‡ à¤¸à¤‚à¤ªà¤°à¥à¤• à¤¨à¤¹à¥€à¤‚ à¤¹à¥‹ à¤ªà¤¾à¤¯à¤¾");
     } finally {
       setLoading(false);
     }
@@ -127,13 +127,13 @@ export default function RateList() {
         <header className="rl-header">
           <IndianRupee size={35} />
           <h2>Borewell Mitra MP - Rate List</h2>
-          <p>अपने क्षेत्र के अनुसार Borewell सेवाओं की दर देखें।</p>
+          <p>à¤…à¤ªà¤¨à¥‡ à¤•à¥à¤·à¥‡à¤¤à¥à¤° à¤•à¥‡ à¤…à¤¨à¥à¤¸à¤¾à¤° Borewell à¤¸à¥‡à¤µà¤¾à¤“à¤‚ à¤•à¥€ à¤¦à¤° à¤¦à¥‡à¤–à¥‡à¤‚à¥¤</p>
         </header>
 
         <section className="rl-card">
-          <h3><MapPin size={19} /> अपना क्षेत्र चुनें</h3>
+          <h3><MapPin size={19} /> à¤…à¤ªà¤¨à¤¾ à¤•à¥à¤·à¥‡à¤¤à¥à¤° à¤šà¥à¤¨à¥‡à¤‚</h3>
 
-          <label className="rl-label">जिला चुनें</label>
+          <label className="rl-label">à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚</label>
           <select
             className="rl-select"
             value={district}
@@ -144,13 +144,13 @@ export default function RateList() {
               setError("");
             }}
           >
-            <option value="">-- जिला चुनें --</option>
+            <option value="">-- à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚ --</option>
             {districtList.map(name => (
               <option key={name} value={name}>{name}</option>
             ))}
           </select>
 
-          <label className="rl-label">ब्लॉक चुनें</label>
+          <label className="rl-label">à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚</label>
           <select
             className="rl-select"
             value={block}
@@ -161,25 +161,25 @@ export default function RateList() {
             }}
             disabled={!district}
           >
-            <option value="">-- ब्लॉक चुनें --</option>
+            <option value="">-- à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚ --</option>
             {blockList.map(name => (
               <option key={name} value={name}>{name}</option>
             ))}
           </select>
 
           <button className="rl-btn" onClick={loadRates} disabled={loading}>
-            {loading ? "रेट लोड हो रहे हैं..." : "रेट देखें"}
+            {loading ? "à¤°à¥‡à¤Ÿ à¤²à¥‹à¤¡ à¤¹à¥‹ à¤°à¤¹à¥‡ à¤¹à¥ˆà¤‚..." : "à¤°à¥‡à¤Ÿ à¤¦à¥‡à¤–à¥‡à¤‚"}
           </button>
 
           {error && <div className="rl-error">{error}</div>}
         </section>
 
         <section className="rl-card">
-          <h3><IndianRupee size={19} /> सेवा दर सूची</h3>
+          <h3><IndianRupee size={19} /> à¤¸à¥‡à¤µà¤¾ à¤¦à¤° à¤¸à¥‚à¤šà¥€</h3>
 
           {district && block && (
             <p>
-              <b>चयनित क्षेत्र:</b> {district} / {block}
+              <b>à¤šà¤¯à¤¨à¤¿à¤¤ à¤•à¥à¤·à¥‡à¤¤à¥à¤°:</b> {district} / {block}
             </p>
           )}
 
@@ -188,18 +188,18 @@ export default function RateList() {
               className="rl-input"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="सेवा खोजें..."
+              placeholder="à¤¸à¥‡à¤µà¤¾ à¤–à¥‹à¤œà¥‡à¤‚..."
             />
           )}
 
-          {loading && <p>रेट लोड हो रहे हैं...</p>}
+          {loading && <p>à¤°à¥‡à¤Ÿ à¤²à¥‹à¤¡ à¤¹à¥‹ à¤°à¤¹à¥‡ à¤¹à¥ˆà¤‚...</p>}
 
           {!loading && rates.length === 0 && (
-            <p>रेट देखने के लिए जिला और ब्लॉक चुनकर बटन दबाएँ।</p>
+            <p>à¤°à¥‡à¤Ÿ à¤¦à¥‡à¤–à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤œà¤¿à¤²à¤¾ à¤”à¤° à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¤•à¤° à¤¬à¤Ÿà¤¨ à¤¦à¤¬à¤¾à¤à¤à¥¤</p>
           )}
 
           {!loading && rates.length > 0 && filteredRates.length === 0 && (
-            <p>इस नाम की कोई सेवा नहीं मिली।</p>
+            <p>à¤‡à¤¸ à¤¨à¤¾à¤® à¤•à¥€ à¤•à¥‹à¤ˆ à¤¸à¥‡à¤µà¤¾ à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤²à¥€à¥¤</p>
           )}
 
           {filteredRates.length > 0 && (
@@ -207,17 +207,17 @@ export default function RateList() {
               <table className="rl-table">
                 <thead>
                   <tr>
-                    <th>सेवा का नाम</th>
-                    <th>दर</th>
-                    <th>इकाई</th>
+                    <th>à¤¸à¥‡à¤µà¤¾ à¤•à¤¾ à¤¨à¤¾à¤®</th>
+                    <th>à¤¦à¤°</th>
+                    <th>à¤‡à¤•à¤¾à¤ˆ</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredRates.map((item, index) => (
                     <tr key={item.id || index}>
-                      <td>{item.service_name || item.service || "सेवा"}</td>
-                      <td className="rl-price">₹{item.rate ?? "—"}</td>
-                      <td>{item.unit || "—"}</td>
+                      <td>{item.service_name || item.service || "à¤¸à¥‡à¤µà¤¾"}</td>
+                      <td className="rl-price">â‚¹{item.rate ?? "â€”"}</td>
+                      <td>{item.unit || "â€”"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -227,7 +227,7 @@ export default function RateList() {
 
           {!serviceLoading && services.length > 0 && rates.length === 0 && (
             <p style={{ color: "#64748b", fontSize: 13 }}>
-              उपलब्ध सेवाएँ: {services.map(s => s.name).filter(Boolean).join(", ")}
+              à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¸à¥‡à¤µà¤¾à¤à¤: {services.map(s => s.name).filter(Boolean).join(", ")}
             </p>
           )}
         </section>

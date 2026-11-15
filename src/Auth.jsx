@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState } from "react";
 import { BLOCKS } from "./areas.js";
 import {
@@ -6,7 +6,7 @@ import {
   Eye, EyeOff, UserPlus, LogIn, ShieldCheck, Building2, MapPin
 } from "lucide-react";
 
-const API = "http://localhost:4000/api/auth";
+const API = ((window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "http://localhost:4000/api" : "/api") + "/auth";
 
 export default function Auth({ onBack, onLogin }) {
   const [mode, setMode] = useState("login");
@@ -44,19 +44,19 @@ async function handleSubmit(event) {
 
   if (!login.trim() && !isRegister) {
     setError(true);
-    setMessage("User ID या मोबाइल नंबर डालें।");
+    setMessage("User ID à¤¯à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° à¤¡à¤¾à¤²à¥‡à¤‚à¥¤");
     return;
   }
 
   if (isRegister && password !== confirmPassword) {
     setError(true);
-    setMessage("दोनों Password एक जैसे नहीं हैं।");
+    setMessage("à¤¦à¥‹à¤¨à¥‹à¤‚ Password à¤à¤• à¤œà¥ˆà¤¸à¥‡ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¤‚à¥¤");
     return;
   }
 
   if (password.length < 8) {
     setError(true);
-    setMessage("Password कम से कम 8 अक्षर का रखें।");
+    setMessage("Password à¤•à¤® à¤¸à¥‡ à¤•à¤® 8 à¤…à¤•à¥à¤·à¤° à¤•à¤¾ à¤°à¤–à¥‡à¤‚à¥¤");
     return;
   }
 
@@ -99,18 +99,18 @@ async function handleSubmit(event) {
 
     if (!response.ok || !data.success) {
       throw new Error(
-        data.message || "Login नहीं हो पाया। कृपया दोबारा प्रयास करें।"
+        data.message || "Login à¤¨à¤¹à¥€à¤‚ à¤¹à¥‹ à¤ªà¤¾à¤¯à¤¾à¥¤ à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¦à¥‹à¤¬à¤¾à¤°à¤¾ à¤ªà¥à¤°à¤¯à¤¾à¤¸ à¤•à¤°à¥‡à¤‚à¥¤"
       );
     }
 
     if (isRegister) {
       setRegisteredUser(data.user);
-      setMessage(data.message || "Registration सफल हुआ।");
+      setMessage(data.message || "Registration à¤¸à¤«à¤² à¤¹à¥à¤†à¥¤");
       setPassword("");
       setConfirmPassword("");
     } else {
       if (!data.token || !data.user) {
-        throw new Error("Server से Login Token नहीं मिला।");
+        throw new Error("Server à¤¸à¥‡ Login Token à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤²à¤¾à¥¤");
       }
 
       localStorage.setItem("bmm-token", data.token);
@@ -121,7 +121,7 @@ async function handleSubmit(event) {
   } catch (err) {
     console.error("AUTH ERROR:", err);
     setError(true);
-    setMessage(err.message || "Server से संपर्क नहीं हो पाया।");
+    setMessage(err.message || "Server à¤¸à¥‡ à¤¸à¤‚à¤ªà¤°à¥à¤• à¤¨à¤¹à¥€à¤‚ à¤¹à¥‹ à¤ªà¤¾à¤¯à¤¾à¥¤");
   } finally {
     setLoading(false);
   }
@@ -176,7 +176,7 @@ async function handleSubmit(event) {
           padding: "9px 12px", borderRadius: 10, cursor: "pointer",
           marginBottom: 22, fontWeight: 700
         }}>
-          <ArrowLeft size={17} style={{ verticalAlign: "middle" }} /> वापस जाएँ
+          <ArrowLeft size={17} style={{ verticalAlign: "middle" }} /> à¤µà¤¾à¤ªà¤¸ à¤œà¤¾à¤à¤
         </button>
 
         <div style={{ textAlign: "center", marginBottom: 24 }}>
@@ -192,7 +192,7 @@ async function handleSubmit(event) {
             Borewell Mitra MP
           </h1>
           <p style={{ color: "#718096", fontSize: 14 }}>
-            आपकी बोरवेल सेवा, आपके पास
+            à¤†à¤ªà¤•à¥€ à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤¸à¥‡à¤µà¤¾, à¤†à¤ªà¤•à¥‡ à¤ªà¤¾à¤¸
           </p>
         </div>
 
@@ -224,7 +224,7 @@ async function handleSubmit(event) {
         </div>
 
         <h2 style={{ color: "#172b4d", fontSize: 21 }}>
-          {isRegister ? "अपना Account बनाएँ" : "फिर से स्वागत है!"}
+          {isRegister ? "à¤…à¤ªà¤¨à¤¾ Account à¤¬à¤¨à¤¾à¤à¤" : "à¤«à¤¿à¤° à¤¸à¥‡ à¤¸à¥à¤µà¤¾à¤—à¤¤ à¤¹à¥ˆ!"}
         </h2>
 
         {registeredUser ? (
@@ -234,12 +234,12 @@ async function handleSubmit(event) {
             textAlign: "center", lineHeight: 1.7
           }}>
             <ShieldCheck size={34} />
-            <h3>Registration सफल!</h3>
-            <p>आपकी User ID:</p>
+            <h3>Registration à¤¸à¤«à¤²!</h3>
+            <p>à¤†à¤ªà¤•à¥€ User ID:</p>
             <strong style={{ fontSize: 25 }}>{registeredUser.userId}</strong>
             <p>{message}</p>
             <p style={{ fontSize: 13 }}>
-              इस ID को सुरक्षित रखें। Login के लिए इसका उपयोग करें।
+              à¤‡à¤¸ ID à¤•à¥‹ à¤¸à¥à¤°à¤•à¥à¤·à¤¿à¤¤ à¤°à¤–à¥‡à¤‚à¥¤ Login à¤•à¥‡ à¤²à¤¿à¤ à¤‡à¤¸à¤•à¤¾ à¤‰à¤ªà¤¯à¥‹à¤— à¤•à¤°à¥‡à¤‚à¥¤
             </p>
             <button type="button" onClick={() => {
               setMode("login");
@@ -251,7 +251,7 @@ async function handleSubmit(event) {
               padding: 13, background: "#087b59", color: "#fff",
               fontWeight: 700, cursor: "pointer"
             }}>
-              Login करें
+              Login à¤•à¤°à¥‡à¤‚
             </button>
           </div>
         ) : (
@@ -259,43 +259,43 @@ async function handleSubmit(event) {
             {isRegister && (
               <>
                 <div style={fieldStyle}>
-                  <label style={labelStyle}>Account का प्रकार</label>
+                  <label style={labelStyle}>Account à¤•à¤¾ à¤ªà¥à¤°à¤•à¤¾à¤°</label>
                   <select value={role} onChange={(e) => {
                     setRole(e.target.value);
                     setDistrict("");
                     setBlock("");
                     resetMessage();
                   }} style={inputStyle}>
-                    <option value="customer">ग्राहक</option>
+                    <option value="customer">à¤—à¥à¤°à¤¾à¤¹à¤•</option>
                     <option value="agent">Agent</option>
                     <option value="referral">Referral Mitra</option>
                   </select>
                 </div>
 
                 <div style={fieldStyle}>
-                  <label style={labelStyle}>पूरा नाम *</label>
+                  <label style={labelStyle}>à¤ªà¥‚à¤°à¤¾ à¤¨à¤¾à¤® *</label>
                   <input required value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="अपना पूरा नाम लिखें" style={inputStyle} />
+                    placeholder="à¤…à¤ªà¤¨à¤¾ à¤ªà¥‚à¤°à¤¾ à¤¨à¤¾à¤® à¤²à¤¿à¤–à¥‡à¤‚" style={inputStyle} />
                 </div>
 
                 {role === "agent" && (
                   <div style={fieldStyle}>
-                    <label style={labelStyle}>Agency का नाम *</label>
+                    <label style={labelStyle}>Agency à¤•à¤¾ à¤¨à¤¾à¤® *</label>
                     <div style={{ position: "relative" }}>
                       <Building2 size={18} style={{
                         position: "absolute", left: 12, top: 14, color: "#8293aa"
                       }} />
                       <input required value={agencyName}
                         onChange={(e) => setAgencyName(e.target.value)}
-                        placeholder="अपनी Agency का नाम लिखें"
+                        placeholder="à¤…à¤ªà¤¨à¥€ Agency à¤•à¤¾ à¤¨à¤¾à¤® à¤²à¤¿à¤–à¥‡à¤‚"
                         style={{ ...inputStyle, paddingLeft: 40 }} />
                     </div>
                   </div>
                 )}
 
                 <div style={fieldStyle}>
-                  <label style={labelStyle}>मोबाइल नंबर *</label>
+                  <label style={labelStyle}>à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° *</label>
                   <div style={{ position: "relative" }}>
                     <Phone size={18} style={{
                       position: "absolute", left: 12, top: 14, color: "#8293aa"
@@ -304,7 +304,7 @@ async function handleSubmit(event) {
                       maxLength={10} pattern="[6-9][0-9]{9}"
                       value={mobile}
                       onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
-                      placeholder="10 अंकों का मोबाइल नंबर"
+                      placeholder="10 à¤…à¤‚à¤•à¥‹à¤‚ à¤•à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤°"
                       style={{ ...inputStyle, paddingLeft: 40 }} />
                   </div>
                 </div>
@@ -312,13 +312,13 @@ async function handleSubmit(event) {
                 {(role === "agent" || role === "customer") && (
                   <>
                     <div style={fieldStyle}>
-                      <label style={labelStyle}>जिला चुनें *</label>
+                      <label style={labelStyle}>à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚ *</label>
                       <select required value={district}
                         onChange={(e) => {
                           setDistrict(e.target.value);
                           setBlock("");
                         }} style={inputStyle}>
-                        <option value="">जिला चुनें</option>
+                        <option value="">à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚</option>
                         {districts.map((item) => (
                           <option key={item} value={item}>{item}</option>
                         ))}
@@ -326,12 +326,12 @@ async function handleSubmit(event) {
                     </div>
 
                     <div style={fieldStyle}>
-                      <label style={labelStyle}>ब्लॉक चुनें *</label>
+                      <label style={labelStyle}>à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚ *</label>
                       <select required value={block}
                         disabled={!district}
                         onChange={(e) => setBlock(e.target.value)}
                         style={inputStyle}>
-                        <option value="">ब्लॉक चुनें</option>
+                        <option value="">à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚</option>
                         {(BLOCKS[district] || []).map((item) => (
                           <option key={item} value={item}>{item}</option>
                         ))}
@@ -342,14 +342,14 @@ async function handleSubmit(event) {
 
                 {role === "agent" && (
                   <div style={fieldStyle}>
-                    <label style={labelStyle}>Office का पूरा पता *</label>
+                    <label style={labelStyle}>Office à¤•à¤¾ à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾ *</label>
                     <div style={{ position: "relative" }}>
                       <MapPin size={18} style={{
                         position: "absolute", left: 12, top: 14, color: "#8293aa"
                       }} />
                       <textarea required value={officeAddress}
                         onChange={(e) => setOfficeAddress(e.target.value)}
-                        placeholder="दुकान/ऑफिस, मोहल्ला, ग्राम/शहर, पिन कोड"
+                        placeholder="à¤¦à¥à¤•à¤¾à¤¨/à¤‘à¤«à¤¿à¤¸, à¤®à¥‹à¤¹à¤²à¥à¤²à¤¾, à¤—à¥à¤°à¤¾à¤®/à¤¶à¤¹à¤°, à¤ªà¤¿à¤¨ à¤•à¥‹à¤¡"
                         rows={3}
                         style={{ ...inputStyle, paddingLeft: 40, resize: "vertical" }} />
                     </div>
@@ -358,14 +358,14 @@ async function handleSubmit(event) {
 
                 {role === "customer" && (
                   <div style={fieldStyle}>
-                    <label style={labelStyle}>घर / खेत का पूरा पता *</label>
+                    <label style={labelStyle}>à¤˜à¤° / à¤–à¥‡à¤¤ à¤•à¤¾ à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾ *</label>
                     <div style={{ position: "relative" }}>
                       <MapPin size={18} style={{
                         position: "absolute", left: 12, top: 14, color: "#8293aa"
                       }} />
                       <textarea required value={customerAddress}
                         onChange={(e) => setCustomerAddress(e.target.value)}
-                        placeholder="ग्राम, मोहल्ला, घर/खेत का पता, पिन कोड"
+                        placeholder="à¤—à¥à¤°à¤¾à¤®, à¤®à¥‹à¤¹à¤²à¥à¤²à¤¾, à¤˜à¤°/à¤–à¥‡à¤¤ à¤•à¤¾ à¤ªà¤¤à¤¾, à¤ªà¤¿à¤¨ à¤•à¥‹à¤¡"
                         rows={3}
                         style={{ ...inputStyle, paddingLeft: 40, resize: "vertical" }} />
                     </div>
@@ -376,10 +376,10 @@ async function handleSubmit(event) {
 
             {!isRegister && (
               <div style={fieldStyle}>
-                <label style={labelStyle}>User ID या मोबाइल नंबर</label>
+                <label style={labelStyle}>User ID à¤¯à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤°</label>
                 <input required value={login}
                   onChange={(e) => setLogin(e.target.value)}
-                  placeholder="User ID या मोबाइल नंबर"
+                  placeholder="User ID à¤¯à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤°"
                   style={inputStyle} />
               </div>
             )}
@@ -393,7 +393,7 @@ async function handleSubmit(event) {
                 <input required type={showPassword ? "text" : "password"}
                   minLength={8} value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="कम से कम 8 अक्षर"
+                  placeholder="à¤•à¤® à¤¸à¥‡ à¤•à¤® 8 à¤…à¤•à¥à¤·à¤°"
                   style={{ ...inputStyle, paddingLeft: 40, paddingRight: 45 }} />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   style={{
@@ -411,7 +411,7 @@ async function handleSubmit(event) {
                 <input required type={showPassword ? "text" : "password"}
                   minLength={8} value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Password दोबारा लिखें" style={inputStyle} />
+                  placeholder="Password à¤¦à¥‹à¤¬à¤¾à¤°à¤¾ à¤²à¤¿à¤–à¥‡à¤‚" style={inputStyle} />
               </div>
             )}
 
@@ -432,8 +432,8 @@ async function handleSubmit(event) {
               color: "#fff", fontWeight: 800, fontSize: 15,
               cursor: loading ? "wait" : "pointer"
             }}>
-              {loading ? "कृपया प्रतीक्षा करें..." :
-                isRegister ? "Account बनाएँ →" : "सुरक्षित Login करें →"}
+              {loading ? "à¤•à¥ƒà¤ªà¤¯à¤¾ à¤ªà¥à¤°à¤¤à¥€à¤•à¥à¤·à¤¾ à¤•à¤°à¥‡à¤‚..." :
+                isRegister ? "Account à¤¬à¤¨à¤¾à¤à¤ â†’" : "à¤¸à¥à¤°à¤•à¥à¤·à¤¿à¤¤ Login à¤•à¤°à¥‡à¤‚ â†’"}
             </button>
           </form>
         )}
@@ -444,7 +444,7 @@ async function handleSubmit(event) {
           fontSize: 12, lineHeight: 1.8
         }}>
           <ShieldCheck size={15} style={{ verticalAlign: "middle" }} />
-          {" "}Borewell Mitra MP — आपकी जानकारी सुरक्षित है।
+          {" "}Borewell Mitra MP â€” à¤†à¤ªà¤•à¥€ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ à¤¸à¥à¤°à¤•à¥à¤·à¤¿à¤¤ à¤¹à¥ˆà¥¤
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-
+﻿
 import React, { useEffect, useState } from "react";
 import {
   MapPin,
@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import "./style.css";
 
-const API = "http://localhost:4000/api";
+const API = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "http://localhost:4000/api" : "/api";
 
 export default function CustomerAreaRates({
   district: selectedDistrict,
@@ -26,7 +26,7 @@ export default function CustomerAreaRates({
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
 
-  // सभी सेवाएँ लोड करें
+  // à¤¸à¤­à¥€ à¤¸à¥‡à¤µà¤¾à¤à¤ à¤²à¥‹à¤¡ à¤•à¤°à¥‡à¤‚
   useEffect(() => {
     let active = true;
 
@@ -37,7 +37,7 @@ export default function CustomerAreaRates({
 
         if (!response.ok) {
           throw new Error(
-            data.message || "Services लोड नहीं हुईं"
+            data.message || "Services à¤²à¥‹à¤¡ à¤¨à¤¹à¥€à¤‚ à¤¹à¥à¤ˆà¤‚"
           );
         }
 
@@ -52,7 +52,7 @@ export default function CustomerAreaRates({
         if (active) {
           setServices([]);
           setError(
-            err.message || "सेवाएँ लोड नहीं हो पाईं।"
+            err.message || "à¤¸à¥‡à¤µà¤¾à¤à¤ à¤²à¥‹à¤¡ à¤¨à¤¹à¥€à¤‚ à¤¹à¥‹ à¤ªà¤¾à¤ˆà¤‚à¥¤"
           );
         }
       } finally {
@@ -69,7 +69,7 @@ export default function CustomerAreaRates({
     };
   }, []);
 
-  // जिला और ब्लॉक के अनुसार रेट लोड करें
+  // à¤œà¤¿à¤²à¤¾ à¤”à¤° à¤¬à¥à¤²à¥‰à¤• à¤•à¥‡ à¤…à¤¨à¥à¤¸à¤¾à¤° à¤°à¥‡à¤Ÿ à¤²à¥‹à¤¡ à¤•à¤°à¥‡à¤‚
   async function loadRates() {
     if (!district || !block) {
       setRates([]);
@@ -93,7 +93,7 @@ export default function CustomerAreaRates({
 
       if (!response.ok) {
         throw new Error(
-          data.message || "रेट लोड नहीं हुए"
+          data.message || "à¤°à¥‡à¤Ÿ à¤²à¥‹à¤¡ à¤¨à¤¹à¥€à¤‚ à¤¹à¥à¤"
         );
       }
 
@@ -106,7 +106,7 @@ export default function CustomerAreaRates({
     } catch (err) {
       setRates([]);
       setError(
-        err.message || "रेट सर्वर से नहीं मिल पाए।"
+        err.message || "à¤°à¥‡à¤Ÿ à¤¸à¤°à¥à¤µà¤° à¤¸à¥‡ à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤² à¤ªà¤¾à¤à¥¤"
       );
 
     } finally {
@@ -114,22 +114,22 @@ export default function CustomerAreaRates({
     }
   }
 
-  // प्रोफाइल का जिला या ब्लॉक बदलने पर रेट अपडेट
+  // à¤ªà¥à¤°à¥‹à¤«à¤¾à¤‡à¤² à¤•à¤¾ à¤œà¤¿à¤²à¤¾ à¤¯à¤¾ à¤¬à¥à¤²à¥‰à¤• à¤¬à¤¦à¤²à¤¨à¥‡ à¤ªà¤° à¤°à¥‡à¤Ÿ à¤…à¤ªà¤¡à¥‡à¤Ÿ
   useEffect(() => {
     loadRates();
   }, [district, block]);
 
-  // सेवा का नाम
+  // à¤¸à¥‡à¤µà¤¾ à¤•à¤¾ à¤¨à¤¾à¤®
   function getServiceName(service) {
     return (
       service?.service_name ||
       service?.name ||
       service?.service ||
-      "अन्य सेवा"
+      "à¤…à¤¨à¥à¤¯ à¤¸à¥‡à¤µà¤¾"
     );
   }
 
-  // सेवा का रेट खोजें
+  // à¤¸à¥‡à¤µà¤¾ à¤•à¤¾ à¤°à¥‡à¤Ÿ à¤–à¥‹à¤œà¥‡à¤‚
   function findRate(service) {
     const name = getServiceName(service);
 
@@ -160,10 +160,10 @@ export default function CustomerAreaRates({
             BOREWELL MITRA MP
           </span>
 
-          <h2>बोरवेल रेट सूची</h2>
+          <h2>à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤°à¥‡à¤Ÿ à¤¸à¥‚à¤šà¥€</h2>
 
           <p>
-            आपके प्रोफाइल के क्षेत्र के अनुसार सेवाओं के रेट।
+            à¤†à¤ªà¤•à¥‡ à¤ªà¥à¤°à¥‹à¤«à¤¾à¤‡à¤² à¤•à¥‡ à¤•à¥à¤·à¥‡à¤¤à¥à¤° à¤•à¥‡ à¤…à¤¨à¥à¤¸à¤¾à¤° à¤¸à¥‡à¤µà¤¾à¤“à¤‚ à¤•à¥‡ à¤°à¥‡à¤Ÿà¥¤
           </p>
         </div>
 
@@ -174,12 +174,12 @@ export default function CustomerAreaRates({
       <div className="rl-selected">
         <span>
           <MapPin size={15} />
-          प्रोफाइल का चयनित क्षेत्र
+          à¤ªà¥à¤°à¥‹à¤«à¤¾à¤‡à¤² à¤•à¤¾ à¤šà¤¯à¤¨à¤¿à¤¤ à¤•à¥à¤·à¥‡à¤¤à¥à¤°
         </span>
 
         <strong>
-          {district || "जिला उपलब्ध नहीं"} /{" "}
-          {block || "ब्लॉक उपलब्ध नहीं"}
+          {district || "à¤œà¤¿à¤²à¤¾ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚"} /{" "}
+          {block || "à¤¬à¥à¤²à¥‰à¤• à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚"}
         </strong>
       </div>
 
@@ -190,7 +190,7 @@ export default function CustomerAreaRates({
 
         <input
           type="search"
-          placeholder="सेवा खोजें..."
+          placeholder="à¤¸à¥‡à¤µà¤¾ à¤–à¥‹à¤œà¥‡à¤‚..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -217,19 +217,19 @@ export default function CustomerAreaRates({
       {loading || serviceLoading ? (
 
         <div className="rl-loading">
-          रेट लोड हो रहे हैं...
+          à¤°à¥‡à¤Ÿ à¤²à¥‹à¤¡ à¤¹à¥‹ à¤°à¤¹à¥‡ à¤¹à¥ˆà¤‚...
         </div>
 
       ) : !district || !block ? (
 
         <div className="rl-empty">
-          कृपया पहले मेरा प्रोफाइल में जिला और ब्लॉक चुनें।
+          à¤•à¥ƒà¤ªà¤¯à¤¾ à¤ªà¤¹à¤²à¥‡ à¤®à¥‡à¤°à¤¾ à¤ªà¥à¤°à¥‹à¤«à¤¾à¤‡à¤² à¤®à¥‡à¤‚ à¤œà¤¿à¤²à¤¾ à¤”à¤° à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚à¥¤
         </div>
 
       ) : filteredServices.length === 0 ? (
 
         <div className="rl-empty">
-          कोई सेवा उपलब्ध नहीं है।
+          à¤•à¥‹à¤ˆ à¤¸à¥‡à¤µà¤¾ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤
         </div>
 
       ) : (
@@ -268,16 +268,16 @@ export default function CustomerAreaRates({
                   {price !== undefined &&
                   price !== null &&
                   price !== "" ? (
-                    `₹${price}`
+                    `â‚¹${price}`
                   ) : (
-                    "रेट उपलब्ध नहीं"
+                    "à¤°à¥‡à¤Ÿ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚"
                   )}
 
                 </div>
 
                 <p className="rl-unit">
                   {rate?.unit ||
-                    "एडमिन द्वारा रेट निर्धारित होगा"}
+                    "à¤à¤¡à¤®à¤¿à¤¨ à¤¦à¥à¤µà¤¾à¤°à¤¾ à¤°à¥‡à¤Ÿ à¤¨à¤¿à¤°à¥à¤§à¤¾à¤°à¤¿à¤¤ à¤¹à¥‹à¤—à¤¾"}
                 </p>
 
                 <div className="rl-location">
@@ -294,9 +294,9 @@ export default function CustomerAreaRates({
 
       {/* NOTE */}
       <div className="rl-note">
-        <strong>नोट:</strong>{" "}
-        अंतिम रेट और कार्य की शर्तों की पुष्टि
-        संबंधित एजेंट से अवश्य करें।
+        <strong>à¤¨à¥‹à¤Ÿ:</strong>{" "}
+        à¤…à¤‚à¤¤à¤¿à¤® à¤°à¥‡à¤Ÿ à¤”à¤° à¤•à¤¾à¤°à¥à¤¯ à¤•à¥€ à¤¶à¤°à¥à¤¤à¥‹à¤‚ à¤•à¥€ à¤ªà¥à¤·à¥à¤Ÿà¤¿
+        à¤¸à¤‚à¤¬à¤‚à¤§à¤¿à¤¤ à¤à¤œà¥‡à¤‚à¤Ÿ à¤¸à¥‡ à¤…à¤µà¤¶à¥à¤¯ à¤•à¤°à¥‡à¤‚à¥¤
       </div>
 
     </section>

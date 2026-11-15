@@ -1,4 +1,4 @@
-
+﻿
 import React, { useEffect, useState } from "react";
 import {
   Copy, Share2, MessageCircle, Users, IndianRupee,
@@ -6,7 +6,7 @@ import {
   CheckCircle, Clock, XCircle, Link as LinkIcon
 } from "lucide-react";
 
-const API = "http://localhost:4000/api";
+const API = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "http://localhost:4000/api" : "/api";
 
 export default function ReferralDashboard({ user, onLogout, onBack }) {
   const [dashboard, setDashboard] = useState(null);
@@ -49,13 +49,13 @@ export default function ReferralDashboard({ user, onLogout, onBack }) {
       const settingsData = await settingsResponse.json();
 
       if (!dashboardResponse.ok) {
-        throw new Error(dashboardData.message || "Dashboard लोड नहीं हुआ");
+        throw new Error(dashboardData.message || "Dashboard à¤²à¥‹à¤¡ à¤¨à¤¹à¥€à¤‚ à¤¹à¥à¤†");
       }
 
       setDashboard(dashboardData);
       setSettings(settingsData);
     } catch (err) {
-      setError(err.message || "Server से संपर्क नहीं हो पाया");
+      setError(err.message || "Server à¤¸à¥‡ à¤¸à¤‚à¤ªà¤°à¥à¤• à¤¨à¤¹à¥€à¤‚ à¤¹à¥‹ à¤ªà¤¾à¤¯à¤¾");
     } finally {
       setLoading(false);
     }
@@ -78,14 +78,14 @@ export default function ReferralDashboard({ user, onLogout, onBack }) {
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(getReferralLink());
-      setMessage("Referral Link कॉपी हो गया");
+      setMessage("Referral Link à¤•à¥‰à¤ªà¥€ à¤¹à¥‹ à¤—à¤¯à¤¾");
     } catch {
-      setMessage("लिंक कॉपी नहीं हुआ। कृपया लिंक को स्वयं कॉपी करें।");
+      setMessage("à¤²à¤¿à¤‚à¤• à¤•à¥‰à¤ªà¥€ à¤¨à¤¹à¥€à¤‚ à¤¹à¥à¤†à¥¤ à¤•à¥ƒà¤ªà¤¯à¤¾ à¤²à¤¿à¤‚à¤• à¤•à¥‹ à¤¸à¥à¤µà¤¯à¤‚ à¤•à¥‰à¤ªà¥€ à¤•à¤°à¥‡à¤‚à¥¤");
     }
   }
 
   function shareWhatsApp() {
-    const text = `नमस्कार! Borewell Mitra MP पर बोरवेल बुकिंग के लिए इस लिंक पर क्लिक करें:\n${getReferralLink()}`;
+    const text = `à¤¨à¤®à¤¸à¥à¤•à¤¾à¤°! Borewell Mitra MP à¤ªà¤° à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤¬à¥à¤•à¤¿à¤‚à¤— à¤•à¥‡ à¤²à¤¿à¤ à¤‡à¤¸ à¤²à¤¿à¤‚à¤• à¤ªà¤° à¤•à¥à¤²à¤¿à¤• à¤•à¤°à¥‡à¤‚:\n${getReferralLink()}`;
     window.open(
       `https://wa.me/?text=${encodeURIComponent(text)}`,
       "_blank"
@@ -98,12 +98,12 @@ export default function ReferralDashboard({ user, onLogout, onBack }) {
     if (!form.customerName.trim() || !form.mobile.trim() ||
         !form.district.trim() || !form.block.trim() ||
         !form.address.trim()) {
-      setMessage("कृपया सभी जरूरी जानकारी भरें");
+      setMessage("à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¸à¤­à¥€ à¤œà¤°à¥‚à¤°à¥€ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ à¤­à¤°à¥‡à¤‚");
       return;
     }
 
     if (!/^[6-9]\d{9}$/.test(form.mobile)) {
-      setMessage("कृपया सही 10 अंकों का मोबाइल नंबर डालें");
+      setMessage("à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¸à¤¹à¥€ 10 à¤…à¤‚à¤•à¥‹à¤‚ à¤•à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° à¤¡à¤¾à¤²à¥‡à¤‚");
       return;
     }
 
@@ -120,11 +120,11 @@ export default function ReferralDashboard({ user, onLogout, onBack }) {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || "Booking नहीं हो पाई");
+        throw new Error(result.message || "Booking à¤¨à¤¹à¥€à¤‚ à¤¹à¥‹ à¤ªà¤¾à¤ˆ");
       }
 
       setMessage(
-        `Booking सफल हुई! Booking ID: ${result.bookingCode || result.booking?.bookingCode || "बन गई"}`
+        `Booking à¤¸à¤«à¤² à¤¹à¥à¤ˆ! Booking ID: ${result.bookingCode || result.booking?.bookingCode || "à¤¬à¤¨ à¤—à¤ˆ"}`
       );
 
       setForm({
@@ -140,7 +140,7 @@ export default function ReferralDashboard({ user, onLogout, onBack }) {
       setShowForm(false);
       loadDashboard();
     } catch (err) {
-      setMessage(err.message || "Booking में समस्या आई");
+      setMessage(err.message || "Booking à¤®à¥‡à¤‚ à¤¸à¤®à¤¸à¥à¤¯à¤¾ à¤†à¤ˆ");
     } finally {
       setSaving(false);
     }
@@ -161,11 +161,11 @@ export default function ReferralDashboard({ user, onLogout, onBack }) {
   function statusIcon(status) {
     const value = String(status || "").toLowerCase();
 
-    if (value.includes("paid") || value.includes("भुगतान")) {
+    if (value.includes("paid") || value.includes("à¤­à¥à¤—à¤¤à¤¾à¤¨")) {
       return <CheckCircle size={16} color="green" />;
     }
 
-    if (value.includes("reject") || value.includes("रद्द")) {
+    if (value.includes("reject") || value.includes("à¤°à¤¦à¥à¤¦")) {
       return <XCircle size={16} color="red" />;
     }
 
@@ -226,7 +226,7 @@ export default function ReferralDashboard({ user, onLogout, onBack }) {
     return (
       <div style={{ padding: 40, textAlign: "center" }}>
         <RefreshCw size={30} />
-        <p>Referral Dashboard लोड हो रहा है...</p>
+        <p>Referral Dashboard à¤²à¥‹à¤¡ à¤¹à¥‹ à¤°à¤¹à¤¾ à¤¹à¥ˆ...</p>
       </div>
     );
   }
@@ -248,7 +248,7 @@ export default function ReferralDashboard({ user, onLogout, onBack }) {
                   style={{ ...styles.button, background: "white", color: "#07518a" }}
                   onClick={onBack}
                 >
-                  <ArrowLeft size={15} /> वापस
+                  <ArrowLeft size={15} /> à¤µà¤¾à¤ªà¤¸
                 </button>
               )}
               <button
@@ -269,15 +269,15 @@ export default function ReferralDashboard({ user, onLogout, onBack }) {
           </div>
 
           <h3 style={{ marginBottom: 4 }}>
-            नमस्कार, {partner.name || user?.name || "Referral Partner"}
+            à¤¨à¤®à¤¸à¥à¤•à¤¾à¤°, {partner.name || user?.name || "Referral Partner"}
           </h3>
-          <div>आपका Referral Business Dashboard</div>
+          <div>à¤†à¤ªà¤•à¤¾ Referral Business Dashboard</div>
         </header>
 
         {error && (
           <div style={{ ...styles.card, color: "#b91c1c", marginBottom: 15 }}>
             {error}
-            <p>कृपया Backend Server चालू होने की जाँच करें।</p>
+            <p>à¤•à¥ƒà¤ªà¤¯à¤¾ Backend Server à¤šà¤¾à¤²à¥‚ à¤¹à¥‹à¤¨à¥‡ à¤•à¥€ à¤œà¤¾à¤à¤š à¤•à¤°à¥‡à¤‚à¥¤</p>
           </div>
         )}
 
@@ -288,17 +288,17 @@ export default function ReferralDashboard({ user, onLogout, onBack }) {
               style={{ ...styles.button, background: "#e5e7eb" }}
               onClick={() => setMessage("")}
             >
-              बंद करें
+              à¤¬à¤‚à¤¦ à¤•à¤°à¥‡à¤‚
             </button>
           </div>
         )}
 
         <section style={styles.card}>
-          <h3><Users size={19} /> आपकी Referral जानकारी</h3>
-          <p><b>नाम:</b> {partner.name || user?.name || "—"}</p>
-          <p><b>Referral ID:</b> {partner.userId || partner.user_id || partner.id || "—"}</p>
-          <p><b>Referral Code:</b> {partner.referral_code || dashboard?.referralCode || "—"}</p>
-          <p><b>मोबाइल:</b> {partner.mobile || user?.mobile || "—"}</p>
+          <h3><Users size={19} /> à¤†à¤ªà¤•à¥€ Referral à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€</h3>
+          <p><b>à¤¨à¤¾à¤®:</b> {partner.name || user?.name || "â€”"}</p>
+          <p><b>Referral ID:</b> {partner.userId || partner.user_id || partner.id || "â€”"}</p>
+          <p><b>Referral Code:</b> {partner.referral_code || dashboard?.referralCode || "â€”"}</p>
+          <p><b>à¤®à¥‹à¤¬à¤¾à¤‡à¤²:</b> {partner.mobile || user?.mobile || "â€”"}</p>
 
           <div style={{
             background: "#eef6ff",
@@ -306,7 +306,7 @@ export default function ReferralDashboard({ user, onLogout, onBack }) {
             borderRadius: 9,
             overflowWrap: "anywhere"
           }}>
-            <b><LinkIcon size={16} /> आपका Referral Link</b>
+            <b><LinkIcon size={16} /> à¤†à¤ªà¤•à¤¾ Referral Link</b>
             <p>{getReferralLink()}</p>
             <button
               style={{ ...styles.button, background: "#075eaa", color: "white" }}
@@ -332,35 +332,35 @@ export default function ReferralDashboard({ user, onLogout, onBack }) {
           <div style={styles.card}>
             <Users color="#0878bd" />
             <h2>{totalBookings}</h2>
-            <div>कुल Referral Bookings</div>
+            <div>à¤•à¥à¤² Referral Bookings</div>
           </div>
 
           <div style={styles.card}>
             <IndianRupee color="#168b4b" />
-            <h2>₹{totalCommission}</h2>
-            <div>कुल कमीशन</div>
+            <h2>â‚¹{totalCommission}</h2>
+            <div>à¤•à¥à¤² à¤•à¤®à¥€à¤¶à¤¨</div>
           </div>
 
           <div style={styles.card}>
             <CheckCircle color="#168b4b" />
-            <h2>₹{paidCommission}</h2>
-            <div>भुगतान किया गया</div>
+            <h2>â‚¹{paidCommission}</h2>
+            <div>à¤­à¥à¤—à¤¤à¤¾à¤¨ à¤•à¤¿à¤¯à¤¾ à¤—à¤¯à¤¾</div>
           </div>
 
           <div style={styles.card}>
             <Clock color="#d97706" />
-            <h2>₹{pendingCommission}</h2>
-            <div>लंबित कमीशन</div>
+            <h2>â‚¹{pendingCommission}</h2>
+            <div>à¤²à¤‚à¤¬à¤¿à¤¤ à¤•à¤®à¥€à¤¶à¤¨</div>
           </div>
         </div>
 
         <section style={{ ...styles.card, marginBottom: 18 }}>
-          <h3>Referral Commission नियम</h3>
+          <h3>Referral Commission à¤¨à¤¿à¤¯à¤®</h3>
           <p>
-            प्रति सफल बुकिंग कमीशन: <b>₹{settings?.commission ?? settings?.commission_amount ?? 200}</b>
+            à¤ªà¥à¤°à¤¤à¤¿ à¤¸à¤«à¤² à¤¬à¥à¤•à¤¿à¤‚à¤— à¤•à¤®à¥€à¤¶à¤¨: <b>â‚¹{settings?.commission ?? settings?.commission_amount ?? 200}</b>
           </p>
           <p>
-            कमीशन तभी मिलेगा जब बोरवेल का काम पूरा हो जाए और Admin द्वारा भुगतान सत्यापित कर दिया जाए।
+            à¤•à¤®à¥€à¤¶à¤¨ à¤¤à¤­à¥€ à¤®à¤¿à¤²à¥‡à¤—à¤¾ à¤œà¤¬ à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤•à¤¾ à¤•à¤¾à¤® à¤ªà¥‚à¤°à¤¾ à¤¹à¥‹ à¤œà¤¾à¤ à¤”à¤° Admin à¤¦à¥à¤µà¤¾à¤°à¤¾ à¤­à¥à¤—à¤¤à¤¾à¤¨ à¤¸à¤¤à¥à¤¯à¤¾à¤ªà¤¿à¤¤ à¤•à¤° à¤¦à¤¿à¤¯à¤¾ à¤œà¤¾à¤à¥¤
           </p>
         </section>
 
@@ -370,76 +370,76 @@ export default function ReferralDashboard({ user, onLogout, onBack }) {
             onClick={() => setShowForm(!showForm)}
           >
             <PlusCircle size={17} />
-            {showForm ? "फॉर्म बंद करें" : "ग्राहक की नई Booking जोड़ें"}
+            {showForm ? "à¤«à¥‰à¤°à¥à¤® à¤¬à¤‚à¤¦ à¤•à¤°à¥‡à¤‚" : "à¤—à¥à¤°à¤¾à¤¹à¤• à¤•à¥€ à¤¨à¤ˆ Booking à¤œà¥‹à¤¡à¤¼à¥‡à¤‚"}
           </button>
         </div>
 
         {showForm && (
           <section style={{ ...styles.card, marginBottom: 18 }}>
-            <h3>नई Referral Booking</h3>
+            <h3>à¤¨à¤ˆ Referral Booking</h3>
 
             <form onSubmit={submitBooking}>
-              <label style={styles.label}>ग्राहक का नाम *</label>
+              <label style={styles.label}>à¤—à¥à¤°à¤¾à¤¹à¤• à¤•à¤¾ à¤¨à¤¾à¤® *</label>
               <input
                 style={styles.input}
                 name="customerName"
                 value={form.customerName}
                 onChange={updateForm}
-                placeholder="ग्राहक का पूरा नाम"
+                placeholder="à¤—à¥à¤°à¤¾à¤¹à¤• à¤•à¤¾ à¤ªà¥‚à¤°à¤¾ à¤¨à¤¾à¤®"
                 required
               />
 
-              <label style={styles.label}>मोबाइल नंबर *</label>
+              <label style={styles.label}>à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° *</label>
               <input
                 style={styles.input}
                 name="mobile"
                 value={form.mobile}
                 onChange={updateForm}
-                placeholder="10 अंकों का मोबाइल नंबर"
+                placeholder="10 à¤…à¤‚à¤•à¥‹à¤‚ à¤•à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤°"
                 maxLength={10}
                 required
               />
 
-              <label style={styles.label}>जिला *</label>
+              <label style={styles.label}>à¤œà¤¿à¤²à¤¾ *</label>
               <input
                 style={styles.input}
                 name="district"
                 value={form.district}
                 onChange={updateForm}
-                placeholder="जिला"
+                placeholder="à¤œà¤¿à¤²à¤¾"
                 required
               />
 
-              <label style={styles.label}>तहसील</label>
+              <label style={styles.label}>à¤¤à¤¹à¤¸à¥€à¤²</label>
               <input
                 style={styles.input}
                 name="tehsil"
                 value={form.tehsil}
                 onChange={updateForm}
-                placeholder="तहसील"
+                placeholder="à¤¤à¤¹à¤¸à¥€à¤²"
               />
 
-              <label style={styles.label}>ब्लॉक *</label>
+              <label style={styles.label}>à¤¬à¥à¤²à¥‰à¤• *</label>
               <input
                 style={styles.input}
                 name="block"
                 value={form.block}
                 onChange={updateForm}
-                placeholder="ब्लॉक"
+                placeholder="à¤¬à¥à¤²à¥‰à¤•"
                 required
               />
 
-              <label style={styles.label}>पूरा पता *</label>
+              <label style={styles.label}>à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾ *</label>
               <textarea
                 style={{ ...styles.input, minHeight: 85 }}
                 name="address"
                 value={form.address}
                 onChange={updateForm}
-                placeholder="ग्राम, पोस्ट, पिन कोड सहित पूरा पता"
+                placeholder="à¤—à¥à¤°à¤¾à¤®, à¤ªà¥‹à¤¸à¥à¤Ÿ, à¤ªà¤¿à¤¨ à¤•à¥‹à¤¡ à¤¸à¤¹à¤¿à¤¤ à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾"
                 required
               />
 
-              <label style={styles.label}>सेवा चुनें</label>
+              <label style={styles.label}>à¤¸à¥‡à¤µà¤¾ à¤šà¥à¤¨à¥‡à¤‚</label>
               <select
                 style={styles.input}
                 name="service"
@@ -464,27 +464,27 @@ export default function ReferralDashboard({ user, onLogout, onBack }) {
                   opacity: saving ? 0.6 : 1
                 }}
               >
-                {saving ? "Booking भेजी जा रही है..." : "Booking Submit करें"}
+                {saving ? "Booking à¤­à¥‡à¤œà¥€ à¤œà¤¾ à¤°à¤¹à¥€ à¤¹à¥ˆ..." : "Booking Submit à¤•à¤°à¥‡à¤‚"}
               </button>
             </form>
           </section>
         )}
 
         <section style={{ ...styles.card, marginBottom: 18 }}>
-          <h3><ClipboardList size={19} /> आपकी Referral Bookings</h3>
+          <h3><ClipboardList size={19} /> à¤†à¤ªà¤•à¥€ Referral Bookings</h3>
 
           {bookings.length === 0 ? (
-            <p>अभी कोई Referral Booking उपलब्ध नहीं है।</p>
+            <p>à¤…à¤­à¥€ à¤•à¥‹à¤ˆ Referral Booking à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤</p>
           ) : (
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 600 }}>
                 <thead>
                   <tr style={{ background: "#eef3f8", textAlign: "left" }}>
                     <th style={{ padding: 10 }}>Booking ID</th>
-                    <th style={{ padding: 10 }}>ग्राहक</th>
-                    <th style={{ padding: 10 }}>मोबाइल</th>
-                    <th style={{ padding: 10 }}>सेवा</th>
-                    <th style={{ padding: 10 }}>स्थिति</th>
+                    <th style={{ padding: 10 }}>à¤—à¥à¤°à¤¾à¤¹à¤•</th>
+                    <th style={{ padding: 10 }}>à¤®à¥‹à¤¬à¤¾à¤‡à¤²</th>
+                    <th style={{ padding: 10 }}>à¤¸à¥‡à¤µà¤¾</th>
+                    <th style={{ padding: 10 }}>à¤¸à¥à¤¥à¤¿à¤¤à¤¿</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -506,10 +506,10 @@ export default function ReferralDashboard({ user, onLogout, onBack }) {
         </section>
 
         <section style={styles.card}>
-          <h3><IndianRupee size={19} /> कमीशन की जानकारी</h3>
+          <h3><IndianRupee size={19} /> à¤•à¤®à¥€à¤¶à¤¨ à¤•à¥€ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€</h3>
 
           {commissions.length === 0 ? (
-            <p>अभी कोई कमीशन रिकॉर्ड उपलब्ध नहीं है।</p>
+            <p>à¤…à¤­à¥€ à¤•à¥‹à¤ˆ à¤•à¤®à¥€à¤¶à¤¨ à¤°à¤¿à¤•à¥‰à¤°à¥à¤¡ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤</p>
           ) : (
             commissions.map((item, index) => (
               <div
@@ -533,7 +533,7 @@ export default function ReferralDashboard({ user, onLogout, onBack }) {
                     {item.status || "Pending"}
                   </div>
                 </div>
-                <b>₹{item.amount || 0}</b>
+                <b>â‚¹{item.amount || 0}</b>
               </div>
             ))
           )}

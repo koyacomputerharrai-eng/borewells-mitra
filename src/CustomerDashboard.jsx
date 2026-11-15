@@ -1,4 +1,4 @@
-
+﻿
 import React, { useEffect, useMemo, useState } from "react";
 import CustomerAreaRates from "./CustomerAreaRates.jsx";
 import { DISTRICTS, BLOCKS } from "./areas.js";
@@ -10,9 +10,7 @@ import {
 } from "lucide-react";
 import "./CustomerDashboard.css";
 
-const API = window.location.hostname === "localhost"
-  ? "http://localhost:4000/api"
-  : "https://borewells-mitra-api.onrender.com/api";
+const API = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "http://localhost:4000/api" : "/api";
 
 const SUPPORT_PHONE = "919183863725";
 
@@ -24,7 +22,7 @@ function getBlocksForDistrict(district) {
 }
 
 function formatDate(value) {
-  if (!value) return "उपलब्ध नहीं";
+  if (!value) return "à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
   return date.toLocaleString("hi-IN", {
@@ -35,10 +33,10 @@ function formatDate(value) {
 
 function getStatusClass(status = "") {
   const value = String(status).toLowerCase();
-  if (value.includes("पूर्ण") || value.includes("complete")) return "success";
-  if (value.includes("रद्द") || value.includes("cancel")) return "danger";
-  if (value.includes("प्रगति") || value.includes("progress")) return "info";
-  if (value.includes("नियुक्त") || value.includes("assign")) return "purple";
+  if (value.includes("à¤ªà¥‚à¤°à¥à¤£") || value.includes("complete")) return "success";
+  if (value.includes("à¤°à¤¦à¥à¤¦") || value.includes("cancel")) return "danger";
+  if (value.includes("à¤ªà¥à¤°à¤—à¤¤à¤¿") || value.includes("progress")) return "info";
+  if (value.includes("à¤¨à¤¿à¤¯à¥à¤•à¥à¤¤") || value.includes("assign")) return "purple";
   return "pending";
 }
 
@@ -57,7 +55,7 @@ export default function CustomerDashboard({ user, onLogout }) {
   const [photoMessage, setPhotoMessage] = useState("");
   const [district, setDistrict] = useState(
     user?.district ||
-    DISTRICTS?.find(x => x === "छिंदवाड़ा") ||
+    DISTRICTS?.find(x => x === "à¤›à¤¿à¤‚à¤¦à¤µà¤¾à¤¡à¤¼à¤¾") ||
     DISTRICTS?.[0] || ""
   );
   const [block, setBlock] = useState(user?.block || "");
@@ -84,7 +82,7 @@ export default function CustomerDashboard({ user, onLogout }) {
       const result = await response.json();
 
       if (!response.ok || result?.success === false) {
-        throw new Error(result?.message || "बुकिंग जानकारी नहीं मिली।");
+        throw new Error(result?.message || "à¤¬à¥à¤•à¤¿à¤‚à¤— à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤²à¥€à¥¤");
       }
 
       const rows = Array.isArray(result)
@@ -95,7 +93,7 @@ export default function CustomerDashboard({ user, onLogout }) {
 
       setBookings(rows);
     } catch (err) {
-      setError(err.message || "सर्वर से संपर्क नहीं हो सका।");
+      setError(err.message || "à¤¸à¤°à¥à¤µà¤° à¤¸à¥‡ à¤¸à¤‚à¤ªà¤°à¥à¤• à¤¨à¤¹à¥€à¤‚ à¤¹à¥‹ à¤¸à¤•à¤¾à¥¤");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -111,18 +109,18 @@ export default function CustomerDashboard({ user, onLogout }) {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setPhotoMessage("कृपया सही फोटो चुनें।");
+      setPhotoMessage("à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¸à¤¹à¥€ à¤«à¥‹à¤Ÿà¥‹ à¤šà¥à¤¨à¥‡à¤‚à¥¤");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setPhotoMessage("फोटो 5 MB से कम होनी चाहिए।");
+      setPhotoMessage("à¤«à¥‹à¤Ÿà¥‹ 5 MB à¤¸à¥‡ à¤•à¤® à¤¹à¥‹à¤¨à¥€ à¤šà¤¾à¤¹à¤¿à¤à¥¤");
       return;
     }
 
     const reader = new FileReader();
     reader.onload = () => {
       setProfilePhoto(reader.result);
-      setPhotoMessage("फोटो का Preview बदल गया है। यह अभी सर्वर पर सेव नहीं है।");
+      setPhotoMessage("à¤«à¥‹à¤Ÿà¥‹ à¤•à¤¾ Preview à¤¬à¤¦à¤² à¤—à¤¯à¤¾ à¤¹à¥ˆà¥¤ à¤¯à¤¹ à¤…à¤­à¥€ à¤¸à¤°à¥à¤µà¤° à¤ªà¤° à¤¸à¥‡à¤µ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤");
     };
     reader.readAsDataURL(file);
   }
@@ -142,15 +140,15 @@ export default function CustomerDashboard({ user, onLogout }) {
     item => !["success", "danger"].includes(getStatusClass(item.status))
   ).length;
 
-  const customerName = user?.name || "ग्राहक";
-  const customerId = user?.userId || user?.id || "उपलब्ध नहीं";
+  const customerName = user?.name || "à¤—à¥à¤°à¤¾à¤¹à¤•";
+  const customerId = user?.userId || user?.id || "à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚";
 
   const navItems = [
-    ["profile", "मेरा प्रोफाइल"],
-    ["bookings", "मेरी बुकिंग"],
-    ["agents", "एजेंट डिटेल्स"],
-    ["rates", "एरिया रेट लिस्ट"],
-    ["support", "सहायता"]
+    ["profile", "à¤®à¥‡à¤°à¤¾ à¤ªà¥à¤°à¥‹à¤«à¤¾à¤‡à¤²"],
+    ["bookings", "à¤®à¥‡à¤°à¥€ à¤¬à¥à¤•à¤¿à¤‚à¤—"],
+    ["agents", "à¤à¤œà¥‡à¤‚à¤Ÿ à¤¡à¤¿à¤Ÿà¥‡à¤²à¥à¤¸"],
+    ["rates", "à¤à¤°à¤¿à¤¯à¤¾ à¤°à¥‡à¤Ÿ à¤²à¤¿à¤¸à¥à¤Ÿ"],
+    ["support", "à¤¸à¤¹à¤¾à¤¯à¤¤à¤¾"]
   ];
 
   function closeMenu() {
@@ -183,7 +181,7 @@ export default function CustomerDashboard({ user, onLogout }) {
           </div>
         </div>
 
-        <div className="sidebar-label">मेन्यू</div>
+        <div className="sidebar-label">à¤®à¥‡à¤¨à¥à¤¯à¥‚</div>
         <nav className="customer-nav">
           {navItems.map(([id, label]) => (
             <a href={`#${id}`} key={id} onClick={closeMenu}>
@@ -196,14 +194,14 @@ export default function CustomerDashboard({ user, onLogout }) {
         <div className="sidebar-bottom">
           <div className="sidebar-help">
             <Headset size={22} />
-            <strong>मदद चाहिए?</strong>
-            <span>हमारी सहायता टीम से संपर्क करें।</span>
+            <strong>à¤®à¤¦à¤¦ à¤šà¤¾à¤¹à¤¿à¤?</strong>
+            <span>à¤¹à¤®à¤¾à¤°à¥€ à¤¸à¤¹à¤¾à¤¯à¤¤à¤¾ à¤Ÿà¥€à¤® à¤¸à¥‡ à¤¸à¤‚à¤ªà¤°à¥à¤• à¤•à¤°à¥‡à¤‚à¥¤</span>
             <a href={`https://wa.me/${SUPPORT_PHONE}`} target="_blank" rel="noreferrer">
-              WhatsApp सहायता
+              WhatsApp à¤¸à¤¹à¤¾à¤¯à¤¤à¤¾
             </a>
           </div>
           <button className="logout-button" onClick={onLogout}>
-            <LogOut size={18} /> लॉगआउट
+            <LogOut size={18} /> à¤²à¥‰à¤—à¤†à¤‰à¤Ÿ
           </button>
         </div>
       </aside>
@@ -223,8 +221,8 @@ export default function CustomerDashboard({ user, onLogout }) {
           </button>
           <div>
             <span className="topbar-eyebrow">CUSTOMER DASHBOARD</span>
-            <h1>नमस्ते, {customerName}!</h1>
-            <p>आपकी बुकिंग और सेवाओं की जानकारी एक ही जगह।</p>
+            <h1>à¤¨à¤®à¤¸à¥à¤¤à¥‡, {customerName}!</h1>
+            <p>à¤†à¤ªà¤•à¥€ à¤¬à¥à¤•à¤¿à¤‚à¤— à¤”à¤° à¤¸à¥‡à¤µà¤¾à¤“à¤‚ à¤•à¥€ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ à¤à¤• à¤¹à¥€ à¤œà¤—à¤¹à¥¤</p>
           </div>
           <button
             className="topbar-refresh"
@@ -232,26 +230,26 @@ export default function CustomerDashboard({ user, onLogout }) {
             disabled={refreshing}
           >
             <RefreshCw size={17} className={refreshing ? "spin" : ""} />
-            <span>{refreshing ? "लोड हो रहा है" : "रिफ्रेश"}</span>
+            <span>{refreshing ? "à¤²à¥‹à¤¡ à¤¹à¥‹ à¤°à¤¹à¤¾ à¤¹à¥ˆ" : "à¤°à¤¿à¤«à¥à¤°à¥‡à¤¶"}</span>
           </button>
         </header>
 
         <section className="customer-stat-grid">
           <div className="customer-stat-card">
             <div className="stat-icon blue"><ClipboardList size={22} /></div>
-            <div><span>कुल बुकिंग</span><strong>{bookings.length}</strong></div>
+            <div><span>à¤•à¥à¤² à¤¬à¥à¤•à¤¿à¤‚à¤—</span><strong>{bookings.length}</strong></div>
           </div>
           <div className="customer-stat-card">
             <div className="stat-icon gold"><Activity size={22} /></div>
-            <div><span>चालू बुकिंग</span><strong>{activeCount}</strong></div>
+            <div><span>à¤šà¤¾à¤²à¥‚ à¤¬à¥à¤•à¤¿à¤‚à¤—</span><strong>{activeCount}</strong></div>
           </div>
           <div className="customer-stat-card">
             <div className="stat-icon green"><CheckCircle size={22} /></div>
-            <div><span>पूर्ण बुकिंग</span><strong>{completedCount}</strong></div>
+            <div><span>à¤ªà¥‚à¤°à¥à¤£ à¤¬à¥à¤•à¤¿à¤‚à¤—</span><strong>{completedCount}</strong></div>
           </div>
           <div className="customer-stat-card">
             <div className="stat-icon purple"><Users size={22} /></div>
-            <div><span>नियुक्त एजेंट</span><strong>{uniqueAgents.length}</strong></div>
+            <div><span>à¤¨à¤¿à¤¯à¥à¤•à¥à¤¤ à¤à¤œà¥‡à¤‚à¤Ÿ</span><strong>{uniqueAgents.length}</strong></div>
           </div>
         </section>
 
@@ -259,8 +257,8 @@ export default function CustomerDashboard({ user, onLogout }) {
           <div className="panel-heading">
             <div>
               <span className="panel-kicker">ACCOUNT</span>
-              <h2><UserRound size={21} /> मेरा प्रोफाइल</h2>
-              <p>आपकी ग्राहक जानकारी</p>
+              <h2><UserRound size={21} /> à¤®à¥‡à¤°à¤¾ à¤ªà¥à¤°à¥‹à¤«à¤¾à¤‡à¤²</h2>
+              <p>à¤†à¤ªà¤•à¥€ à¤—à¥à¤°à¤¾à¤¹à¤• à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€</p>
             </div>
           </div>
 
@@ -272,7 +270,7 @@ export default function CustomerDashboard({ user, onLogout }) {
                   : <UserRound size={48} />}
               </div>
               <label className="photo-upload-button" htmlFor="customer-profile-photo">
-                <Camera size={16} /> फोटो चुनें
+                <Camera size={16} /> à¤«à¥‹à¤Ÿà¥‹ à¤šà¥à¤¨à¥‡à¤‚
               </label>
               <input
                 id="customer-profile-photo"
@@ -281,22 +279,22 @@ export default function CustomerDashboard({ user, onLogout }) {
                 onChange={handlePhotoChange}
                 hidden
               />
-              <small>अधिकतम 5 MB · केवल Preview</small>
+              <small>à¤…à¤§à¤¿à¤•à¤¤à¤® 5 MB Â· à¤•à¥‡à¤µà¤² Preview</small>
               {photoMessage && <small className="photo-message">{photoMessage}</small>}
             </div>
 
             <div className="profile-details-grid">
               <div className="info-tile">
-                <span>पूरा नाम</span><strong>{customerName}</strong>
+                <span>à¤ªà¥‚à¤°à¤¾ à¤¨à¤¾à¤®</span><strong>{customerName}</strong>
               </div>
               <div className="info-tile">
-                <span>मोबाइल नंबर</span><strong>{user?.mobile || "उपलब्ध नहीं"}</strong>
+                <span>à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤°</span><strong>{user?.mobile || "à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚"}</strong>
               </div>
               <div className="info-tile">
                 <span>Customer ID</span><strong>{customerId}</strong>
               </div>
               <div className="info-tile">
-                <span>रजिस्ट्रेशन जिला</span><strong>{user?.district || "उपलब्ध नहीं"}</strong>
+                <span>à¤°à¤œà¤¿à¤¸à¥à¤Ÿà¥à¤°à¥‡à¤¶à¤¨ à¤œà¤¿à¤²à¤¾</span><strong>{user?.district || "à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚"}</strong>
               </div>
             </div>
           </div>
@@ -304,21 +302,21 @@ export default function CustomerDashboard({ user, onLogout }) {
           <div className="profile-location">
             <div className="location-title">
               <MapPinned size={19} />
-              <div><strong>रेट लिस्ट के लिए क्षेत्र चुनें</strong><span>यह चयन रेट लिस्ट दिखाने के लिए है।</span></div>
+              <div><strong>à¤°à¥‡à¤Ÿ à¤²à¤¿à¤¸à¥à¤Ÿ à¤•à¥‡ à¤²à¤¿à¤ à¤•à¥à¤·à¥‡à¤¤à¥à¤° à¤šà¥à¤¨à¥‡à¤‚</strong><span>à¤¯à¤¹ à¤šà¤¯à¤¨ à¤°à¥‡à¤Ÿ à¤²à¤¿à¤¸à¥à¤Ÿ à¤¦à¤¿à¤–à¤¾à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤¹à¥ˆà¥¤</span></div>
             </div>
             <div className="location-selects">
-              <label>जिला
+              <label>à¤œà¤¿à¤²à¤¾
                 <select value={district} onChange={e => setDistrict(e.target.value)}>
                   {(DISTRICTS || []).map(name => <option key={name} value={name}>{name}</option>)}
                 </select>
               </label>
-              <label>ब्लॉक
+              <label>à¤¬à¥à¤²à¥‰à¤•
                 <select value={block} onChange={e => setBlock(e.target.value)} disabled={!blocks.length}>
                   {blocks.map(name => <option key={name} value={name}>{name}</option>)}
                 </select>
               </label>
             </div>
-            <p className="readonly-note">प्रोफाइल में स्थायी बदलाव के लिए Backend में प्रोफाइल अपडेट सुविधा जोड़नी होगी।</p>
+            <p className="readonly-note">à¤ªà¥à¤°à¥‹à¤«à¤¾à¤‡à¤² à¤®à¥‡à¤‚ à¤¸à¥à¤¥à¤¾à¤¯à¥€ à¤¬à¤¦à¤²à¤¾à¤µ à¤•à¥‡ à¤²à¤¿à¤ Backend à¤®à¥‡à¤‚ à¤ªà¥à¤°à¥‹à¤«à¤¾à¤‡à¤² à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤¸à¥à¤µà¤¿à¤§à¤¾ à¤œà¥‹à¤¡à¤¼à¤¨à¥€ à¤¹à¥‹à¤—à¥€à¥¤</p>
           </div>
         </section>
 
@@ -326,22 +324,22 @@ export default function CustomerDashboard({ user, onLogout }) {
           <div className="panel-heading panel-heading-row">
             <div>
               <span className="panel-kicker">BOOKING ACTIVITY</span>
-              <h2><ClipboardList size={21} /> मेरी बुकिंग का स्टेटस</h2>
-              <p>आपकी बुकिंग की वर्तमान स्थिति</p>
+              <h2><ClipboardList size={21} /> à¤®à¥‡à¤°à¥€ à¤¬à¥à¤•à¤¿à¤‚à¤— à¤•à¤¾ à¤¸à¥à¤Ÿà¥‡à¤Ÿà¤¸</h2>
+              <p>à¤†à¤ªà¤•à¥€ à¤¬à¥à¤•à¤¿à¤‚à¤— à¤•à¥€ à¤µà¤°à¥à¤¤à¤®à¤¾à¤¨ à¤¸à¥à¤¥à¤¿à¤¤à¤¿</p>
             </div>
             <button className="small-action-button" onClick={() => loadBookings(true)} disabled={refreshing}>
-              <RefreshCw size={16} /> रिफ्रेश
+              <RefreshCw size={16} /> à¤°à¤¿à¤«à¥à¤°à¥‡à¤¶
             </button>
           </div>
 
-          {loading && <div className="empty-state"><RefreshCw className="spin" size={28} /><p>बुकिंग जानकारी लोड हो रही है...</p></div>}
+          {loading && <div className="empty-state"><RefreshCw className="spin" size={28} /><p>à¤¬à¥à¤•à¤¿à¤‚à¤— à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ à¤²à¥‹à¤¡ à¤¹à¥‹ à¤°à¤¹à¥€ à¤¹à¥ˆ...</p></div>}
           {error && <div className="error-message">{error}</div>}
 
           {!loading && !error && bookings.length === 0 && (
             <div className="empty-state">
               <ClipboardList size={38} />
-              <strong>अभी कोई बुकिंग नहीं मिली</strong>
-              <p>आपकी बुकिंग यहाँ दिखाई देगी।</p>
+              <strong>à¤…à¤­à¥€ à¤•à¥‹à¤ˆ à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤²à¥€</strong>
+              <p>à¤†à¤ªà¤•à¥€ à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¯à¤¹à¤¾à¤ à¤¦à¤¿à¤–à¤¾à¤ˆ à¤¦à¥‡à¤—à¥€à¥¤</p>
             </div>
           )}
 
@@ -350,22 +348,22 @@ export default function CustomerDashboard({ user, onLogout }) {
               <div className="booking-card-top">
                 <div>
                   <span className="booking-label">BOOKING ID</span>
-                  <h3>{booking.bookingCode || `बुकिंग #${booking.id}`}</h3>
+                  <h3>{booking.bookingCode || `à¤¬à¥à¤•à¤¿à¤‚à¤— #${booking.id}`}</h3>
                 </div>
                 <span className={`booking-status ${getStatusClass(booking.status)}`}>
-                  {booking.status || "नई बुकिंग"}
+                  {booking.status || "à¤¨à¤ˆ à¤¬à¥à¤•à¤¿à¤‚à¤—"}
                 </span>
               </div>
               <div className="booking-details-grid">
-                <div><span>सेवा</span><strong>{booking.service || "—"}</strong></div>
-                <div><span>जिला / ब्लॉक</span><strong>{booking.district || "—"} / {booking.block || "—"}</strong></div>
-                <div><span>गाँव / शहर</span><strong>{booking.village || "—"}</strong></div>
-                <div><span><CalendarDays size={14} /> बुकिंग तारीख</span><strong>{formatDate(booking.created_at)}</strong></div>
-                <div><span><IndianRupee size={14} /> बुकिंग रेट</span><strong>{booking.rate_at_booking != null ? `₹${booking.rate_at_booking} ${booking.rate_unit || ""}` : "रेट अभी उपलब्ध नहीं"}</strong></div>
+                <div><span>à¤¸à¥‡à¤µà¤¾</span><strong>{booking.service || "â€”"}</strong></div>
+                <div><span>à¤œà¤¿à¤²à¤¾ / à¤¬à¥à¤²à¥‰à¤•</span><strong>{booking.district || "â€”"} / {booking.block || "â€”"}</strong></div>
+                <div><span>à¤—à¤¾à¤à¤µ / à¤¶à¤¹à¤°</span><strong>{booking.village || "â€”"}</strong></div>
+                <div><span><CalendarDays size={14} /> à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¤à¤¾à¤°à¥€à¤–</span><strong>{formatDate(booking.created_at)}</strong></div>
+                <div><span><IndianRupee size={14} /> à¤¬à¥à¤•à¤¿à¤‚à¤— à¤°à¥‡à¤Ÿ</span><strong>{booking.rate_at_booking != null ? `â‚¹${booking.rate_at_booking} ${booking.rate_unit || ""}` : "à¤°à¥‡à¤Ÿ à¤…à¤­à¥€ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚"}</strong></div>
                 <div>
-                  <span>भुगतान सत्यापन</span>
+                  <span>à¤­à¥à¤—à¤¤à¤¾à¤¨ à¤¸à¤¤à¥à¤¯à¤¾à¤ªà¤¨</span>
                   <strong className={booking.payment_verified ? "text-green" : "text-amber"}>
-                    {booking.payment_verified ? "सत्यापित" : "अभी सत्यापित नहीं"}
+                    {booking.payment_verified ? "à¤¸à¤¤à¥à¤¯à¤¾à¤ªà¤¿à¤¤" : "à¤…à¤­à¥€ à¤¸à¤¤à¥à¤¯à¤¾à¤ªà¤¿à¤¤ à¤¨à¤¹à¥€à¤‚"}
                   </strong>
                   {booking.payment_note && <small>{booking.payment_note}</small>}
                 </div>
@@ -378,16 +376,16 @@ export default function CustomerDashboard({ user, onLogout }) {
           <div className="panel-heading">
             <div>
               <span className="panel-kicker">YOUR SERVICE TEAM</span>
-              <h2><Users size={21} /> एजेंट डिटेल्स</h2>
-              <p>आपकी बुकिंग के लिए नियुक्त एजेंट</p>
+              <h2><Users size={21} /> à¤à¤œà¥‡à¤‚à¤Ÿ à¤¡à¤¿à¤Ÿà¥‡à¤²à¥à¤¸</h2>
+              <p>à¤†à¤ªà¤•à¥€ à¤¬à¥à¤•à¤¿à¤‚à¤— à¤•à¥‡ à¤²à¤¿à¤ à¤¨à¤¿à¤¯à¥à¤•à¥à¤¤ à¤à¤œà¥‡à¤‚à¤Ÿ</p>
             </div>
           </div>
 
           {uniqueAgents.length === 0 ? (
             <div className="empty-state">
               <UserRound size={38} />
-              <strong>अभी एजेंट नियुक्त नहीं हुआ है</strong>
-              <p>एजेंट नियुक्त होने पर उसकी जानकारी यहाँ दिखाई देगी।</p>
+              <strong>à¤…à¤­à¥€ à¤à¤œà¥‡à¤‚à¤Ÿ à¤¨à¤¿à¤¯à¥à¤•à¥à¤¤ à¤¨à¤¹à¥€à¤‚ à¤¹à¥à¤† à¤¹à¥ˆ</strong>
+              <p>à¤à¤œà¥‡à¤‚à¤Ÿ à¤¨à¤¿à¤¯à¥à¤•à¥à¤¤ à¤¹à¥‹à¤¨à¥‡ à¤ªà¤° à¤‰à¤¸à¤•à¥€ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ à¤¯à¤¹à¤¾à¤ à¤¦à¤¿à¤–à¤¾à¤ˆ à¤¦à¥‡à¤—à¥€à¥¤</p>
             </div>
           ) : (
             <div className="agent-grid">
@@ -397,13 +395,13 @@ export default function CustomerDashboard({ user, onLogout }) {
                   <div className="agent-card" key={agent.agent_mobile}>
                     <div className="agent-avatar"><UserRound size={25} /></div>
                     <div className="agent-information">
-                      <span>आपका नियुक्त एजेंट</span>
-                      <h3>{agent.agent_name || "नियुक्त एजेंट"}</h3>
-                      <p>{agent.agency_name || "बोरवेल सेवा एजेंट"}</p>
+                      <span>à¤†à¤ªà¤•à¤¾ à¤¨à¤¿à¤¯à¥à¤•à¥à¤¤ à¤à¤œà¥‡à¤‚à¤Ÿ</span>
+                      <h3>{agent.agent_name || "à¤¨à¤¿à¤¯à¥à¤•à¥à¤¤ à¤à¤œà¥‡à¤‚à¤Ÿ"}</h3>
+                      <p>{agent.agency_name || "à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤¸à¥‡à¤µà¤¾ à¤à¤œà¥‡à¤‚à¤Ÿ"}</p>
                       <strong><Phone size={15} /> {agent.agent_mobile}</strong>
                     </div>
                     <div className="agent-actions">
-                      <a href={`tel:${phone}`}><Phone size={16} /> कॉल</a>
+                      <a href={`tel:${phone}`}><Phone size={16} /> à¤•à¥‰à¤²</a>
                       <a href={`https://wa.me/91${phone}`} target="_blank" rel="noreferrer">
                         <MessageCircle size={16} /> WhatsApp
                       </a>
@@ -419,8 +417,8 @@ export default function CustomerDashboard({ user, onLogout }) {
           <div className="panel-heading">
             <div>
               <span className="panel-kicker">AREA-WISE PRICING</span>
-              <h2><MapPin size={21} /> एरिया वाइज रेट लिस्ट</h2>
-              <p>{district || "जिला"} · {block || "ब्लॉक"}</p>
+              <h2><MapPin size={21} /> à¤à¤°à¤¿à¤¯à¤¾ à¤µà¤¾à¤‡à¤œ à¤°à¥‡à¤Ÿ à¤²à¤¿à¤¸à¥à¤Ÿ</h2>
+              <p>{district || "à¤œà¤¿à¤²à¤¾"} Â· {block || "à¤¬à¥à¤²à¥‰à¤•"}</p>
             </div>
           </div>
           <CustomerAreaRates district={district} block={block} />
@@ -429,12 +427,12 @@ export default function CustomerDashboard({ user, onLogout }) {
         <section className="customer-support-panel" id="support">
           <div className="support-icon"><Headset size={28} /></div>
           <div className="support-copy">
-            <span>हम आपकी सहायता के लिए उपलब्ध हैं</span>
-            <h2>किसी भी समस्या में हमसे संपर्क करें</h2>
-            <p>बुकिंग, एजेंट या अन्य जानकारी के लिए सहायता टीम से बात करें।</p>
+            <span>à¤¹à¤® à¤†à¤ªà¤•à¥€ à¤¸à¤¹à¤¾à¤¯à¤¤à¤¾ à¤•à¥‡ à¤²à¤¿à¤ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¹à¥ˆà¤‚</span>
+            <h2>à¤•à¤¿à¤¸à¥€ à¤­à¥€ à¤¸à¤®à¤¸à¥à¤¯à¤¾ à¤®à¥‡à¤‚ à¤¹à¤®à¤¸à¥‡ à¤¸à¤‚à¤ªà¤°à¥à¤• à¤•à¤°à¥‡à¤‚</h2>
+            <p>à¤¬à¥à¤•à¤¿à¤‚à¤—, à¤à¤œà¥‡à¤‚à¤Ÿ à¤¯à¤¾ à¤…à¤¨à¥à¤¯ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ à¤•à¥‡ à¤²à¤¿à¤ à¤¸à¤¹à¤¾à¤¯à¤¤à¤¾ à¤Ÿà¥€à¤® à¤¸à¥‡ à¤¬à¤¾à¤¤ à¤•à¤°à¥‡à¤‚à¥¤</p>
           </div>
           <div className="support-actions">
-            <a href={`tel:+${SUPPORT_PHONE}`}><Phone size={17} /> कॉल करें</a>
+            <a href={`tel:+${SUPPORT_PHONE}`}><Phone size={17} /> à¤•à¥‰à¤² à¤•à¤°à¥‡à¤‚</a>
             <a href={`https://wa.me/${SUPPORT_PHONE}`} target="_blank" rel="noreferrer">
               <MessageCircle size={17} /> WhatsApp
             </a>
@@ -442,7 +440,7 @@ export default function CustomerDashboard({ user, onLogout }) {
         </section>
 
         <footer className="customer-footer">
-          <span>© Borewells Mitra</span>
+          <span>Â© Borewells Mitra</span>
           <span>Customer Portal</span>
         </footer>
       </main>
