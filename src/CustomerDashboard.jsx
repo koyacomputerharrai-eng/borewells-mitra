@@ -2,128 +2,103 @@
 import React, { useEffect, useMemo, useState } from "react";
 import CustomerAreaRates from "./CustomerAreaRates.jsx";
 import { DISTRICTS, BLOCKS } from "./areas.js";
-
 import {
-  UserRound,
-  Phone,
-  MessageCircle,
-  MapPin,
-  CalendarDays,
-  RefreshCw,
-  LogOut,
-  Droplets,
-  IndianRupee,
-  ClipboardList,
-  Camera,
-  Upload,
-  CheckCircle,
-  Clock,
-  Headset,
-  Save,
-  Users
+  UserRound, Phone, MessageCircle, MapPin, CalendarDays,
+  RefreshCw, LogOut, Droplets, IndianRupee, ClipboardList,
+  Camera, CheckCircle, Clock, Headset, Users, Menu, X,
+  Activity, ChevronRight, MapPinned
 } from "lucide-react";
+import "./CustomerDashboard.css";
 
-const API = "http://localhost:4000/api";
+const API = window.location.hostname === "localhost"
+  ? "http://localhost:4000/api"
+  : "https://borewells-mitra-api.onrender.com/api";
+
+const SUPPORT_PHONE = "919183863725";
 
 function getBlocksForDistrict(district) {
   const list = BLOCKS?.[district];
-
   if (Array.isArray(list)) return list;
-
-  if (list && typeof list === "object") {
-    return Object.keys(list);
-  }
-
+  if (list && typeof list === "object") return Object.keys(list);
   return [];
 }
 
+function formatDate(value) {
+  if (!value) return "उपलब्ध नहीं";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString("hi-IN", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  });
+}
+
+function getStatusClass(status = "") {
+  const value = String(status).toLowerCase();
+  if (value.includes("पूर्ण") || value.includes("complete")) return "success";
+  if (value.includes("रद्द") || value.includes("cancel")) return "danger";
+  if (value.includes("प्रगति") || value.includes("progress")) return "info";
+  if (value.includes("नियुक्त") || value.includes("assign")) return "purple";
+  return "pending";
+}
+
 export default function CustomerDashboard({ user, onLogout }) {
-
-  const token =
-    user?.token ||
+  const token = user?.token ||
     localStorage.getItem("bmm-token") ||
-    localStorage.getItem("token") ||
-    "";
+    localStorage.getItem("token") || "";
 
-  // PROFILE
-  const [profilePhoto, setProfilePhoto] = useState(
-    user?.photo || user?.profile_photo || ""
-  );
-
-  const [district, setDistrict] = useState(
-    user?.district ||
-    (DISTRICTS || []).find(x => x === "छिंदवाड़ा") ||
-    DISTRICTS?.[0] ||
-    ""
-  );
-
-  const [block, setBlock] = useState(
-    user?.block ||
-    getBlocksForDistrict(
-      user?.district ||
-      (DISTRICTS || []).find(x => x === "छिंदवाड़ा") ||
-      DISTRICTS?.[0] ||
-      ""
-    )[0] ||
-    ""
-  );
-
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [profileMessage, setProfileMessage] = useState("");
-
-  // BOOKINGS
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState(
+    user?.photo || user?.profile_photo || ""
+  );
+  const [photoMessage, setPhotoMessage] = useState("");
+  const [district, setDistrict] = useState(
+    user?.district ||
+    DISTRICTS?.find(x => x === "छिंदवाड़ा") ||
+    DISTRICTS?.[0] || ""
+  );
+  const [block, setBlock] = useState(user?.block || "");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const blocks = useMemo(
     () => getBlocksForDistrict(district),
     [district]
   );
 
-  // District change
   useEffect(() => {
-    if (!blocks.includes(block)) {
-      setBlock(blocks[0] || "");
-    }
-  }, [district]);
+    if (!blocks.includes(block)) setBlock(blocks[0] || "");
+  }, [district, blocks, block]);
 
-  // LOAD BOOKINGS
-  async function loadBookings() {
-    setLoading(true);
+  async function loadBookings(showRefresh = false) {
+    if (showRefresh) setRefreshing(true);
+    else setLoading(true);
     setError("");
 
     try {
-      const response = await fetch(
-        `${API}/customer/bookings`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-
+      const response = await fetch(`${API}/customer/bookings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       const result = await response.json();
 
-      if (!response.ok || result.success === false) {
-        throw new Error(
-          result.message || "बुकिंग जानकारी नहीं मिली।"
-        );
+      if (!response.ok || result?.success === false) {
+        throw new Error(result?.message || "बुकिंग जानकारी नहीं मिली।");
       }
 
-      setBookings(
-        Array.isArray(result.bookings)
+      const rows = Array.isArray(result)
+        ? result
+        : Array.isArray(result?.bookings)
           ? result.bookings
-          : []
-      );
+          : [];
 
+      setBookings(rows);
     } catch (err) {
-      setError(
-        err.message || "सर्वर से संपर्क नहीं हो सका।"
-      );
-
+      setError(err.message || "सर्वर से संपर्क नहीं हो सका।");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }
 
@@ -131,725 +106,346 @@ export default function CustomerDashboard({ user, onLogout }) {
     loadBookings();
   }, []);
 
-  // PROFILE PHOTO PREVIEW
-  function handlePhotoChange(e) {
-    const file = e.target.files?.[0];
-
+  function handlePhotoChange(event) {
+    const file = event.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setProfileMessage("कृपया सही फोटो चुनें।");
+      setPhotoMessage("कृपया सही फोटो चुनें।");
       return;
     }
-
     if (file.size > 5 * 1024 * 1024) {
-      setProfileMessage("फोटो 5 MB से कम होनी चाहिए।");
+      setPhotoMessage("फोटो 5 MB से कम होनी चाहिए।");
       return;
     }
 
     const reader = new FileReader();
-
     reader.onload = () => {
       setProfilePhoto(reader.result);
-      setProfileMessage(
-        "फोटो चुनी गई है। प्रोफाइल सेव करें।"
-      );
+      setPhotoMessage("फोटो का Preview बदल गया है। यह अभी सर्वर पर सेव नहीं है।");
     };
-
     reader.readAsDataURL(file);
   }
 
-  // SAVE PROFILE
-  // इसके लिए backend में /customer/profile route बनाना होगा।
-  async function saveProfile() {
-    setSavingProfile(true);
-    setProfileMessage("");
+  const uniqueAgents = useMemo(() => {
+    const agents = bookings.filter(item => item.agent_mobile);
+    return agents.filter((agent, index, self) =>
+      index === self.findIndex(item => item.agent_mobile === agent.agent_mobile)
+    );
+  }, [bookings]);
 
-    try {
-      const response = await fetch(
-        `${API}/customer/profile`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            district,
-            block,
-            photo: profilePhoto
-          })
-        }
-      );
+  const completedCount = bookings.filter(
+    item => getStatusClass(item.status) === "success"
+  ).length;
 
-      const result = await response.json();
+  const activeCount = bookings.filter(
+    item => !["success", "danger"].includes(getStatusClass(item.status))
+  ).length;
 
-      if (!response.ok || result.success === false) {
-        throw new Error(
-          result.message || "प्रोफाइल सेव नहीं हो पाई।"
-        );
-      }
+  const customerName = user?.name || "ग्राहक";
+  const customerId = user?.userId || user?.id || "उपलब्ध नहीं";
 
-      setProfileMessage("प्रोफाइल सफलतापूर्वक सेव हो गई।");
+  const navItems = [
+    ["profile", "मेरा प्रोफाइल"],
+    ["bookings", "मेरी बुकिंग"],
+    ["agents", "एजेंट डिटेल्स"],
+    ["rates", "एरिया रेट लिस्ट"],
+    ["support", "सहायता"]
+  ];
 
-    } catch (err) {
-      setProfileMessage(
-        err.message ||
-        "प्रोफाइल सेव नहीं हो पाई। Backend API जाँचें।"
-      );
-
-    } finally {
-      setSavingProfile(false);
-    }
+  function closeMenu() {
+    setMobileMenuOpen(false);
   }
-
-  function formatDate(value) {
-    if (!value) return "उपलब्ध नहीं";
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) return value;
-
-    return date.toLocaleString("hi-IN", {
-      dateStyle: "medium",
-      timeStyle: "short"
-    });
-  }
-
-  function statusColor(status) {
-    if (status === "पूर्ण") return "#15803d";
-    if (status === "रद्द") return "#dc2626";
-    if (status === "कार्य प्रगति पर") return "#2563eb";
-    if (status === "एजेंट नियुक्त") return "#7c3aed";
-    return "#b45309";
-  }
-
-  // सभी बुकिंग से नियुक्त एजेंट की जानकारी
-  const agents = bookings.filter(
-    booking => booking.agent_mobile
-  );
-
-  const uniqueAgents = agents.filter(
-    (agent, index, self) =>
-      index === self.findIndex(
-        item =>
-          item.agent_mobile === agent.agent_mobile
-      )
-  );
-
-  const styles = {
-    page: {
-      minHeight: "100vh",
-      background: "#f3f7fb",
-      padding: "20px",
-      color: "#172b4d"
-    },
-
-    container: {
-      maxWidth: "1100px",
-      margin: "auto"
-    },
-
-    header: {
-      background: "#063b70",
-      color: "#fff",
-      padding: "22px",
-      borderRadius: "16px",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      flexWrap: "wrap",
-      gap: "15px"
-    },
-
-    card: {
-      background: "#fff",
-      border: "1px solid #e2e8f0",
-      borderRadius: "14px",
-      padding: "20px",
-      marginTop: "18px",
-      boxShadow: "0 4px 15px rgba(0,0,0,.04)"
-    },
-
-    button: {
-      border: 0,
-      borderRadius: "9px",
-      padding: "10px 14px",
-      cursor: "pointer",
-      fontWeight: 700,
-      display: "inline-flex",
-      alignItems: "center",
-      gap: "7px",
-      textDecoration: "none"
-    },
-
-    grid: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
-      gap: "12px",
-      marginTop: "15px"
-    },
-
-    detail: {
-      background: "#f8fafc",
-      borderRadius: "10px",
-      padding: "13px",
-      minWidth: 0
-    },
-
-    input: {
-      width: "100%",
-      padding: "11px",
-      border: "1px solid #cbd5e1",
-      borderRadius: "8px",
-      marginTop: "7px",
-      boxSizing: "border-box",
-      background: "#fff",
-      fontSize: "15px"
-    },
-
-    label: {
-      fontWeight: 700,
-      fontSize: "14px"
-    }
-  };
 
   return (
-    <div style={styles.page}>
-      <div style={styles.container}>
-
-        {/* HEADER */}
-        <header style={styles.header}>
+    <div className="customer-dashboard">
+      <aside className={`customer-sidebar ${mobileMenuOpen ? "open" : ""}`}>
+        <div className="customer-brand">
+          <div className="customer-brand-icon"><Droplets size={25} /></div>
           <div>
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10
-            }}>
-              <Droplets size={30} />
-              <h2 style={{ margin: 0 }}>
-                Customer Dashboard
-              </h2>
-            </div>
-
-            <p style={{ margin: "8px 0 0", opacity: .9 }}>
-              Borewell Mitra MP – ग्राहक डैशबोर्ड
-            </p>
+            <strong>Borewells Mitra</strong>
+            <span>Customer Portal</span>
           </div>
+          <button className="mobile-close" onClick={closeMenu} aria-label="Close menu">
+            <X size={21} />
+          </button>
+        </div>
 
+        <div className="sidebar-user">
+          <div className="sidebar-avatar">
+            {profilePhoto
+              ? <img src={profilePhoto} alt="Profile" />
+              : <UserRound size={25} />}
+          </div>
+          <div className="sidebar-user-info">
+            <strong>{customerName}</strong>
+            <span>Customer ID: {customerId}</span>
+          </div>
+        </div>
+
+        <div className="sidebar-label">मेन्यू</div>
+        <nav className="customer-nav">
+          {navItems.map(([id, label]) => (
+            <a href={`#${id}`} key={id} onClick={closeMenu}>
+              <ChevronRight size={17} />
+              {label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="sidebar-bottom">
+          <div className="sidebar-help">
+            <Headset size={22} />
+            <strong>मदद चाहिए?</strong>
+            <span>हमारी सहायता टीम से संपर्क करें।</span>
+            <a href={`https://wa.me/${SUPPORT_PHONE}`} target="_blank" rel="noreferrer">
+              WhatsApp सहायता
+            </a>
+          </div>
+          <button className="logout-button" onClick={onLogout}>
+            <LogOut size={18} /> लॉगआउट
+          </button>
+        </div>
+      </aside>
+
+      {mobileMenuOpen && (
+        <button className="sidebar-overlay" onClick={closeMenu} aria-label="Close menu" />
+      )}
+
+      <main className="customer-main">
+        <header className="customer-topbar">
           <button
-            style={{
-              ...styles.button,
-              background: "#fff",
-              color: "#063b70"
-            }}
-            onClick={onLogout}
+            className="mobile-menu-button"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Open menu"
           >
-            <LogOut size={17} />
-            लॉगआउट
+            <Menu size={22} />
+          </button>
+          <div>
+            <span className="topbar-eyebrow">CUSTOMER DASHBOARD</span>
+            <h1>नमस्ते, {customerName}!</h1>
+            <p>आपकी बुकिंग और सेवाओं की जानकारी एक ही जगह।</p>
+          </div>
+          <button
+            className="topbar-refresh"
+            onClick={() => loadBookings(true)}
+            disabled={refreshing}
+          >
+            <RefreshCw size={17} className={refreshing ? "spin" : ""} />
+            <span>{refreshing ? "लोड हो रहा है" : "रिफ्रेश"}</span>
           </button>
         </header>
 
-        {/* 1. MY PROFILE */}
-        <section style={styles.card}>
+        <section className="customer-stat-grid">
+          <div className="customer-stat-card">
+            <div className="stat-icon blue"><ClipboardList size={22} /></div>
+            <div><span>कुल बुकिंग</span><strong>{bookings.length}</strong></div>
+          </div>
+          <div className="customer-stat-card">
+            <div className="stat-icon gold"><Activity size={22} /></div>
+            <div><span>चालू बुकिंग</span><strong>{activeCount}</strong></div>
+          </div>
+          <div className="customer-stat-card">
+            <div className="stat-icon green"><CheckCircle size={22} /></div>
+            <div><span>पूर्ण बुकिंग</span><strong>{completedCount}</strong></div>
+          </div>
+          <div className="customer-stat-card">
+            <div className="stat-icon purple"><Users size={22} /></div>
+            <div><span>नियुक्त एजेंट</span><strong>{uniqueAgents.length}</strong></div>
+          </div>
+        </section>
 
-          <h3 style={{ marginTop: 0 }}>
-            <UserRound
-              size={20}
-              style={{ verticalAlign: "middle" }}
-            />{" "}
-            मेरा प्रोफाइल
-          </h3>
-
-          {/* PROFILE PHOTO */}
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 18,
-            flexWrap: "wrap",
-            margin: "18px 0"
-          }}>
-
-            <div style={{
-              width: 100,
-              height: 100,
-              borderRadius: "50%",
-              background: "#e7f1ff",
-              border: "3px solid #dbeafe",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden"
-            }}>
-
-              {profilePhoto ? (
-                <img
-                  src={profilePhoto}
-                  alt="Profile"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover"
-                  }}
-                />
-              ) : (
-                <UserRound size={48} color="#0756a0" />
-              )}
-
-            </div>
-
+        <section className="customer-panel" id="profile">
+          <div className="panel-heading">
             <div>
-              <label
-                htmlFor="customer-profile-photo"
-                style={{
-                  ...styles.button,
-                  background: "#e7f1ff",
-                  color: "#0756a0"
-                }}
-              >
-                <Camera size={17} />
-                फोटो बदलें
-              </label>
+              <span className="panel-kicker">ACCOUNT</span>
+              <h2><UserRound size={21} /> मेरा प्रोफाइल</h2>
+              <p>आपकी ग्राहक जानकारी</p>
+            </div>
+          </div>
 
+          <div className="profile-layout">
+            <div className="profile-photo-area">
+              <div className="profile-photo">
+                {profilePhoto
+                  ? <img src={profilePhoto} alt="Customer profile" />
+                  : <UserRound size={48} />}
+              </div>
+              <label className="photo-upload-button" htmlFor="customer-profile-photo">
+                <Camera size={16} /> फोटो चुनें
+              </label>
               <input
                 id="customer-profile-photo"
                 type="file"
                 accept="image/*"
                 onChange={handlePhotoChange}
-                style={{ display: "none" }}
+                hidden
               />
-
-              <p style={{
-                fontSize: 12,
-                color: "#64748b",
-                marginTop: 8
-              }}>
-                अधिकतम फोटो साइज 5 MB
-              </p>
+              <small>अधिकतम 5 MB · केवल Preview</small>
+              {photoMessage && <small className="photo-message">{photoMessage}</small>}
             </div>
 
+            <div className="profile-details-grid">
+              <div className="info-tile">
+                <span>पूरा नाम</span><strong>{customerName}</strong>
+              </div>
+              <div className="info-tile">
+                <span>मोबाइल नंबर</span><strong>{user?.mobile || "उपलब्ध नहीं"}</strong>
+              </div>
+              <div className="info-tile">
+                <span>Customer ID</span><strong>{customerId}</strong>
+              </div>
+              <div className="info-tile">
+                <span>रजिस्ट्रेशन जिला</span><strong>{user?.district || "उपलब्ध नहीं"}</strong>
+              </div>
+            </div>
           </div>
 
-          {/* CUSTOMER DETAILS */}
-          <div style={styles.grid}>
-
-            <div style={styles.detail}>
-              <small>पूरा नाम</small>
-              <h3 style={{ margin: "6px 0 0" }}>
-                {user?.name || "उपलब्ध नहीं"}
-              </h3>
+          <div className="profile-location">
+            <div className="location-title">
+              <MapPinned size={19} />
+              <div><strong>रेट लिस्ट के लिए क्षेत्र चुनें</strong><span>यह चयन रेट लिस्ट दिखाने के लिए है।</span></div>
             </div>
-
-            <div style={styles.detail}>
-              <small>मोबाइल नंबर</small>
-              <h3 style={{ margin: "6px 0 0" }}>
-                {user?.mobile || "उपलब्ध नहीं"}
-              </h3>
-            </div>
-
-            <div style={styles.detail}>
-              <small>Customer ID</small>
-              <h3 style={{ margin: "6px 0 0" }}>
-                {user?.userId || user?.id || "उपलब्ध नहीं"}
-              </h3>
-            </div>
-
-          </div>
-
-          {/* DISTRICT */}
-          <div style={styles.grid}>
-
-            <div>
-              <label style={styles.label}>
-                <MapPin size={15} /> जिला चुनें
+            <div className="location-selects">
+              <label>जिला
+                <select value={district} onChange={e => setDistrict(e.target.value)}>
+                  {(DISTRICTS || []).map(name => <option key={name} value={name}>{name}</option>)}
+                </select>
               </label>
-
-              <select
-                style={styles.input}
-                value={district}
-                onChange={e => setDistrict(e.target.value)}
-              >
-                {DISTRICTS.map(name => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* BLOCK */}
-            <div>
-              <label style={styles.label}>
-                <MapPin size={15} /> ब्लॉक चुनें
+              <label>ब्लॉक
+                <select value={block} onChange={e => setBlock(e.target.value)} disabled={!blocks.length}>
+                  {blocks.map(name => <option key={name} value={name}>{name}</option>)}
+                </select>
               </label>
-
-              <select
-                style={styles.input}
-                value={block}
-                onChange={e => setBlock(e.target.value)}
-                disabled={!blocks.length}
-              >
-                {blocks.map(name => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
             </div>
-
+            <p className="readonly-note">प्रोफाइल में स्थायी बदलाव के लिए Backend में प्रोफाइल अपडेट सुविधा जोड़नी होगी।</p>
           </div>
-
-          <button
-            onClick={saveProfile}
-            disabled={savingProfile}
-            style={{
-              ...styles.button,
-              background: "#0756a0",
-              color: "#fff",
-              marginTop: 18,
-              opacity: savingProfile ? .6 : 1
-            }}
-          >
-            <Save size={17} />
-            {savingProfile
-              ? "सेव हो रहा है..."
-              : "प्रोफाइल सेव करें"}
-          </button>
-
-          {profileMessage && (
-            <p style={{
-              marginTop: 12,
-              fontWeight: 600,
-              color: profileMessage.includes("सफल")
-                ? "#15803d"
-                : "#b45309"
-            }}>
-              {profileMessage}
-            </p>
-          )}
-
         </section>
 
-        {/* 2. MY BOOKINGS */}
-        <section style={styles.card}>
-
-          <div style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 10
-          }}>
-
-            <h3 style={{ margin: 0 }}>
-              <ClipboardList
-                size={20}
-                style={{ verticalAlign: "middle" }}
-              />{" "}
-              मेरी बुकिंग का स्टेटस
-            </h3>
-
-            <button
-              style={{
-                ...styles.button,
-                background: "#e7f1ff",
-                color: "#0756a0"
-              }}
-              onClick={loadBookings}
-              disabled={loading}
-            >
-              <RefreshCw size={16} />
-              रिफ्रेश
+        <section className="customer-panel" id="bookings">
+          <div className="panel-heading panel-heading-row">
+            <div>
+              <span className="panel-kicker">BOOKING ACTIVITY</span>
+              <h2><ClipboardList size={21} /> मेरी बुकिंग का स्टेटस</h2>
+              <p>आपकी बुकिंग की वर्तमान स्थिति</p>
+            </div>
+            <button className="small-action-button" onClick={() => loadBookings(true)} disabled={refreshing}>
+              <RefreshCw size={16} /> रिफ्रेश
             </button>
-
           </div>
 
-          {loading && (
-            <p>बुकिंग जानकारी लोड हो रही है...</p>
-          )}
-
-          {error && (
-            <p style={{ color: "#dc2626", marginTop: 15 }}>
-              {error}
-            </p>
-          )}
+          {loading && <div className="empty-state"><RefreshCw className="spin" size={28} /><p>बुकिंग जानकारी लोड हो रही है...</p></div>}
+          {error && <div className="error-message">{error}</div>}
 
           {!loading && !error && bookings.length === 0 && (
-            <div style={{
-              textAlign: "center",
-              padding: "30px 10px",
-              color: "#64748b"
-            }}>
+            <div className="empty-state">
               <ClipboardList size={38} />
-              <h3>अभी कोई बुकिंग नहीं मिली</h3>
+              <strong>अभी कोई बुकिंग नहीं मिली</strong>
               <p>आपकी बुकिंग यहाँ दिखाई देगी।</p>
             </div>
           )}
 
-          {bookings.map(booking => (
-
-            <article
-              key={booking.id}
-              style={{
-                border: "1px solid #e2e8f0",
-                borderRadius: "13px",
-                padding: "17px",
-                marginTop: "16px"
-              }}
-            >
-
-              <div style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: 10
-              }}>
-
-                <h3 style={{ margin: 0 }}>
-                  {booking.bookingCode ||
-                    `बुकिंग #${booking.id}`}
-                </h3>
-
-                <span style={{
-                  background: `${statusColor(booking.status)}18`,
-                  color: statusColor(booking.status),
-                  padding: "7px 12px",
-                  borderRadius: "30px",
-                  fontWeight: 700,
-                  fontSize: "13px"
-                }}>
+          {!loading && bookings.map(booking => (
+            <article className="booking-card" key={booking.id}>
+              <div className="booking-card-top">
+                <div>
+                  <span className="booking-label">BOOKING ID</span>
+                  <h3>{booking.bookingCode || `बुकिंग #${booking.id}`}</h3>
+                </div>
+                <span className={`booking-status ${getStatusClass(booking.status)}`}>
                   {booking.status || "नई बुकिंग"}
                 </span>
-
               </div>
-
-              <div style={styles.grid}>
-
-                <div style={styles.detail}>
-                  <small>सेवा</small>
-                  <p style={{ marginBottom: 0 }}>
-                    {booking.service || "—"}
-                  </p>
+              <div className="booking-details-grid">
+                <div><span>सेवा</span><strong>{booking.service || "—"}</strong></div>
+                <div><span>जिला / ब्लॉक</span><strong>{booking.district || "—"} / {booking.block || "—"}</strong></div>
+                <div><span>गाँव / शहर</span><strong>{booking.village || "—"}</strong></div>
+                <div><span><CalendarDays size={14} /> बुकिंग तारीख</span><strong>{formatDate(booking.created_at)}</strong></div>
+                <div><span><IndianRupee size={14} /> बुकिंग रेट</span><strong>{booking.rate_at_booking != null ? `₹${booking.rate_at_booking} ${booking.rate_unit || ""}` : "रेट अभी उपलब्ध नहीं"}</strong></div>
+                <div>
+                  <span>भुगतान सत्यापन</span>
+                  <strong className={booking.payment_verified ? "text-green" : "text-amber"}>
+                    {booking.payment_verified ? "सत्यापित" : "अभी सत्यापित नहीं"}
+                  </strong>
+                  {booking.payment_note && <small>{booking.payment_note}</small>}
                 </div>
-
-                <div style={styles.detail}>
-                  <small>जिला / ब्लॉक</small>
-                  <p style={{ marginBottom: 0 }}>
-                    {booking.district || "—"} / {booking.block || "—"}
-                  </p>
-                </div>
-
-                <div style={styles.detail}>
-                  <small>गाँव / शहर</small>
-                  <p style={{ marginBottom: 0 }}>
-                    {booking.village || "—"}
-                  </p>
-                </div>
-
-                <div style={styles.detail}>
-                  <small>
-                    <CalendarDays size={14} /> बुकिंग तारीख
-                  </small>
-                  <p style={{ marginBottom: 0 }}>
-                    {formatDate(booking.created_at)}
-                  </p>
-                </div>
-
-                <div style={styles.detail}>
-                  <small>
-                    <IndianRupee size={14} /> बुकिंग रेट
-                  </small>
-                  <p style={{ marginBottom: 0 }}>
-                    {booking.rate_at_booking != null
-                      ? `₹${booking.rate_at_booking} ${booking.rate_unit || ""}`
-                      : "रेट अभी उपलब्ध नहीं"}
-                  </p>
-                </div>
-
-                <div style={styles.detail}>
-                  <small>भुगतान सत्यापन</small>
-                  <p style={{
-                    marginBottom: 0,
-                    color: booking.payment_verified
-                      ? "#15803d"
-                      : "#b45309",
-                    fontWeight: 700
-                  }}>
-                    {booking.payment_verified
-                      ? "सत्यापित"
-                      : "अभी सत्यापित नहीं"}
-                  </p>
-
-                  {booking.payment_note && (
-                    <small>{booking.payment_note}</small>
-                  )}
-                </div>
-
               </div>
-
             </article>
-
           ))}
-
         </section>
 
-        {/* 3. AGENT DETAILS */}
-        <section style={styles.card}>
-
-          <h3 style={{ marginTop: 0 }}>
-            <Users
-              size={20}
-              style={{ verticalAlign: "middle" }}
-            />{" "}
-            एजेंट डिटेल्स
-          </h3>
-
-          {uniqueAgents.length === 0 ? (
-
-            <div style={{
-              textAlign: "center",
-              padding: "25px",
-              color: "#64748b"
-            }}>
-              <UserRound size={38} />
-              <p>
-                अभी किसी बुकिंग के लिए एजेंट नियुक्त नहीं हुआ है।
-              </p>
+        <section className="customer-panel" id="agents">
+          <div className="panel-heading">
+            <div>
+              <span className="panel-kicker">YOUR SERVICE TEAM</span>
+              <h2><Users size={21} /> एजेंट डिटेल्स</h2>
+              <p>आपकी बुकिंग के लिए नियुक्त एजेंट</p>
             </div>
-
-          ) : (
-
-            <div style={styles.grid}>
-
-              {uniqueAgents.map(agent => (
-
-                <div
-                  key={agent.agent_mobile}
-                  style={{
-                    ...styles.detail,
-                    border: "1px solid #dbeafe",
-                    background: "#eef6ff"
-                  }}
-                >
-
-                  <h4 style={{ marginTop: 0 }}>
-                    {agent.agent_name || "नियुक्त एजेंट"}
-                  </h4>
-
-                  <p>
-                    <Phone size={15} />{" "}
-                    {agent.agent_mobile}
-                  </p>
-
-                  <div style={{
-                    display: "flex",
-                    gap: 8,
-                    flexWrap: "wrap"
-                  }}>
-
-                    <a
-                      href={`tel:${agent.agent_mobile}`}
-                      style={{
-                        ...styles.button,
-                        background: "#15803d",
-                        color: "#fff"
-                      }}
-                    >
-                      <Phone size={15} />
-                      कॉल करें
-                    </a>
-
-                    <a
-                      href={`https://wa.me/91${String(agent.agent_mobile).replace(/\D/g, "").slice(-10)}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        ...styles.button,
-                        background: "#16a34a",
-                        color: "#fff"
-                      }}
-                    >
-                      <MessageCircle size={15} />
-                      WhatsApp
-                    </a>
-
-                  </div>
-
-                </div>
-
-              ))}
-
-            </div>
-
-          )}
-
-        </section>
-
-        {/* 4. AREA WISE RATE LIST */}
-        <section style={{ marginTop: 18 }}>
-          <CustomerAreaRates
-            district={district}
-            block={block}
-          />
-        </section>
-
-        {/* 5. SUPPORT */}
-        <section style={{
-          ...styles.card,
-          background: "#063b70",
-          color: "#fff"
-        }}>
-
-          <h3 style={{ marginTop: 0 }}>
-            <Headset
-              size={21}
-              style={{ verticalAlign: "middle" }}
-            />{" "}
-            सहायता / Support
-          </h3>
-
-          <p>
-            बुकिंग, एजेंट या अन्य समस्या के लिए हमसे संपर्क करें।
-          </p>
-
-          <div style={{
-            display: "flex",
-            gap: 10,
-            flexWrap: "wrap"
-          }}>
-
-            <a
-              href="tel:+919343863725"
-              style={{
-                ...styles.button,
-                background: "#fff",
-                color: "#063b70"
-              }}
-            >
-              <Phone size={17} />
-              कॉल करें
-            </a>
-
-            <a
-              href="https://wa.me/919343863725"
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                ...styles.button,
-                background: "#16a34a",
-                color: "#fff"
-              }}
-            >
-              <MessageCircle size={17} />
-              WhatsApp
-            </a>
-
           </div>
 
+          {uniqueAgents.length === 0 ? (
+            <div className="empty-state">
+              <UserRound size={38} />
+              <strong>अभी एजेंट नियुक्त नहीं हुआ है</strong>
+              <p>एजेंट नियुक्त होने पर उसकी जानकारी यहाँ दिखाई देगी।</p>
+            </div>
+          ) : (
+            <div className="agent-grid">
+              {uniqueAgents.map(agent => {
+                const phone = String(agent.agent_mobile).replace(/\D/g, "").slice(-10);
+                return (
+                  <div className="agent-card" key={agent.agent_mobile}>
+                    <div className="agent-avatar"><UserRound size={25} /></div>
+                    <div className="agent-information">
+                      <span>आपका नियुक्त एजेंट</span>
+                      <h3>{agent.agent_name || "नियुक्त एजेंट"}</h3>
+                      <p>{agent.agency_name || "बोरवेल सेवा एजेंट"}</p>
+                      <strong><Phone size={15} /> {agent.agent_mobile}</strong>
+                    </div>
+                    <div className="agent-actions">
+                      <a href={`tel:${phone}`}><Phone size={16} /> कॉल</a>
+                      <a href={`https://wa.me/91${phone}`} target="_blank" rel="noreferrer">
+                        <MessageCircle size={16} /> WhatsApp
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
 
-      </div>
+        <section className="customer-panel" id="rates">
+          <div className="panel-heading">
+            <div>
+              <span className="panel-kicker">AREA-WISE PRICING</span>
+              <h2><MapPin size={21} /> एरिया वाइज रेट लिस्ट</h2>
+              <p>{district || "जिला"} · {block || "ब्लॉक"}</p>
+            </div>
+          </div>
+          <CustomerAreaRates district={district} block={block} />
+        </section>
+
+        <section className="customer-support-panel" id="support">
+          <div className="support-icon"><Headset size={28} /></div>
+          <div className="support-copy">
+            <span>हम आपकी सहायता के लिए उपलब्ध हैं</span>
+            <h2>किसी भी समस्या में हमसे संपर्क करें</h2>
+            <p>बुकिंग, एजेंट या अन्य जानकारी के लिए सहायता टीम से बात करें।</p>
+          </div>
+          <div className="support-actions">
+            <a href={`tel:+${SUPPORT_PHONE}`}><Phone size={17} /> कॉल करें</a>
+            <a href={`https://wa.me/${SUPPORT_PHONE}`} target="_blank" rel="noreferrer">
+              <MessageCircle size={17} /> WhatsApp
+            </a>
+          </div>
+        </section>
+
+        <footer className="customer-footer">
+          <span>© Borewells Mitra</span>
+          <span>Customer Portal</span>
+        </footer>
+      </main>
     </div>
   );
 }
