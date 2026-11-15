@@ -1,4 +1,4 @@
-
+﻿
 import React, { useMemo, useState } from "react";
 import {
   Phone,
@@ -14,7 +14,7 @@ import {
 
 import { DISTRICTS, BLOCKS } from "./areas.js";
 
-const API = "https://borewells-mitra-api.onrender.com/api";
+const API = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "http://localhost:4000/api" : "/api";
 
 function getBlocks(district) {
   const list = BLOCKS?.[district];
@@ -103,12 +103,12 @@ export default function AgentContact() {
 
   const searchAgents = async () => {
     if (!district) {
-      setError("पहले जिला चुनें।");
+      setError("à¤ªà¤¹à¤²à¥‡ à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚à¥¤");
       return;
     }
 
     if (!block) {
-      setError("पहले ब्लॉक चुनें।");
+      setError("à¤ªà¤¹à¤²à¥‡ à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚à¥¤");
       return;
     }
 
@@ -122,7 +122,7 @@ export default function AgentContact() {
     const params = new URLSearchParams({ district, block });
 
     try {
-      // चुने हुए District और Block के Agents
+      // à¤šà¥à¤¨à¥‡ à¤¹à¥à¤ District à¤”à¤° Block à¤•à¥‡ Agents
       const agentResponse = await fetch(
         `${API}/public/agents?${params.toString()}`
       );
@@ -147,7 +147,7 @@ export default function AgentContact() {
 
       setAgents(filteredAgents);
 
-      // इसी Block का अलग Banner
+      // à¤‡à¤¸à¥€ Block à¤•à¤¾ à¤…à¤²à¤— Banner
       try {
         const bannerResponse = await fetch(
           `${API}/public/block-banner?${params.toString()}`
@@ -159,18 +159,18 @@ export default function AgentContact() {
         setBanner(image);
 
         if (!image) {
-          setBannerError("इस Block का Banner अभी उपलब्ध नहीं है।");
+          setBannerError("à¤‡à¤¸ Block à¤•à¤¾ Banner à¤…à¤­à¥€ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤");
         }
       } catch (bannerErr) {
         setBanner("");
         setBannerError(
-          bannerErr.message || "Banner लोड नहीं हो सका।"
+          bannerErr.message || "Banner à¤²à¥‹à¤¡ à¤¨à¤¹à¥€à¤‚ à¤¹à¥‹ à¤¸à¤•à¤¾à¥¤"
         );
       }
 
       setSearched(true);
     } catch (err) {
-      setError(err.message || "Agent की जानकारी नहीं मिल सकी।");
+      setError(err.message || "Agent à¤•à¥€ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤² à¤¸à¤•à¥€à¥¤");
       setSearched(false);
     } finally {
       setLoading(false);
@@ -441,23 +441,23 @@ export default function AgentContact() {
       `}</style>
 
       <div className="agent-heading">
-        <h2>Borewells Mitra Agent संपर्क</h2>
+        <h2>Borewells Mitra Agent à¤¸à¤‚à¤ªà¤°à¥à¤•</h2>
         <p>
-          अपने जिले और ब्लॉक के सक्रिय एजेंट खोजें।
+          à¤…à¤ªà¤¨à¥‡ à¤œà¤¿à¤²à¥‡ à¤”à¤° à¤¬à¥à¤²à¥‰à¤• à¤•à¥‡ à¤¸à¤•à¥à¤°à¤¿à¤¯ à¤à¤œà¥‡à¤‚à¤Ÿ à¤–à¥‹à¤œà¥‡à¤‚à¥¤
         </p>
       </div>
 
-      {/* District और Block Search */}
+      {/* District à¤”à¤° Block Search */}
       <div className="agent-search-box">
         <div className="agent-search-grid">
           <div className="agent-field">
-            <label>जिला चुनें</label>
+            <label>à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚</label>
 
             <select
               value={district}
               onChange={e => handleDistrictChange(e.target.value)}
             >
-              <option value="">-- जिला चुनें --</option>
+              <option value="">-- à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚ --</option>
 
               {districtList.map(name => (
                 <option key={name} value={name}>
@@ -468,14 +468,14 @@ export default function AgentContact() {
           </div>
 
           <div className="agent-field">
-            <label>ब्लॉक चुनें</label>
+            <label>à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚</label>
 
             <select
               value={block}
               disabled={!district || blocks.length === 0}
               onChange={e => handleBlockChange(e.target.value)}
             >
-              <option value="">-- ब्लॉक चुनें --</option>
+              <option value="">-- à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚ --</option>
 
               {blocks.map(name => (
                 <option key={name} value={name}>
@@ -497,17 +497,17 @@ export default function AgentContact() {
             <Search size={19} />
           )}
 
-          {loading ? "खोज रहे हैं..." : "Agent खोजें"}
+          {loading ? "à¤–à¥‹à¤œ à¤°à¤¹à¥‡ à¤¹à¥ˆà¤‚..." : "Agent à¤–à¥‹à¤œà¥‡à¤‚"}
         </button>
       </div>
 
-      {/* Search से पहले Agent या Banner नहीं */}
+      {/* Search à¤¸à¥‡ à¤ªà¤¹à¤²à¥‡ Agent à¤¯à¤¾ Banner à¤¨à¤¹à¥€à¤‚ */}
       {!searched && !loading && !error && (
         <div className="agent-state">
           <MapPin size={30} />
           <p>
-            एजेंट देखने के लिए पहले अपना जिला और ब्लॉक चुनकर
-            Agent खोजें पर क्लिक करें।
+            à¤à¤œà¥‡à¤‚à¤Ÿ à¤¦à¥‡à¤–à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤ªà¤¹à¤²à¥‡ à¤…à¤ªà¤¨à¤¾ à¤œà¤¿à¤²à¤¾ à¤”à¤° à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¤•à¤°
+            Agent à¤–à¥‹à¤œà¥‡à¤‚ à¤ªà¤° à¤•à¥à¤²à¤¿à¤• à¤•à¤°à¥‡à¤‚à¥¤
           </p>
         </div>
       )}
@@ -515,7 +515,7 @@ export default function AgentContact() {
       {loading && (
         <div className="agent-state">
           <RefreshCw size={26} />
-          <p>चुने हुए क्षेत्र की जानकारी लोड हो रही है...</p>
+          <p>à¤šà¥à¤¨à¥‡ à¤¹à¥à¤ à¤•à¥à¤·à¥‡à¤¤à¥à¤° à¤•à¥€ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ à¤²à¥‹à¤¡ à¤¹à¥‹ à¤°à¤¹à¥€ à¤¹à¥ˆ...</p>
         </div>
       )}
 
@@ -526,11 +526,11 @@ export default function AgentContact() {
         </div>
       )}
 
-      {/* Search के बाद चुने हुए Block का Banner और Agents */}
+      {/* Search à¤•à¥‡ à¤¬à¤¾à¤¦ à¤šà¥à¤¨à¥‡ à¤¹à¥à¤ Block à¤•à¤¾ Banner à¤”à¤° Agents */}
       {searched && (
         <>
           <h3 className="agent-results-title">
-            {district} जिला — {block} ब्लॉक
+            {district} à¤œà¤¿à¤²à¤¾ â€” {block} à¤¬à¥à¤²à¥‰à¤•
           </h3>
 
           {banner ? (
@@ -543,7 +543,7 @@ export default function AgentContact() {
           ) : (
             <div className="agent-banner-placeholder">
               <ImageIcon size={25} />
-              <p>इस ब्लॉक का Banner अभी उपलब्ध नहीं है।</p>
+              <p>à¤‡à¤¸ à¤¬à¥à¤²à¥‰à¤• à¤•à¤¾ Banner à¤…à¤­à¥€ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤</p>
               {bannerError && <small>{bannerError}</small>}
             </div>
           )}
@@ -552,14 +552,14 @@ export default function AgentContact() {
             <div className="agent-state">
               <UserRound size={30} />
               <p>
-                {district} के {block} ब्लॉक में अभी कोई
-                Approved और Active Agent उपलब्ध नहीं है।
+                {district} à¤•à¥‡ {block} à¤¬à¥à¤²à¥‰à¤• à¤®à¥‡à¤‚ à¤…à¤­à¥€ à¤•à¥‹à¤ˆ
+                Approved à¤”à¤° Active Agent à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤
               </p>
             </div>
           ) : (
             <>
               <h3 className="agent-results-title">
-                उपलब्ध एजेंट ({agents.length})
+                à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤à¤œà¥‡à¤‚à¤Ÿ ({agents.length})
               </h3>
 
               <div className="agent-grid">
@@ -576,7 +576,7 @@ export default function AgentContact() {
                     agent.office_address ||
                     agent.officeAddress ||
                     agent.address ||
-                    "पता उपलब्ध नहीं है";
+                    "à¤ªà¤¤à¤¾ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆ";
 
                   return (
                     <div
@@ -596,16 +596,16 @@ export default function AgentContact() {
                       <div className="agent-info">
                         <MapPin size={17} />
                         <span>
-                          <strong>जिला:</strong> {district}
+                          <strong>à¤œà¤¿à¤²à¤¾:</strong> {district}
                           <br />
-                          <strong>ब्लॉक:</strong> {block}
+                          <strong>à¤¬à¥à¤²à¥‰à¤•:</strong> {block}
                         </span>
                       </div>
 
                       <div className="agent-info">
                         <Building2 size={17} />
                         <span>
-                          <strong>ऑफिस पता:</strong>
+                          <strong>à¤‘à¤«à¤¿à¤¸ à¤ªà¤¤à¤¾:</strong>
                           <br />
                           {address}
                         </span>
@@ -614,7 +614,7 @@ export default function AgentContact() {
                       <div className="agent-info">
                         <Phone size={17} />
                         <span>
-                          {mobile || "मोबाइल उपलब्ध नहीं"}
+                          {mobile || "à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚"}
                         </span>
                       </div>
 
@@ -640,7 +640,7 @@ export default function AgentContact() {
                             </a>
                           </>
                         ) : (
-                          <span>संपर्क नंबर उपलब्ध नहीं है।</span>
+                          <span>à¤¸à¤‚à¤ªà¤°à¥à¤• à¤¨à¤‚à¤¬à¤° à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤</span>
                         )}
                       </div>
                     </div>

@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState } from "react";
 import "./Booking.css";
 import * as AreaData from "./areas.js";
@@ -11,7 +11,7 @@ const BLOCKS =
   AreaData.blocks ||
   {};
 
-const API = "http://localhost:4000/api";
+const API = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "http://localhost:4000/api" : "/api";
 
 export default function Booking({ onBack }) {
   const [form, setForm] = useState({
@@ -50,12 +50,12 @@ export default function Booking({ onBack }) {
       !form.village.trim() ||
       !form.service
     ) {
-      setMessage("कृपया सभी जानकारी भरें।");
+      setMessage("à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¸à¤­à¥€ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ à¤­à¤°à¥‡à¤‚à¥¤");
       return;
     }
 
     if (!/^[6-9]\d{9}$/.test(form.mobile.trim())) {
-      setMessage("कृपया सही 10 अंकों का मोबाइल नंबर डालें।");
+      setMessage("à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¸à¤¹à¥€ 10 à¤…à¤‚à¤•à¥‹à¤‚ à¤•à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° à¤¡à¤¾à¤²à¥‡à¤‚à¥¤");
       return;
     }
 
@@ -70,7 +70,7 @@ export default function Booking({ onBack }) {
 
     try {
       setSubmitting(true);
-      setMessage("बुकिंग भेजी जा रही है...");
+      setMessage("à¤¬à¥à¤•à¤¿à¤‚à¤— à¤­à¥‡à¤œà¥€ à¤œà¤¾ à¤°à¤¹à¥€ à¤¹à¥ˆ...");
 
       const response = await fetch(`${API}/bookings`, {
         method: "POST",
@@ -86,7 +86,7 @@ export default function Booking({ onBack }) {
         throw new Error(
           result.message ||
           result.error ||
-          "बुकिंग दर्ज नहीं हो सकी।"
+          "à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¦à¤°à¥à¤œ à¤¨à¤¹à¥€à¤‚ à¤¹à¥‹ à¤¸à¤•à¥€à¥¤"
         );
       }
 
@@ -95,11 +95,11 @@ export default function Booking({ onBack }) {
         result.bookingId ||
         result.booking?.bookingCode ||
         result.booking?.id ||
-        "सफलतापूर्वक दर्ज";
+        "à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤¦à¤°à¥à¤œ";
 
       setSuccess(true);
       setMessage(
-        `बुकिंग सफल! आपका बुकिंग नंबर: ${bookingNumber}`
+        `à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¸à¤«à¤²! à¤†à¤ªà¤•à¤¾ à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¨à¤‚à¤¬à¤°: ${bookingNumber}`
       );
 
       setForm({
@@ -115,7 +115,7 @@ export default function Booking({ onBack }) {
       setSuccess(false);
       setMessage(
         error.message ||
-        "सर्वर से संपर्क नहीं हो पाया। कृपया दोबारा प्रयास करें।"
+        "à¤¸à¤°à¥à¤µà¤° à¤¸à¥‡ à¤¸à¤‚à¤ªà¤°à¥à¤• à¤¨à¤¹à¥€à¤‚ à¤¹à¥‹ à¤ªà¤¾à¤¯à¤¾à¥¤ à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¦à¥‹à¤¬à¤¾à¤°à¤¾ à¤ªà¥à¤°à¤¯à¤¾à¤¸ à¤•à¤°à¥‡à¤‚à¥¤"
       );
     } finally {
       setSubmitting(false);
@@ -131,13 +131,13 @@ export default function Booking({ onBack }) {
           className="booking-back-btn"
           onClick={onBack}
         >
-          ← वापस होम पेज
+          â† à¤µà¤¾à¤ªà¤¸ à¤¹à¥‹à¤® à¤ªà¥‡à¤œ
         </button>
 
         <h1>Book Your Borewell</h1>
 
         <p>
-          बोरवेल सेवा बुक करने के लिए नीचे जानकारी भरें।
+          à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤¸à¥‡à¤µà¤¾ à¤¬à¥à¤• à¤•à¤°à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤¨à¥€à¤šà¥‡ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ à¤­à¤°à¥‡à¤‚à¥¤
         </p>
 
         {message && (
@@ -153,29 +153,29 @@ export default function Booking({ onBack }) {
 
         <form onSubmit={handleSubmit}>
 
-          <label>ग्राहक का नाम *</label>
+          <label>à¤—à¥à¤°à¤¾à¤¹à¤• à¤•à¤¾ à¤¨à¤¾à¤® *</label>
           <input
             type="text"
             name="name"
             value={form.name}
             onChange={handleChange}
-            placeholder="अपना नाम लिखें"
+            placeholder="à¤…à¤ªà¤¨à¤¾ à¤¨à¤¾à¤® à¤²à¤¿à¤–à¥‡à¤‚"
             required
           />
 
-          <label>मोबाइल नंबर *</label>
+          <label>à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° *</label>
           <input
             type="tel"
             name="mobile"
             value={form.mobile}
             onChange={handleChange}
-            placeholder="10 अंकों का मोबाइल नंबर"
+            placeholder="10 à¤…à¤‚à¤•à¥‹à¤‚ à¤•à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤°"
             maxLength="10"
             inputMode="numeric"
             required
           />
 
-          <label>जिला चुनें *</label>
+          <label>à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚ *</label>
           <select
             name="district"
             value={form.district}
@@ -188,7 +188,7 @@ export default function Booking({ onBack }) {
             }
             required
           >
-            <option value="">-- जिला चुनें --</option>
+            <option value="">-- à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚ --</option>
 
             {DISTRICTS.map((district) => (
               <option key={district} value={district}>
@@ -197,7 +197,7 @@ export default function Booking({ onBack }) {
             ))}
           </select>
 
-          <label>ब्लॉक चुनें *</label>
+          <label>à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚ *</label>
           <select
             name="block"
             value={form.block}
@@ -205,7 +205,7 @@ export default function Booking({ onBack }) {
             required
             disabled={!form.district}
           >
-            <option value="">-- ब्लॉक चुनें --</option>
+            <option value="">-- à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚ --</option>
 
             {(BLOCKS[form.district] || []).map((block) => (
               <option key={block} value={block}>
@@ -214,38 +214,38 @@ export default function Booking({ onBack }) {
             ))}
           </select>
 
-          <label>पूरा पता *</label>
+          <label>à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾ *</label>
           <input
             type="text"
             name="village"
             value={form.village}
             onChange={handleChange}
-            placeholder="गाँव, शहर, मोहल्ला और पूरा पता लिखें"
+            placeholder="à¤—à¤¾à¤à¤µ, à¤¶à¤¹à¤°, à¤®à¥‹à¤¹à¤²à¥à¤²à¤¾ à¤”à¤° à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾ à¤²à¤¿à¤–à¥‡à¤‚"
             required
           />
 
-          <label>सेवा चुनें *</label>
+          <label>à¤¸à¥‡à¤µà¤¾ à¤šà¥à¤¨à¥‡à¤‚ *</label>
           <select
             name="service"
             value={form.service}
             onChange={handleChange}
             required
           >
-            <option value="">-- सेवा चुनें --</option>
+            <option value="">-- à¤¸à¥‡à¤µà¤¾ à¤šà¥à¤¨à¥‡à¤‚ --</option>
 
             <option value="Drilling">
-              नया बोरवेल
+              à¤¨à¤¯à¤¾ à¤¬à¥‹à¤°à¤µà¥‡à¤²
             </option>
 
             <option value="Repairing">
-              बोरवेल रिपेयरिंग
+              à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤°à¤¿à¤ªà¥‡à¤¯à¤°à¤¿à¤‚à¤—
             </option>
           </select>
 
           <button type="submit" disabled={submitting}>
             {submitting
-              ? "बुकिंग भेजी जा रही है..."
-              : "Booking Submit करें"}
+              ? "à¤¬à¥à¤•à¤¿à¤‚à¤— à¤­à¥‡à¤œà¥€ à¤œà¤¾ à¤°à¤¹à¥€ à¤¹à¥ˆ..."
+              : "Booking Submit à¤•à¤°à¥‡à¤‚"}
           </button>
 
         </form>

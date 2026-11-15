@@ -1,4 +1,4 @@
-
+﻿
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { DISTRICTS, BLOCKS } from "./areas.js";
 
-const API = `http://${window.location.hostname}:4000/api`;
+const API = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "http://localhost:4000/api" : "/api";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -34,7 +34,7 @@ function getBlocksForDistrict(district) {
 }
 
 function getServiceName(item) {
-  return item.service_name || item.service || item.name || "अन्य सेवा";
+  return item.service_name || item.service || item.name || "à¤…à¤¨à¥à¤¯ à¤¸à¥‡à¤µà¤¾";
 }
 
 function getServiceRate(item) {
@@ -47,17 +47,17 @@ function getServiceKey(item, index) {
 
 function numberWords(number) {
   const n = Math.floor(Number(number) || 0);
-  if (n === 0) return "शून्य";
+  if (n === 0) return "à¤¶à¥‚à¤¨à¥à¤¯";
 
   const ones = [
-    "", "एक", "दो", "तीन", "चार", "पाँच", "छह", "सात",
-    "आठ", "नौ", "दस", "ग्यारह", "बारह", "तेरह",
-    "चौदह", "पंद्रह", "सोलह", "सत्रह", "अठारह", "उन्नीस"
+    "", "à¤à¤•", "à¤¦à¥‹", "à¤¤à¥€à¤¨", "à¤šà¤¾à¤°", "à¤ªà¤¾à¤à¤š", "à¤›à¤¹", "à¤¸à¤¾à¤¤",
+    "à¤†à¤ ", "à¤¨à¥Œ", "à¤¦à¤¸", "à¤—à¥à¤¯à¤¾à¤°à¤¹", "à¤¬à¤¾à¤°à¤¹", "à¤¤à¥‡à¤°à¤¹",
+    "à¤šà¥Œà¤¦à¤¹", "à¤ªà¤‚à¤¦à¥à¤°à¤¹", "à¤¸à¥‹à¤²à¤¹", "à¤¸à¤¤à¥à¤°à¤¹", "à¤…à¤ à¤¾à¤°à¤¹", "à¤‰à¤¨à¥à¤¨à¥€à¤¸"
   ];
 
   const tens = [
-    "", "", "बीस", "तीस", "चालीस", "पचास",
-    "साठ", "सत्तर", "अस्सी", "नब्बे"
+    "", "", "à¤¬à¥€à¤¸", "à¤¤à¥€à¤¸", "à¤šà¤¾à¤²à¥€à¤¸", "à¤ªà¤šà¤¾à¤¸",
+    "à¤¸à¤¾à¤ ", "à¤¸à¤¤à¥à¤¤à¤°", "à¤…à¤¸à¥à¤¸à¥€", "à¤¨à¤¬à¥à¤¬à¥‡"
   ];
 
   const convert = (x) => {
@@ -69,12 +69,12 @@ function numberWords(number) {
         : tens[Math.floor(x / 10)];
     }
     if (x < 1000)
-      return ones[Math.floor(x / 100)] + " सौ " + convert(x % 100);
+      return ones[Math.floor(x / 100)] + " à¤¸à¥Œ " + convert(x % 100);
     if (x < 100000)
-      return convert(Math.floor(x / 1000)) + " हजार " + convert(x % 1000);
+      return convert(Math.floor(x / 1000)) + " à¤¹à¤œà¤¾à¤° " + convert(x % 1000);
     if (x < 10000000)
-      return convert(Math.floor(x / 100000)) + " लाख " + convert(x % 100000);
-    return convert(Math.floor(x / 10000000)) + " करोड़ " + convert(x % 10000000);
+      return convert(Math.floor(x / 100000)) + " à¤²à¤¾à¤– " + convert(x % 100000);
+    return convert(Math.floor(x / 10000000)) + " à¤•à¤°à¥‹à¤¡à¤¼ " + convert(x % 10000000);
   };
 
   return convert(n).replace(/\s+/g, " ").trim();
@@ -120,7 +120,7 @@ export default function Calculator() {
     setNotice({ text, type });
   };
 
-  // जिला और ब्लॉक के अनुसार Rate List लोड करें
+  // à¤œà¤¿à¤²à¤¾ à¤”à¤° à¤¬à¥à¤²à¥‰à¤• à¤•à¥‡ à¤…à¤¨à¥à¤¸à¤¾à¤° Rate List à¤²à¥‹à¤¡ à¤•à¤°à¥‡à¤‚
   const loadRates = useCallback(async (signal) => {
     if (!district || !block) {
       setRates([]);
@@ -141,7 +141,7 @@ export default function Calculator() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "रेट लोड नहीं हुए।");
+        throw new Error(data.message || "à¤°à¥‡à¤Ÿ à¤²à¥‹à¤¡ à¤¨à¤¹à¥€à¤‚ à¤¹à¥à¤à¥¤");
       }
 
       const list = Array.isArray(data)
@@ -154,12 +154,12 @@ export default function Calculator() {
       setQuantities({});
 
       if (list.length === 0) {
-        setError("इस ब्लॉक के लिए अभी कोई रेट उपलब्ध नहीं है।");
+        setError("à¤‡à¤¸ à¤¬à¥à¤²à¥‰à¤• à¤•à¥‡ à¤²à¤¿à¤ à¤…à¤­à¥€ à¤•à¥‹à¤ˆ à¤°à¥‡à¤Ÿ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤");
       }
     } catch (err) {
       if (err.name !== "AbortError") {
         setRates([]);
-        setError(err.message || "रेट सर्वर से नहीं मिल पाए।");
+        setError(err.message || "à¤°à¥‡à¤Ÿ à¤¸à¤°à¥à¤µà¤° à¤¸à¥‡ à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤² à¤ªà¤¾à¤à¥¤");
       }
     } finally {
       if (!signal?.aborted) {
@@ -181,7 +181,7 @@ export default function Calculator() {
     return () => controller.abort();
   }, [district, block, loadRates]);
 
-  // केवल Quantity भरी हुई Services
+  // à¤•à¥‡à¤µà¤² Quantity à¤­à¤°à¥€ à¤¹à¥à¤ˆ Services
   const items = useMemo(() => {
     return rates
       .map((item, index) => {
@@ -193,7 +193,7 @@ export default function Calculator() {
           service: getServiceName(item),
           quantity,
           rate: getServiceRate(item),
-          unit: item.unit || "प्रति यूनिट",
+          unit: item.unit || "à¤ªà¥à¤°à¤¤à¤¿ à¤¯à¥‚à¤¨à¤¿à¤Ÿ",
         };
       })
       .filter((item) => item.quantity > 0);
@@ -227,39 +227,39 @@ export default function Calculator() {
     setBillDate(today());
     setNotice({
       type: "success",
-      text: "कैलकुलेटर रीसेट हो गया।",
+      text: "à¤•à¥ˆà¤²à¤•à¥à¤²à¥‡à¤Ÿà¤° à¤°à¥€à¤¸à¥‡à¤Ÿ à¤¹à¥‹ à¤—à¤¯à¤¾à¥¤",
     });
   }
 
   async function downloadPDF() {
     if (!customer.name.trim()) {
-      return showNotice("ग्राहक का नाम दर्ज करें।");
+      return showNotice("à¤—à¥à¤°à¤¾à¤¹à¤• à¤•à¤¾ à¤¨à¤¾à¤® à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚à¥¤");
     }
 
     if (customer.mobile.length !== 10) {
-      return showNotice("सही 10 अंकों का मोबाइल नंबर दर्ज करें।");
+      return showNotice("à¤¸à¤¹à¥€ 10 à¤…à¤‚à¤•à¥‹à¤‚ à¤•à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚à¥¤");
     }
 
     if (!district || !block) {
-      return showNotice("जिला और ब्लॉक चुनें।");
+      return showNotice("à¤œà¤¿à¤²à¤¾ à¤”à¤° à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚à¥¤");
     }
 
     if (loadingRates) {
-      return showNotice("रेट लोड होने तक इंतजार करें।");
+      return showNotice("à¤°à¥‡à¤Ÿ à¤²à¥‹à¤¡ à¤¹à¥‹à¤¨à¥‡ à¤¤à¤• à¤‡à¤‚à¤¤à¤œà¤¾à¤° à¤•à¤°à¥‡à¤‚à¥¤");
     }
 
     if (!items.length) {
-      return showNotice("कम से कम एक Service की Quantity भरें।");
+      return showNotice("à¤•à¤® à¤¸à¥‡ à¤•à¤® à¤à¤• Service à¤•à¥€ Quantity à¤­à¤°à¥‡à¤‚à¥¤");
     }
 
     if (items.some((item) => item.rate <= 0)) {
-      return showNotice("किसी Service का रेट उपलब्ध नहीं है।");
+      return showNotice("à¤•à¤¿à¤¸à¥€ Service à¤•à¤¾ à¤°à¥‡à¤Ÿ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤");
     }
 
     const element = pdfRef.current;
 
     if (!element) {
-      return showNotice("PDF कंटेंट नहीं मिला।");
+      return showNotice("PDF à¤•à¤‚à¤Ÿà¥‡à¤‚à¤Ÿ à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤²à¤¾à¥¤");
     }
 
     setDownloading(true);
@@ -309,10 +309,10 @@ export default function Calculator() {
 
       pdf.save(`${billNo}.pdf`);
 
-      showNotice("आपकी Estimate PDF डाउनलोड हो गई।", "success");
+      showNotice("à¤†à¤ªà¤•à¥€ Estimate PDF à¤¡à¤¾à¤‰à¤¨à¤²à¥‹à¤¡ à¤¹à¥‹ à¤—à¤ˆà¥¤", "success");
     } catch (err) {
       console.error(err);
-      showNotice("PDF बनाने में समस्या आई। दोबारा प्रयास करें।");
+      showNotice("PDF à¤¬à¤¨à¤¾à¤¨à¥‡ à¤®à¥‡à¤‚ à¤¸à¤®à¤¸à¥à¤¯à¤¾ à¤†à¤ˆà¥¤ à¤¦à¥‹à¤¬à¤¾à¤°à¤¾ à¤ªà¥à¤°à¤¯à¤¾à¤¸ à¤•à¤°à¥‡à¤‚à¥¤");
     } finally {
       setDownloading(false);
     }
@@ -350,7 +350,7 @@ export default function Calculator() {
       <section className="bmm-hero">
         <div>
           <div className="bmm-eyebrow">
-            BOREWELL SERVICES • MADHYA PRADESH
+            BOREWELL SERVICES â€¢ MADHYA PRADESH
           </div>
 
           <h2>
@@ -358,7 +358,7 @@ export default function Calculator() {
           </h2>
 
           <p>
-            जिला और ब्लॉक के अनुसार रेट लेकर अपना अनुमान तैयार करें।
+            à¤œà¤¿à¤²à¤¾ à¤”à¤° à¤¬à¥à¤²à¥‰à¤• à¤•à¥‡ à¤…à¤¨à¥à¤¸à¤¾à¤° à¤°à¥‡à¤Ÿ à¤²à¥‡à¤•à¤° à¤…à¤ªà¤¨à¤¾ à¤…à¤¨à¥à¤®à¤¾à¤¨ à¤¤à¥ˆà¤¯à¤¾à¤° à¤•à¤°à¥‡à¤‚à¥¤
           </p>
         </div>
 
@@ -384,7 +384,7 @@ export default function Calculator() {
           </div>
           <div>
             <small>GRAND TOTAL</small>
-            <strong>₹{money(total)}</strong>
+            <strong>â‚¹{money(total)}</strong>
           </div>
         </div>
 
@@ -408,7 +408,7 @@ export default function Calculator() {
 
           <div>
             <h3>Customer Details</h3>
-            <p>ग्राहक की जानकारी भरें</p>
+            <p>à¤—à¥à¤°à¤¾à¤¹à¤• à¤•à¥€ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ à¤­à¤°à¥‡à¤‚</p>
           </div>
 
           <span className="bmm-step">01</span>
@@ -416,10 +416,10 @@ export default function Calculator() {
 
         <div className="bmm-form-grid">
           <label className="bmm-field">
-            <span>ग्राहक का नाम <i>*</i></span>
+            <span>à¤—à¥à¤°à¤¾à¤¹à¤• à¤•à¤¾ à¤¨à¤¾à¤® <i>*</i></span>
 
             <input
-              placeholder="ग्राहक का पूरा नाम"
+              placeholder="à¤—à¥à¤°à¤¾à¤¹à¤• à¤•à¤¾ à¤ªà¥‚à¤°à¤¾ à¤¨à¤¾à¤®"
               value={customer.name}
               onChange={(e) =>
                 setCustomer({
@@ -431,12 +431,12 @@ export default function Calculator() {
           </label>
 
           <label className="bmm-field">
-            <span>मोबाइल नंबर <i>*</i></span>
+            <span>à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° <i>*</i></span>
 
             <input
               type="tel"
               maxLength="10"
-              placeholder="10 अंकों का मोबाइल नंबर"
+              placeholder="10 à¤…à¤‚à¤•à¥‹à¤‚ à¤•à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤°"
               value={customer.mobile}
               onChange={(e) =>
                 setCustomer({
@@ -448,10 +448,10 @@ export default function Calculator() {
           </label>
 
           <label className="bmm-field bmm-span-2">
-            <span>पूरा पता</span>
+            <span>à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾</span>
 
             <input
-              placeholder="ग्राम, पोस्ट, पिन कोड आदि"
+              placeholder="à¤—à¥à¤°à¤¾à¤®, à¤ªà¥‹à¤¸à¥à¤Ÿ, à¤ªà¤¿à¤¨ à¤•à¥‹à¤¡ à¤†à¤¦à¤¿"
               value={customer.address}
               onChange={(e) =>
                 setCustomer({
@@ -473,7 +473,7 @@ export default function Calculator() {
 
           <div>
             <h3>Location Details</h3>
-            <p>रेट प्राप्त करने के लिए अपना क्षेत्र चुनें</p>
+            <p>à¤°à¥‡à¤Ÿ à¤ªà¥à¤°à¤¾à¤ªà¥à¤¤ à¤•à¤°à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤…à¤ªà¤¨à¤¾ à¤•à¥à¤·à¥‡à¤¤à¥à¤° à¤šà¥à¤¨à¥‡à¤‚</p>
           </div>
 
           <span className="bmm-step">02</span>
@@ -481,7 +481,7 @@ export default function Calculator() {
 
         <div className="bmm-form-grid">
           <label className="bmm-field">
-            <span>जिला <i>*</i></span>
+            <span>à¤œà¤¿à¤²à¤¾ <i>*</i></span>
 
             <select
               value={district}
@@ -493,7 +493,7 @@ export default function Calculator() {
                 setError("");
               }}
             >
-              <option value="">जिला चुनें</option>
+              <option value="">à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚</option>
 
               {districts.map((name) => (
                 <option key={name} value={name}>
@@ -504,7 +504,7 @@ export default function Calculator() {
           </label>
 
           <label className="bmm-field">
-            <span>ब्लॉक <i>*</i></span>
+            <span>à¤¬à¥à¤²à¥‰à¤• <i>*</i></span>
 
             <select
               value={block}
@@ -516,7 +516,7 @@ export default function Calculator() {
                 setError("");
               }}
             >
-              <option value="">ब्लॉक चुनें</option>
+              <option value="">à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚</option>
 
               {blocks.map((name) => (
                 <option key={name} value={name}>
@@ -527,7 +527,7 @@ export default function Calculator() {
           </label>
 
           <label className="bmm-field">
-            <span>बिल की तारीख</span>
+            <span>à¤¬à¤¿à¤² à¤•à¥€ à¤¤à¤¾à¤°à¥€à¤–</span>
 
             <div className="bmm-date-wrap">
               <CalendarDays size={17} />
@@ -552,7 +552,7 @@ export default function Calculator() {
           <div>
             <h3>Services & Quantity</h3>
             <p>
-              Rate List से आए रेट के अनुसार अपनी मात्रा भरें।
+              Rate List à¤¸à¥‡ à¤†à¤ à¤°à¥‡à¤Ÿ à¤•à¥‡ à¤…à¤¨à¥à¤¸à¤¾à¤° à¤…à¤ªà¤¨à¥€ à¤®à¤¾à¤¤à¥à¤°à¤¾ à¤­à¤°à¥‡à¤‚à¥¤
             </p>
           </div>
 
@@ -562,20 +562,20 @@ export default function Calculator() {
         {!district || !block ? (
           <div className="bmm-empty">
             <MapPin size={30} />
-            <strong>पहले जिला और ब्लॉक चुनें</strong>
-            <small>इसके बाद सभी उपलब्ध Services दिखाई देंगी।</small>
+            <strong>à¤ªà¤¹à¤²à¥‡ à¤œà¤¿à¤²à¤¾ à¤”à¤° à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚</strong>
+            <small>à¤‡à¤¸à¤•à¥‡ à¤¬à¤¾à¤¦ à¤¸à¤­à¥€ à¤‰à¤ªà¤²à¤¬à¥à¤§ Services à¤¦à¤¿à¤–à¤¾à¤ˆ à¤¦à¥‡à¤‚à¤—à¥€à¥¤</small>
           </div>
         ) : loadingRates ? (
           <div className="bmm-empty">
             <LoaderCircle className="bmm-spin" size={30} />
-            <strong>Rate List लोड हो रही है...</strong>
+            <strong>Rate List à¤²à¥‹à¤¡ à¤¹à¥‹ à¤°à¤¹à¥€ à¤¹à¥ˆ...</strong>
           </div>
         ) : error ? (
           <div className="bmm-notice error">{error}</div>
         ) : rates.length === 0 ? (
           <div className="bmm-empty">
-            <strong>कोई Service उपलब्ध नहीं है।</strong>
-            <small>Admin से इस ब्लॉक की Rate List अपडेट करवाएँ।</small>
+            <strong>à¤•à¥‹à¤ˆ Service à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤</strong>
+            <small>Admin à¤¸à¥‡ à¤‡à¤¸ à¤¬à¥à¤²à¥‰à¤• à¤•à¥€ Rate List à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤•à¤°à¤µà¤¾à¤à¤à¥¤</small>
           </div>
         ) : (
           <>
@@ -588,7 +588,7 @@ export default function Calculator() {
                 onClick={() => loadRates()}
                 className="bmm-refresh-btn"
               >
-                <RefreshCw size={15} /> रेट रिफ्रेश
+                <RefreshCw size={15} /> à¤°à¥‡à¤Ÿ à¤°à¤¿à¤«à¥à¤°à¥‡à¤¶
               </button>
             </div>
 
@@ -597,7 +597,7 @@ export default function Calculator() {
                 const key = getServiceKey(item, index);
                 const quantity = quantities[key] ?? "";
                 const rate = getServiceRate(item);
-                const unit = item.unit || "प्रति यूनिट";
+                const unit = item.unit || "à¤ªà¥à¤°à¤¤à¤¿ à¤¯à¥‚à¤¨à¤¿à¤Ÿ";
                 const amount = (Number(quantity) || 0) * rate;
 
                 return (
@@ -605,13 +605,13 @@ export default function Calculator() {
                     <div className="bmm-quantity-service">
                       <strong>{getServiceName(item)}</strong>
                       <small>
-                        ₹{money(rate)} / {unit}
+                        â‚¹{money(rate)} / {unit}
                       </small>
                     </div>
 
                     <div className="bmm-quantity-input">
                       <label htmlFor={`quantity-${index}`}>
-                        मात्रा ({unit})
+                        à¤®à¤¾à¤¤à¥à¤°à¤¾ ({unit})
                       </label>
 
                       <input
@@ -628,8 +628,8 @@ export default function Calculator() {
                     </div>
 
                     <div className="bmm-quantity-amount">
-                      <small>कुल राशि</small>
-                      <strong>₹{money(amount)}</strong>
+                      <small>à¤•à¥à¤² à¤°à¤¾à¤¶à¤¿</small>
+                      <strong>â‚¹{money(amount)}</strong>
                     </div>
                   </div>
                 );
@@ -652,12 +652,12 @@ export default function Calculator() {
       <section className="bmm-summary">
         <div>
           <small>ESTIMATED TOTAL</small>
-          <h2>₹{money(total)}</h2>
+          <h2>â‚¹{money(total)}</h2>
 
           <p>
             {total
-              ? numberWords(total) + " रुपये मात्र"
-              : "Quantity भरने पर कुल राशि दिखाई देगी।"}
+              ? numberWords(total) + " à¤°à¥à¤ªà¤¯à¥‡ à¤®à¤¾à¤¤à¥à¤°"
+              : "Quantity à¤­à¤°à¤¨à¥‡ à¤ªà¤° à¤•à¥à¤² à¤°à¤¾à¤¶à¤¿ à¤¦à¤¿à¤–à¤¾à¤ˆ à¤¦à¥‡à¤—à¥€à¥¤"}
           </p>
         </div>
 
@@ -682,12 +682,12 @@ export default function Calculator() {
           {downloading ? (
             <>
               <LoaderCircle className="bmm-spin" size={18} />
-              PDF बन रही है...
+              PDF à¤¬à¤¨ à¤°à¤¹à¥€ à¤¹à¥ˆ...
             </>
           ) : (
             <>
               <FileDown size={19} />
-              Estimate PDF डाउनलोड करें
+              Estimate PDF à¤¡à¤¾à¤‰à¤¨à¤²à¥‹à¤¡ à¤•à¤°à¥‡à¤‚
             </>
           )}
         </button>
@@ -703,7 +703,7 @@ export default function Calculator() {
 
             <div>
               <h1>BOREWELLS MITRA</h1>
-              <p>BOREWELL • DRILLING • PIPE SERVICES</p>
+              <p>BOREWELL â€¢ DRILLING â€¢ PIPE SERVICES</p>
             </div>
 
             <div className="bmm-pdf-label">ESTIMATE</div>
@@ -711,7 +711,7 @@ export default function Calculator() {
 
           <div className="bmm-pdf-title">
             <h2>ESTIMATE / SERVICE BILL</h2>
-            <p>सेवा का अनुमान एवं विवरण</p>
+            <p>à¤¸à¥‡à¤µà¤¾ à¤•à¤¾ à¤…à¤¨à¥à¤®à¤¾à¤¨ à¤à¤µà¤‚ à¤µà¤¿à¤µà¤°à¤£</p>
           </div>
 
           <div className="bmm-pdf-meta">
@@ -731,28 +731,28 @@ export default function Calculator() {
 
             <div className="bmm-pdf-info-grid">
               <div>
-                <small>ग्राहक का नाम</small>
-                <strong>{customer.name || "—"}</strong>
+                <small>à¤—à¥à¤°à¤¾à¤¹à¤• à¤•à¤¾ à¤¨à¤¾à¤®</small>
+                <strong>{customer.name || "â€”"}</strong>
               </div>
 
               <div>
-                <small>मोबाइल नंबर</small>
-                <strong>{customer.mobile || "—"}</strong>
+                <small>à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤°</small>
+                <strong>{customer.mobile || "â€”"}</strong>
               </div>
 
               <div className="bmm-pdf-wide">
-                <small>पता</small>
-                <strong>{customer.address || "—"}</strong>
+                <small>à¤ªà¤¤à¤¾</small>
+                <strong>{customer.address || "â€”"}</strong>
               </div>
 
               <div>
-                <small>जिला</small>
-                <strong>{district || "—"}</strong>
+                <small>à¤œà¤¿à¤²à¤¾</small>
+                <strong>{district || "â€”"}</strong>
               </div>
 
               <div>
-                <small>ब्लॉक</small>
-                <strong>{block || "—"}</strong>
+                <small>à¤¬à¥à¤²à¥‰à¤•</small>
+                <strong>{block || "â€”"}</strong>
               </div>
             </div>
           </div>
@@ -763,11 +763,11 @@ export default function Calculator() {
             <table>
               <thead>
                 <tr>
-                  <th>क्र.</th>
-                  <th>सर्विस का विवरण</th>
-                  <th>मात्रा</th>
-                  <th>रेट (₹)</th>
-                  <th>राशि (₹)</th>
+                  <th>à¤•à¥à¤°.</th>
+                  <th>à¤¸à¤°à¥à¤µà¤¿à¤¸ à¤•à¤¾ à¤µà¤¿à¤µà¤°à¤£</th>
+                  <th>à¤®à¤¾à¤¤à¥à¤°à¤¾</th>
+                  <th>à¤°à¥‡à¤Ÿ (â‚¹)</th>
+                  <th>à¤°à¤¾à¤¶à¤¿ (â‚¹)</th>
                 </tr>
               </thead>
 
@@ -784,7 +784,7 @@ export default function Calculator() {
 
                 {items.length === 0 && (
                   <tr>
-                    <td colSpan="5">अभी कोई Service नहीं चुनी गई।</td>
+                    <td colSpan="5">à¤…à¤­à¥€ à¤•à¥‹à¤ˆ Service à¤¨à¤¹à¥€à¤‚ à¤šà¥à¤¨à¥€ à¤—à¤ˆà¥¤</td>
                   </tr>
                 )}
               </tbody>
@@ -792,31 +792,31 @@ export default function Calculator() {
           </div>
 
           <div className="bmm-pdf-total">
-            <span>GRAND TOTAL / कुल राशि</span>
-            <strong>₹{money(total)}</strong>
+            <span>GRAND TOTAL / à¤•à¥à¤² à¤°à¤¾à¤¶à¤¿</span>
+            <strong>â‚¹{money(total)}</strong>
           </div>
 
           <div className="bmm-pdf-words">
-            <small>राशि शब्दों में</small>
+            <small>à¤°à¤¾à¤¶à¤¿ à¤¶à¤¬à¥à¤¦à¥‹à¤‚ à¤®à¥‡à¤‚</small>
             <strong>
-              {total ? numberWords(total) + " रुपये मात्र" : "—"}
+              {total ? numberWords(total) + " à¤°à¥à¤ªà¤¯à¥‡ à¤®à¤¾à¤¤à¥à¤°" : "â€”"}
             </strong>
           </div>
 
           <div className="bmm-pdf-footer">
             <div>
               <strong>Borewells Mitra</strong>
-              <p>आपकी बोरवेल सेवा का विश्वसनीय साथी</p>
+              <p>à¤†à¤ªà¤•à¥€ à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤¸à¥‡à¤µà¤¾ à¤•à¤¾ à¤µà¤¿à¤¶à¥à¤µà¤¸à¤¨à¥€à¤¯ à¤¸à¤¾à¤¥à¥€</p>
             </div>
 
             <div className="bmm-sign">
               <span>Authorized Signature</span>
-              <small>अधिकृत हस्ताक्षर</small>
+              <small>à¤…à¤§à¤¿à¤•à¥ƒà¤¤ à¤¹à¤¸à¥à¤¤à¤¾à¤•à¥à¤·à¤°</small>
             </div>
           </div>
 
           <div className="bmm-pdf-bottom">
-            यह केवल अनुमान है, अंतिम बिल नहीं।
+            à¤¯à¤¹ à¤•à¥‡à¤µà¤² à¤…à¤¨à¥à¤®à¤¾à¤¨ à¤¹à¥ˆ, à¤…à¤‚à¤¤à¤¿à¤® à¤¬à¤¿à¤² à¤¨à¤¹à¥€à¤‚à¥¤
           </div>
         </div>
       </div>

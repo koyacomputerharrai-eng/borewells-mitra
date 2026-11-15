@@ -1,4 +1,4 @@
-
+﻿
 import React, { useEffect, useState } from "react";
 import {
   RefreshCw, CheckCircle, XCircle, Clock,
@@ -7,7 +7,7 @@ import {
   ShieldCheck, AlertCircle
 } from "lucide-react";
 
-const API = "http://localhost:4000/api";
+const API = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "http://localhost:4000/api" : "/api";
 
 export default function AgentDashboard({ user, onLogout }) {
   const [bookings, setBookings] = useState([]);
@@ -52,7 +52,7 @@ export default function AgentDashboard({ user, onLogout }) {
     });
 
     throw new Error(
-      `API Error: ${response.url} | Status: ${response.status} | JSON नहीं मिला।`
+      `API Error: ${response.url} | Status: ${response.status} | JSON à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤²à¤¾à¥¤`
     );
   }
 }
@@ -68,7 +68,7 @@ export default function AgentDashboard({ user, onLogout }) {
 
       const data = await readResponse(response);
 
-      // Backend Raw Array या Object दोनों स्वीकार करें
+      // Backend Raw Array à¤¯à¤¾ Object à¤¦à¥‹à¤¨à¥‹à¤‚ à¤¸à¥à¤µà¥€à¤•à¤¾à¤° à¤•à¤°à¥‡à¤‚
       const list = Array.isArray(data)
         ? data
         : data.bookings || [];
@@ -141,27 +141,27 @@ export default function AgentDashboard({ user, onLogout }) {
     setProfileMessage("");
 
     if (profileRequest?.status === "pending") {
-      setProfileMessage("आपकी पिछली Request अभी Pending है।");
+      setProfileMessage("à¤†à¤ªà¤•à¥€ à¤ªà¤¿à¤›à¤²à¥€ Request à¤…à¤­à¥€ Pending à¤¹à¥ˆà¥¤");
       return;
     }
 
     if (!profile.name.trim()) {
-      setProfileMessage("एजेंट का नाम भरें।");
+      setProfileMessage("à¤à¤œà¥‡à¤‚à¤Ÿ à¤•à¤¾ à¤¨à¤¾à¤® à¤­à¤°à¥‡à¤‚à¥¤");
       return;
     }
 
     if (!/^[6-9][0-9]{9}$/.test(profile.mobile)) {
-      setProfileMessage("सही 10 अंकों का मोबाइल नंबर भरें।");
+      setProfileMessage("à¤¸à¤¹à¥€ 10 à¤…à¤‚à¤•à¥‹à¤‚ à¤•à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° à¤­à¤°à¥‡à¤‚à¥¤");
       return;
     }
 
     if (!profile.agency_name.trim()) {
-      setProfileMessage("एजेंसी का नाम भरें।");
+      setProfileMessage("à¤à¤œà¥‡à¤‚à¤¸à¥€ à¤•à¤¾ à¤¨à¤¾à¤® à¤­à¤°à¥‡à¤‚à¥¤");
       return;
     }
 
     if (!profile.office_address.trim()) {
-      setProfileMessage("ऑफिस का पता भरें।");
+      setProfileMessage("à¤‘à¤«à¤¿à¤¸ à¤•à¤¾ à¤ªà¤¤à¤¾ à¤­à¤°à¥‡à¤‚à¥¤");
       return;
     }
 
@@ -186,13 +186,13 @@ export default function AgentDashboard({ user, onLogout }) {
 
       setEditingProfile(false);
 
-      // पुरानी Profile ही दिखाई जाएगी, जब तक Admin Approve न करे
+      // à¤ªà¥à¤°à¤¾à¤¨à¥€ Profile à¤¹à¥€ à¤¦à¤¿à¤–à¤¾à¤ˆ à¤œà¤¾à¤à¤—à¥€, à¤œà¤¬ à¤¤à¤• Admin Approve à¤¨ à¤•à¤°à¥‡
       await loadProfile();
       await loadProfileRequest();
 
       setProfileMessage(
         data.message ||
-        "आपकी Profile Update Request Admin को भेज दी गई है।"
+        "à¤†à¤ªà¤•à¥€ Profile Update Request Admin à¤•à¥‹ à¤­à¥‡à¤œ à¤¦à¥€ à¤—à¤ˆ à¤¹à¥ˆà¥¤"
       );
     } catch (error) {
       setProfileMessage(error.message);
@@ -203,13 +203,13 @@ export default function AgentDashboard({ user, onLogout }) {
 
   async function bookingAction(id, action) {
     const labels = {
-      accept: "बुकिंग स्वीकार",
-      reject: "बुकिंग Reject",
-      start: "काम शुरू",
-      complete: "काम पूर्ण"
+      accept: "à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¸à¥à¤µà¥€à¤•à¤¾à¤°",
+      reject: "à¤¬à¥à¤•à¤¿à¤‚à¤— Reject",
+      start: "à¤•à¤¾à¤® à¤¶à¥à¤°à¥‚",
+      complete: "à¤•à¤¾à¤® à¤ªà¥‚à¤°à¥à¤£"
     };
 
-    if (!window.confirm(`${labels[action]} करना चाहते हैं?`)) return;
+    if (!window.confirm(`${labels[action]} à¤•à¤°à¤¨à¤¾ à¤šà¤¾à¤¹à¤¤à¥‡ à¤¹à¥ˆà¤‚?`)) return;
 
     try {
       let url = `${API}/agent/bookings/${id}`;
@@ -218,7 +218,7 @@ export default function AgentDashboard({ user, onLogout }) {
       if (action === "start" || action === "complete") {
         url += "/work-status";
         body = {
-          status: action === "start" ? "कार्य प्रगति पर" : "पूर्ण"
+          status: action === "start" ? "à¤•à¤¾à¤°à¥à¤¯ à¤ªà¥à¤°à¤—à¤¤à¤¿ à¤ªà¤°" : "à¤ªà¥‚à¤°à¥à¤£"
         };
       }
 
@@ -233,7 +233,7 @@ export default function AgentDashboard({ user, onLogout }) {
 
       const data = await readResponse(response);
 
-      setMessage(data.message || "अपडेट सफल।");
+      setMessage(data.message || "à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤¸à¤«à¤²à¥¤");
       await loadBookings();
     } catch (error) {
       setMessage(error.message);
@@ -247,16 +247,16 @@ export default function AgentDashboard({ user, onLogout }) {
   }, []);
 
   function remainingTime(dueAt) {
-    if (!dueAt) return "समय सीमा उपलब्ध नहीं";
+    if (!dueAt) return "à¤¸à¤®à¤¯ à¤¸à¥€à¤®à¤¾ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚";
 
     const remaining = new Date(dueAt).getTime() - Date.now();
 
-    if (remaining <= 0) return "समय समाप्त";
+    if (remaining <= 0) return "à¤¸à¤®à¤¯ à¤¸à¤®à¤¾à¤ªà¥à¤¤";
 
     const hours = Math.floor(remaining / 3600000);
     const minutes = Math.floor((remaining % 3600000) / 60000);
 
-    return `${hours} घंटे ${minutes} मिनट शेष`;
+    return `${hours} à¤˜à¤‚à¤Ÿà¥‡ ${minutes} à¤®à¤¿à¤¨à¤Ÿ à¤¶à¥‡à¤·`;
   }
 
   const inputStyle = {
@@ -293,10 +293,10 @@ export default function AgentDashboard({ user, onLogout }) {
 
       <main className="agent-content">
         <section className="agent-welcome">
-          <h2>नमस्ते, {profile.name || "Agent"} जी</h2>
+          <h2>à¤¨à¤®à¤¸à¥à¤¤à¥‡, {profile.name || "Agent"} à¤œà¥€</h2>
           <p>
-            Agent ID: {profile.userId || "—"} |
-            {profile.district || "—"} / {profile.block || "—"}
+            Agent ID: {profile.userId || "â€”"} |
+            {profile.district || "â€”"} / {profile.block || "â€”"}
           </p>
         </section>
 
@@ -323,7 +323,7 @@ export default function AgentDashboard({ user, onLogout }) {
           >
             <h2 style={{ margin: 0 }}>
               <UserRound size={21} style={{ verticalAlign: "middle" }} />
-              {" "}मेरी प्रोफाइल
+              {" "}à¤®à¥‡à¤°à¥€ à¤ªà¥à¤°à¥‹à¤«à¤¾à¤‡à¤²
             </h2>
 
             {!editingProfile && !pending && (
@@ -341,7 +341,7 @@ export default function AgentDashboard({ user, onLogout }) {
           </div>
 
           {requestLoading ? (
-            <p>Request Status लोड हो रहा है...</p>
+            <p>Request Status à¤²à¥‹à¤¡ à¤¹à¥‹ à¤°à¤¹à¤¾ à¤¹à¥ˆ...</p>
           ) : pending ? (
             <div
               style={{
@@ -358,8 +358,8 @@ export default function AgentDashboard({ user, onLogout }) {
                 {" "}Pending Admin Approval
               </strong>
               <p style={{ marginBottom: 0 }}>
-                आपकी Profile बदलने की Request भेज दी गई है।
-                Admin की मंजूरी मिलने तक पुरानी जानकारी ही लागू रहेगी।
+                à¤†à¤ªà¤•à¥€ Profile à¤¬à¤¦à¤²à¤¨à¥‡ à¤•à¥€ Request à¤­à¥‡à¤œ à¤¦à¥€ à¤—à¤ˆ à¤¹à¥ˆà¥¤
+                Admin à¤•à¥€ à¤®à¤‚à¤œà¥‚à¤°à¥€ à¤®à¤¿à¤²à¤¨à¥‡ à¤¤à¤• à¤ªà¥à¤°à¤¾à¤¨à¥€ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ à¤¹à¥€ à¤²à¤¾à¤—à¥‚ à¤°à¤¹à¥‡à¤—à¥€à¥¤
               </p>
               <small>Request ID: {profileRequest.id}</small>
             </div>
@@ -374,7 +374,7 @@ export default function AgentDashboard({ user, onLogout }) {
               }}
             >
               <ShieldCheck size={18} style={{ verticalAlign: "middle" }} />
-              {" "}आपकी पिछली Profile Request Approve हो गई है।
+              {" "}à¤†à¤ªà¤•à¥€ à¤ªà¤¿à¤›à¤²à¥€ Profile Request Approve à¤¹à¥‹ à¤—à¤ˆ à¤¹à¥ˆà¥¤
             </div>
           ) : profileRequest?.status === "rejected" ? (
             <div
@@ -387,48 +387,48 @@ export default function AgentDashboard({ user, onLogout }) {
               }}
             >
               <AlertCircle size={18} style={{ verticalAlign: "middle" }} />
-              {" "}आपकी पिछली Request Reject हुई है।
+              {" "}à¤†à¤ªà¤•à¥€ à¤ªà¤¿à¤›à¤²à¥€ Request Reject à¤¹à¥à¤ˆ à¤¹à¥ˆà¥¤
               {profileRequest.admin_note && (
-                <p>Admin का संदेश: {profileRequest.admin_note}</p>
+                <p>Admin à¤•à¤¾ à¤¸à¤‚à¤¦à¥‡à¤¶: {profileRequest.admin_note}</p>
               )}
             </div>
           ) : null}
 
           {profileLoading ? (
-            <p>प्रोफाइल लोड हो रही है...</p>
+            <p>à¤ªà¥à¤°à¥‹à¤«à¤¾à¤‡à¤² à¤²à¥‹à¤¡ à¤¹à¥‹ à¤°à¤¹à¥€ à¤¹à¥ˆ...</p>
           ) : (
             <form onSubmit={saveProfile}>
               <label style={fieldStyle}>
                 <Building2 size={16} style={{ verticalAlign: "middle" }} />
-                {" "}एजेंसी का नाम
+                {" "}à¤à¤œà¥‡à¤‚à¤¸à¥€ à¤•à¤¾ à¤¨à¤¾à¤®
                 <input
                   style={inputStyle}
                   name="agency_name"
                   value={profile.agency_name}
                   onChange={handleProfileChange}
                   disabled={!editingProfile || pending}
-                  placeholder="अपनी एजेंसी का नाम लिखें"
+                  placeholder="à¤…à¤ªà¤¨à¥€ à¤à¤œà¥‡à¤‚à¤¸à¥€ à¤•à¤¾ à¤¨à¤¾à¤® à¤²à¤¿à¤–à¥‡à¤‚"
                   required
                 />
               </label>
 
               <label style={fieldStyle}>
                 <UserRound size={16} style={{ verticalAlign: "middle" }} />
-                {" "}एजेंट का नाम
+                {" "}à¤à¤œà¥‡à¤‚à¤Ÿ à¤•à¤¾ à¤¨à¤¾à¤®
                 <input
                   style={inputStyle}
                   name="name"
                   value={profile.name}
                   onChange={handleProfileChange}
                   disabled={!editingProfile || pending}
-                  placeholder="एजेंट का पूरा नाम"
+                  placeholder="à¤à¤œà¥‡à¤‚à¤Ÿ à¤•à¤¾ à¤ªà¥‚à¤°à¤¾ à¤¨à¤¾à¤®"
                   required
                 />
               </label>
 
               <label style={fieldStyle}>
                 <Phone size={16} style={{ verticalAlign: "middle" }} />
-                {" "}मोबाइल नंबर
+                {" "}à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤°
                 <input
                   style={inputStyle}
                   name="mobile"
@@ -438,14 +438,14 @@ export default function AgentDashboard({ user, onLogout }) {
                   value={profile.mobile}
                   onChange={handleProfileChange}
                   disabled={!editingProfile || pending}
-                  placeholder="10 अंकों का मोबाइल नंबर"
+                  placeholder="10 à¤…à¤‚à¤•à¥‹à¤‚ à¤•à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤°"
                   required
                 />
               </label>
 
               <label style={fieldStyle}>
                 <MapPin size={16} style={{ verticalAlign: "middle" }} />
-                {" "}ऑफिस का पता
+                {" "}à¤‘à¤«à¤¿à¤¸ à¤•à¤¾ à¤ªà¤¤à¤¾
                 <textarea
                   style={{
                     ...inputStyle,
@@ -456,7 +456,7 @@ export default function AgentDashboard({ user, onLogout }) {
                   value={profile.office_address}
                   onChange={handleProfileChange}
                   disabled={!editingProfile || pending}
-                  placeholder="एजेंसी / ऑफिस का पूरा पता"
+                  placeholder="à¤à¤œà¥‡à¤‚à¤¸à¥€ / à¤‘à¤«à¤¿à¤¸ à¤•à¤¾ à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾"
                   required
                 />
               </label>
@@ -471,7 +471,7 @@ export default function AgentDashboard({ user, onLogout }) {
               >
                 <div>
                   <label style={fieldStyle}>
-                    जिला (Admin द्वारा निर्धारित)
+                    à¤œà¤¿à¤²à¤¾ (Admin à¤¦à¥à¤µà¤¾à¤°à¤¾ à¤¨à¤¿à¤°à¥à¤§à¤¾à¤°à¤¿à¤¤)
                   </label>
                   <input
                     style={inputStyle}
@@ -482,7 +482,7 @@ export default function AgentDashboard({ user, onLogout }) {
 
                 <div>
                   <label style={fieldStyle}>
-                    ब्लॉक (Admin द्वारा निर्धारित)
+                    à¤¬à¥à¤²à¥‰à¤• (Admin à¤¦à¥à¤µà¤¾à¤°à¤¾ à¤¨à¤¿à¤°à¥à¤§à¤¾à¤°à¤¿à¤¤)
                   </label>
                   <input
                     style={inputStyle}
@@ -497,10 +497,10 @@ export default function AgentDashboard({ user, onLogout }) {
                   style={{
                     padding: "10px",
                     borderRadius: "8px",
-                    background: profileMessage.includes("भेज दी गई")
+                    background: profileMessage.includes("à¤­à¥‡à¤œ à¤¦à¥€ à¤—à¤ˆ")
                       ? "#dcfce7"
                       : "#fee2e2",
-                    color: profileMessage.includes("भेज दी गई")
+                    color: profileMessage.includes("à¤­à¥‡à¤œ à¤¦à¥€ à¤—à¤ˆ")
                       ? "#166534"
                       : "#991b1b"
                   }}
@@ -524,8 +524,8 @@ export default function AgentDashboard({ user, onLogout }) {
                   >
                     <Save size={17} />
                     {profileSaving
-                      ? "Request भेजी जा रही है..."
-                      : "Approval के लिए भेजें"}
+                      ? "Request à¤­à¥‡à¤œà¥€ à¤œà¤¾ à¤°à¤¹à¥€ à¤¹à¥ˆ..."
+                      : "Approval à¤•à¥‡ à¤²à¤¿à¤ à¤­à¥‡à¤œà¥‡à¤‚"}
                   </button>
 
                   <button
@@ -547,7 +547,7 @@ export default function AgentDashboard({ user, onLogout }) {
 
         {/* BOOKINGS */}
         <div className="agent-toolbar">
-          <h2>मेरी नियुक्त बुकिंग</h2>
+          <h2>à¤®à¥‡à¤°à¥€ à¤¨à¤¿à¤¯à¥à¤•à¥à¤¤ à¤¬à¥à¤•à¤¿à¤‚à¤—</h2>
           <button className="btn btn-light" onClick={loadBookings}>
             <RefreshCw size={17} /> Refresh
           </button>
@@ -556,9 +556,9 @@ export default function AgentDashboard({ user, onLogout }) {
         {message && <p className="form-message">{message}</p>}
 
         {loading ? (
-          <p>बुकिंग लोड हो रही हैं...</p>
+          <p>à¤¬à¥à¤•à¤¿à¤‚à¤— à¤²à¥‹à¤¡ à¤¹à¥‹ à¤°à¤¹à¥€ à¤¹à¥ˆà¤‚...</p>
         ) : bookings.length === 0 ? (
-          <p>अभी आपके लिए कोई बुकिंग नियुक्त नहीं है।</p>
+          <p>à¤…à¤­à¥€ à¤†à¤ªà¤•à¥‡ à¤²à¤¿à¤ à¤•à¥‹à¤ˆ à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¨à¤¿à¤¯à¥à¤•à¥à¤¤ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤</p>
         ) : (
           <div className="agent-booking-grid">
             {bookings.map((booking) => (
@@ -572,14 +572,14 @@ export default function AgentDashboard({ user, onLogout }) {
                 </div>
 
                 <h3>{booking.name}</h3>
-                <p>मोबाइल: {booking.mobile}</p>
+                <p>à¤®à¥‹à¤¬à¤¾à¤‡à¤²: {booking.mobile}</p>
                 <p>
                   <MapPin size={15} />
                   {booking.district} / {booking.block} / {booking.village}
                 </p>
-                <p>सेवा: {booking.service}</p>
+                <p>à¤¸à¥‡à¤µà¤¾: {booking.service}</p>
 
-                {booking.status === "एजेंट नियुक्त" && (
+                {booking.status === "à¤à¤œà¥‡à¤‚à¤Ÿ à¤¨à¤¿à¤¯à¥à¤•à¥à¤¤" && (
                   <p className="agent-deadline">
                     <Clock size={16} />
                     {remainingTime(booking.assignment_due_at)}
@@ -587,7 +587,7 @@ export default function AgentDashboard({ user, onLogout }) {
                 )}
 
                 <div className="agent-booking-actions">
-                  {booking.status === "एजेंट नियुक्त" && (
+                  {booking.status === "à¤à¤œà¥‡à¤‚à¤Ÿ à¤¨à¤¿à¤¯à¥à¤•à¥à¤¤" && (
                     <>
                       <button
                         className="btn btn-primary"
@@ -605,21 +605,21 @@ export default function AgentDashboard({ user, onLogout }) {
                     </>
                   )}
 
-                  {booking.status === "एजेंट द्वारा स्वीकार" && (
+                  {booking.status === "à¤à¤œà¥‡à¤‚à¤Ÿ à¤¦à¥à¤µà¤¾à¤°à¤¾ à¤¸à¥à¤µà¥€à¤•à¤¾à¤°" && (
                     <button
                       className="btn btn-primary"
                       onClick={() => bookingAction(booking.id, "start")}
                     >
-                      <Play size={17} /> काम शुरू करें
+                      <Play size={17} /> à¤•à¤¾à¤® à¤¶à¥à¤°à¥‚ à¤•à¤°à¥‡à¤‚
                     </button>
                   )}
 
-                  {booking.status === "कार्य प्रगति पर" && (
+                  {booking.status === "à¤•à¤¾à¤°à¥à¤¯ à¤ªà¥à¤°à¤—à¤¤à¤¿ à¤ªà¤°" && (
                     <button
                       className="btn btn-primary"
                       onClick={() => bookingAction(booking.id, "complete")}
                     >
-                      <CheckCheck size={17} /> काम पूर्ण करें
+                      <CheckCheck size={17} /> à¤•à¤¾à¤® à¤ªà¥‚à¤°à¥à¤£ à¤•à¤°à¥‡à¤‚
                     </button>
                   )}
                 </div>

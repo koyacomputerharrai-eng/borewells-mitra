@@ -1,4 +1,4 @@
-
+﻿
 import React, {
   useCallback,
   useEffect,
@@ -20,11 +20,8 @@ import {
 
 import "./style.css";
 
-// Localhost और Live Website के लिए सही API
-const API =
-  window.location.hostname === "localhost"
-    ? "http://localhost:4000/api"
-    : "https://borewells-mitra-api.onrender.com/api";
+// Localhost à¤”à¤° Live Website à¤•à¥‡ à¤²à¤¿à¤ à¤¸à¤¹à¥€ API
+const API = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "http://localhost:4000/api" : "/api";
 
 
 function getBlocksForDistrict(district) {
@@ -102,7 +99,7 @@ export default function RateList() {
 
         if (!response.ok) {
           throw new Error(
-            data.message || "Services लोड नहीं हुईं"
+            data.message || "Services à¤²à¥‹à¤¡ à¤¨à¤¹à¥€à¤‚ à¤¹à¥à¤ˆà¤‚"
           );
         }
 
@@ -123,7 +120,7 @@ export default function RateList() {
             setServicesLoaded(false);
 
             setError(
-              "नई Services सर्वर से नहीं मिल पाईं। कृपया दोबारा रिफ्रेश करें।"
+              "à¤¨à¤ˆ Services à¤¸à¤°à¥à¤µà¤° à¤¸à¥‡ à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤² à¤ªà¤¾à¤ˆà¤‚à¥¤ à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¦à¥‹à¤¬à¤¾à¤°à¤¾ à¤°à¤¿à¤«à¥à¤°à¥‡à¤¶ à¤•à¤°à¥‡à¤‚à¥¤"
             );
           }
         }
@@ -167,7 +164,7 @@ export default function RateList() {
 
         if (!response.ok) {
           throw new Error(
-            data.message || "रेट लोड नहीं हुए"
+            data.message || "à¤°à¥‡à¤Ÿ à¤²à¥‹à¤¡ à¤¨à¤¹à¥€à¤‚ à¤¹à¥à¤"
           );
         }
 
@@ -186,7 +183,7 @@ export default function RateList() {
             setRates([]);
 
             setError(
-              "रेट सर्वर से नहीं मिल पाए। कृपया दोबारा प्रयास करें।"
+              "à¤°à¥‡à¤Ÿ à¤¸à¤°à¥à¤µà¤° à¤¸à¥‡ à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤² à¤ªà¤¾à¤à¥¤ à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¦à¥‹à¤¬à¤¾à¤°à¤¾ à¤ªà¥à¤°à¤¯à¤¾à¤¸ à¤•à¤°à¥‡à¤‚à¥¤"
             );
           }
         }
@@ -239,7 +236,7 @@ export default function RateList() {
     loadServices(controller.signal);
     loadRates(controller.signal);
 
-    // हर 10 सेकंड में Services और Rates अपडेट होंगे
+    // à¤¹à¤° 10 à¤¸à¥‡à¤•à¤‚à¤¡ à¤®à¥‡à¤‚ Services à¤”à¤° Rates à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤¹à¥‹à¤‚à¤—à¥‡
     const refreshTimer = window.setInterval(() => {
       if (!controller.signal.aborted) {
         loadServices(undefined, true);
@@ -324,24 +321,24 @@ export default function RateList() {
         <div className="rl-hero-copy">
 
           <h1>
-            बोरवेल सेवाओं की <span>रेट लिस्ट</span>
+            à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤¸à¥‡à¤µà¤¾à¤“à¤‚ à¤•à¥€ <span>à¤°à¥‡à¤Ÿ à¤²à¤¿à¤¸à¥à¤Ÿ</span>
           </h1>
 
           <p>
-            मध्यप्रदेश में अपने जिले और ब्लॉक का चयन
-            करके सेवाओं के अपडेटेड रेट देखें।
+            à¤®à¤§à¥à¤¯à¤ªà¥à¤°à¤¦à¥‡à¤¶ à¤®à¥‡à¤‚ à¤…à¤ªà¤¨à¥‡ à¤œà¤¿à¤²à¥‡ à¤”à¤° à¤¬à¥à¤²à¥‰à¤• à¤•à¤¾ à¤šà¤¯à¤¨
+            à¤•à¤°à¤•à¥‡ à¤¸à¥‡à¤µà¤¾à¤“à¤‚ à¤•à¥‡ à¤…à¤ªà¤¡à¥‡à¤Ÿà¥‡à¤¡ à¤°à¥‡à¤Ÿ à¤¦à¥‡à¤–à¥‡à¤‚à¥¤
           </p>
 
           <div className="rl-hero-meta">
 
             <span>
               <MapPin size={15} />
-              जिला अनुसार रेट
+              à¤œà¤¿à¤²à¤¾ à¤…à¤¨à¥à¤¸à¤¾à¤° à¤°à¥‡à¤Ÿ
             </span>
 
             <span>
               <MapPin size={15} />
-              ब्लॉक अनुसार रेट
+              à¤¬à¥à¤²à¥‰à¤• à¤…à¤¨à¥à¤¸à¤¾à¤° à¤°à¥‡à¤Ÿ
             </span>
 
           </div>
@@ -361,13 +358,13 @@ export default function RateList() {
 
           <div>
             <span className="rl-kicker">
-              अपना क्षेत्र चुनें
+              à¤…à¤ªà¤¨à¤¾ à¤•à¥à¤·à¥‡à¤¤à¥à¤° à¤šà¥à¤¨à¥‡à¤‚
             </span>
 
-            <h2>जिला से ब्लॉक चुनें</h2>
+            <h2>à¤œà¤¿à¤²à¤¾ à¤¸à¥‡ à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚</h2>
 
             <p>
-              पहले जिला चुनें। फिर उसी जिले के ब्लॉक उपलब्ध होंगे।
+              à¤ªà¤¹à¤²à¥‡ à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚à¥¤ à¤«à¤¿à¤° à¤‰à¤¸à¥€ à¤œà¤¿à¤²à¥‡ à¤•à¥‡ à¤¬à¥à¤²à¥‰à¤• à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¹à¥‹à¤‚à¤—à¥‡à¥¤
             </p>
           </div>
 
@@ -380,7 +377,7 @@ export default function RateList() {
 
             <span>
               <b className="rl-step">1</b>
-              जिला चुनें
+              à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚
             </span>
 
             <select
@@ -390,7 +387,7 @@ export default function RateList() {
               }
             >
               <option value="">
-                मध्यप्रदेश का जिला चुनें
+                à¤®à¤§à¥à¤¯à¤ªà¥à¤°à¤¦à¥‡à¤¶ à¤•à¤¾ à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚
               </option>
 
               {districtList.map((name) => (
@@ -408,7 +405,7 @@ export default function RateList() {
 
             <span>
               <b className="rl-step">2</b>
-              ब्लॉक चुनें
+              à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚
             </span>
 
             <select
@@ -420,10 +417,10 @@ export default function RateList() {
             >
               <option value="">
                 {!district
-                  ? "पहले जिला चुनें"
+                  ? "à¤ªà¤¹à¤²à¥‡ à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚"
                   : blocks.length
-                  ? "ब्लॉक चुनें"
-                  : "इस जिले में ब्लॉक उपलब्ध नहीं"}
+                  ? "à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚"
+                  : "à¤‡à¤¸ à¤œà¤¿à¤²à¥‡ à¤®à¥‡à¤‚ à¤¬à¥à¤²à¥‰à¤• à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚"}
               </option>
 
               {blocks.map((name) => (
@@ -442,14 +439,14 @@ export default function RateList() {
         <div className="rl-selection-summary">
 
           <div>
-            <span>आपका चयन</span>
+            <span>à¤†à¤ªà¤•à¤¾ à¤šà¤¯à¤¨</span>
 
             <strong>
-              {district || "जिला नहीं चुना"}
+              {district || "à¤œà¤¿à¤²à¤¾ à¤¨à¤¹à¥€à¤‚ à¤šà¥à¤¨à¤¾"}
 
               <ChevronRight size={16} />
 
-              {block || "ब्लॉक नहीं चुना"}
+              {block || "à¤¬à¥à¤²à¥‰à¤• à¤¨à¤¹à¥€à¤‚ à¤šà¥à¤¨à¤¾"}
             </strong>
           </div>
 
@@ -465,7 +462,7 @@ export default function RateList() {
               className={loading ? "rl-spin" : ""}
             />
 
-            रेट रिफ्रेश करें
+            à¤°à¥‡à¤Ÿ à¤°à¤¿à¤«à¥à¤°à¥‡à¤¶ à¤•à¤°à¥‡à¤‚
           </button>
 
         </div>
@@ -484,17 +481,17 @@ export default function RateList() {
               SERVICE PRICE LIST
             </span>
 
-            <h2>सेवाओं की दरें</h2>
+            <h2>à¤¸à¥‡à¤µà¤¾à¤“à¤‚ à¤•à¥€ à¤¦à¤°à¥‡à¤‚</h2>
 
             <p>
               {district && block
-                ? `${district} / ${block} के लिए उपलब्ध रेट`
-                : "रेट देखने के लिए पहले जिला और ब्लॉक चुनें"}
+                ? `${district} / ${block} à¤•à¥‡ à¤²à¤¿à¤ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤°à¥‡à¤Ÿ`
+                : "à¤°à¥‡à¤Ÿ à¤¦à¥‡à¤–à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤ªà¤¹à¤²à¥‡ à¤œà¤¿à¤²à¤¾ à¤”à¤° à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚"}
             </p>
           </div>
 
           <span className="rl-count">
-            {filteredRates.length} सेवाएँ
+            {filteredRates.length} à¤¸à¥‡à¤µà¤¾à¤à¤
           </span>
 
         </div>
@@ -506,7 +503,7 @@ export default function RateList() {
 
           <input
             type="search"
-            placeholder="सेवा का नाम खोजें..."
+            placeholder="à¤¸à¥‡à¤µà¤¾ à¤•à¤¾ à¤¨à¤¾à¤® à¤–à¥‹à¤œà¥‡à¤‚..."
             value={search}
             onChange={(e) =>
               setSearch(e.target.value)
@@ -528,7 +525,7 @@ export default function RateList() {
 
           <div className="rl-state">
             <span className="rl-loader" />
-            रेट लोड हो रहे हैं...
+            à¤°à¥‡à¤Ÿ à¤²à¥‹à¤¡ à¤¹à¥‹ à¤°à¤¹à¥‡ à¤¹à¥ˆà¤‚...
           </div>
 
         ) : !district || !block ? (
@@ -538,11 +535,11 @@ export default function RateList() {
             <MapPin size={30} />
 
             <strong>
-              जिला और ब्लॉक चुनें
+              à¤œà¤¿à¤²à¤¾ à¤”à¤° à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚
             </strong>
 
             <p>
-              आपके चयन के अनुसार रेट यहाँ दिखाई देंगे।
+              à¤†à¤ªà¤•à¥‡ à¤šà¤¯à¤¨ à¤•à¥‡ à¤…à¤¨à¥à¤¸à¤¾à¤° à¤°à¥‡à¤Ÿ à¤¯à¤¹à¤¾à¤ à¤¦à¤¿à¤–à¤¾à¤ˆ à¤¦à¥‡à¤‚à¤—à¥‡à¥¤
             </p>
 
           </div>
@@ -553,14 +550,14 @@ export default function RateList() {
 
             <strong>
               {servicesLoaded && services.length === 0
-                ? "अभी कोई Active Service उपलब्ध नहीं है"
-                : "कोई सेवा नहीं मिली"}
+                ? "à¤…à¤­à¥€ à¤•à¥‹à¤ˆ Active Service à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆ"
+                : "à¤•à¥‹à¤ˆ à¤¸à¥‡à¤µà¤¾ à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤²à¥€"}
             </strong>
 
             <p>
               {search
-                ? "दूसरा सेवा नाम खोजें।"
-                : "Admin Dashboard में Active Services की जाँच करें।"}
+                ? "à¤¦à¥‚à¤¸à¤°à¤¾ à¤¸à¥‡à¤µà¤¾ à¤¨à¤¾à¤® à¤–à¥‹à¤œà¥‡à¤‚à¥¤"
+                : "Admin Dashboard à¤®à¥‡à¤‚ Active Services à¤•à¥€ à¤œà¤¾à¤à¤š à¤•à¤°à¥‡à¤‚à¥¤"}
             </p>
 
           </div>
@@ -596,20 +593,20 @@ export default function RateList() {
                 >
 
                   <div className="rl-service-name">
-                    {item.serviceName || "अन्य सेवा"}
+                    {item.serviceName || "à¤…à¤¨à¥à¤¯ à¤¸à¥‡à¤µà¤¾"}
                   </div>
 
                   <div className="rl-service-price">
                     {price !== null &&
                     Number.isFinite(price)
-                      ? `₹${price.toLocaleString("en-IN")}`
-                      : "रेट उपलब्ध नहीं"}
+                      ? `â‚¹${price.toLocaleString("en-IN")}`
+                      : "à¤°à¥‡à¤Ÿ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚"}
                   </div>
 
                   <div className="rl-service-unit">
                     {rateData?.unit ||
                       item.unit ||
-                      "प्रति फुट"}
+                      "à¤ªà¥à¤°à¤¤à¤¿ à¤«à¥à¤Ÿ"}
                   </div>
 
                   <div className="rl-card-location">
@@ -618,7 +615,7 @@ export default function RateList() {
 
                     <span>{district}</span>
 
-                    <span>•</span>
+                    <span>â€¢</span>
 
                     <span>{block}</span>
 
@@ -640,13 +637,13 @@ export default function RateList() {
       <aside className="rl-note">
 
         <strong>
-          महत्वपूर्ण सूचना
+          à¤®à¤¹à¤¤à¥à¤µà¤ªà¥‚à¤°à¥à¤£ à¤¸à¥‚à¤šà¤¨à¤¾
         </strong>
 
         <p>
-          अंतिम रेट कार्य की स्थिति, गहराई एवं सामग्री
-          के अनुसार बदल सकते हैं। काम शुरू करने से पहले
-          संबंधित एजेंट से अंतिम रेट की पुष्टि करें।
+          à¤…à¤‚à¤¤à¤¿à¤® à¤°à¥‡à¤Ÿ à¤•à¤¾à¤°à¥à¤¯ à¤•à¥€ à¤¸à¥à¤¥à¤¿à¤¤à¤¿, à¤—à¤¹à¤°à¤¾à¤ˆ à¤à¤µà¤‚ à¤¸à¤¾à¤®à¤—à¥à¤°à¥€
+          à¤•à¥‡ à¤…à¤¨à¥à¤¸à¤¾à¤° à¤¬à¤¦à¤² à¤¸à¤•à¤¤à¥‡ à¤¹à¥ˆà¤‚à¥¤ à¤•à¤¾à¤® à¤¶à¥à¤°à¥‚ à¤•à¤°à¤¨à¥‡ à¤¸à¥‡ à¤ªà¤¹à¤²à¥‡
+          à¤¸à¤‚à¤¬à¤‚à¤§à¤¿à¤¤ à¤à¤œà¥‡à¤‚à¤Ÿ à¤¸à¥‡ à¤…à¤‚à¤¤à¤¿à¤® à¤°à¥‡à¤Ÿ à¤•à¥€ à¤ªà¥à¤·à¥à¤Ÿà¤¿ à¤•à¤°à¥‡à¤‚à¥¤
         </p>
 
       </aside>

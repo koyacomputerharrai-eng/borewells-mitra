@@ -1,8 +1,8 @@
-
+﻿
 import React, { useMemo, useState } from "react";
 import { DISTRICTS, BLOCKS } from "./areas.js";
 
-const API = "http://localhost:4000/api";
+const API = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "http://localhost:4000/api" : "/api";
 
 const getName = (item) =>
   typeof item === "string"
@@ -68,22 +68,22 @@ export default function Register({ onLogin }) {
     setMessage("");
 
     if (!/^[6-9]\d{9}$/.test(form.mobile)) {
-      setMessage("कृपया सही 10 अंकों का मोबाइल नंबर भरें।");
+      setMessage("à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¸à¤¹à¥€ 10 à¤…à¤‚à¤•à¥‹à¤‚ à¤•à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° à¤­à¤°à¥‡à¤‚à¥¤");
       return;
     }
 
     if (form.password.length < 6) {
-      setMessage("पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।");
+      setMessage("à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤•à¤® à¤¸à¥‡ à¤•à¤® 6 à¤…à¤•à¥à¤·à¤°à¥‹à¤‚ à¤•à¤¾ à¤¹à¥‹à¤¨à¤¾ à¤šà¤¾à¤¹à¤¿à¤à¥¤");
       return;
     }
 
     if (!form.district || !form.block) {
-      setMessage("कृपया जिला और ब्लॉक चुनें।");
+      setMessage("à¤•à¥ƒà¤ªà¤¯à¤¾ à¤œà¤¿à¤²à¤¾ à¤”à¤° à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚à¥¤");
       return;
     }
 
     if (role === "agent" && !form.agency_name.trim()) {
-      setMessage("कृपया एजेंसी का नाम भरें।");
+      setMessage("à¤•à¥ƒà¤ªà¤¯à¤¾ à¤à¤œà¥‡à¤‚à¤¸à¥€ à¤•à¤¾ à¤¨à¤¾à¤® à¤­à¤°à¥‡à¤‚à¥¤");
       return;
     }
 
@@ -113,16 +113,16 @@ export default function Register({ onLogin }) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "रजिस्ट्रेशन नहीं हो पाया।");
+        throw new Error(data.message || "à¤°à¤œà¤¿à¤¸à¥à¤Ÿà¥à¤°à¥‡à¤¶à¤¨ à¤¨à¤¹à¥€à¤‚ à¤¹à¥‹ à¤ªà¤¾à¤¯à¤¾à¥¤");
       }
 
       if (role === "agent") {
         setMessage(
-          "एजेंट रजिस्ट्रेशन सफल! आपका अकाउंट Admin Approval के बाद सक्रिय होगा।"
+          "à¤à¤œà¥‡à¤‚à¤Ÿ à¤°à¤œà¤¿à¤¸à¥à¤Ÿà¥à¤°à¥‡à¤¶à¤¨ à¤¸à¤«à¤²! à¤†à¤ªà¤•à¤¾ à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ Admin Approval à¤•à¥‡ à¤¬à¤¾à¤¦ à¤¸à¤•à¥à¤°à¤¿à¤¯ à¤¹à¥‹à¤—à¤¾à¥¤"
         );
       } else {
         setMessage(
-          data.message || "ग्राहक अकाउंट सफलतापूर्वक बन गया। अब लॉगिन करें।"
+          data.message || "à¤—à¥à¤°à¤¾à¤¹à¤• à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤¬à¤¨ à¤—à¤¯à¤¾à¥¤ à¤…à¤¬ à¤²à¥‰à¤—à¤¿à¤¨ à¤•à¤°à¥‡à¤‚à¥¤"
         );
       }
 
@@ -138,7 +138,7 @@ export default function Register({ onLogin }) {
       });
 
     } catch (error) {
-      setMessage(error.message || "सर्वर से संपर्क नहीं हो पाया।");
+      setMessage(error.message || "à¤¸à¤°à¥à¤µà¤° à¤¸à¥‡ à¤¸à¤‚à¤ªà¤°à¥à¤• à¤¨à¤¹à¥€à¤‚ à¤¹à¥‹ à¤ªà¤¾à¤¯à¤¾à¥¤");
     } finally {
       setLoading(false);
     }
@@ -184,10 +184,10 @@ export default function Register({ onLogin }) {
 
         <div style={{ textAlign: "center", marginBottom: "24px" }}>
           <h2 style={{ color: "#1477bd", margin: "0 0 8px" }}>
-            अपना अकाउंट बनाएँ
+            à¤…à¤ªà¤¨à¤¾ à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤¬à¤¨à¤¾à¤à¤
           </h2>
           <p style={{ color: "#718096", margin: 0 }}>
-            बोरवेल मित्र MP के साथ जुड़ें
+            à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤®à¤¿à¤¤à¥à¤° MP à¤•à¥‡ à¤¸à¤¾à¤¥ à¤œà¥à¤¡à¤¼à¥‡à¤‚
           </p>
         </div>
 
@@ -197,8 +197,8 @@ export default function Register({ onLogin }) {
           marginBottom: "24px",
         }}>
           {[
-            { value: "customer", label: "ग्राहक रजिस्ट्रेशन" },
-            { value: "agent", label: "एजेंट रजिस्ट्रेशन" },
+            { value: "customer", label: "à¤—à¥à¤°à¤¾à¤¹à¤• à¤°à¤œà¤¿à¤¸à¥à¤Ÿà¥à¤°à¥‡à¤¶à¤¨" },
+            { value: "agent", label: "à¤à¤œà¥‡à¤‚à¤Ÿ à¤°à¤œà¤¿à¤¸à¥à¤Ÿà¥à¤°à¥‡à¤¶à¤¨" },
           ].map((item) => (
             <button
               key={item.value}
@@ -226,10 +226,10 @@ export default function Register({ onLogin }) {
         <form onSubmit={handleSubmit}>
 
           <div style={fieldStyle}>
-            <label style={labelStyle}>पूरा नाम *</label>
+            <label style={labelStyle}>à¤ªà¥‚à¤°à¤¾ à¤¨à¤¾à¤® *</label>
             <input
               style={inputStyle}
-              placeholder="अपना पूरा नाम लिखें"
+              placeholder="à¤…à¤ªà¤¨à¤¾ à¤ªà¥‚à¤°à¤¾ à¤¨à¤¾à¤® à¤²à¤¿à¤–à¥‡à¤‚"
               value={form.name}
               onChange={(e) => update("name", e.target.value)}
               required
@@ -238,10 +238,10 @@ export default function Register({ onLogin }) {
 
           {role === "agent" && (
             <div style={fieldStyle}>
-              <label style={labelStyle}>एजेंसी का नाम *</label>
+              <label style={labelStyle}>à¤à¤œà¥‡à¤‚à¤¸à¥€ à¤•à¤¾ à¤¨à¤¾à¤® *</label>
               <input
                 style={inputStyle}
-                placeholder="अपनी एजेंसी का नाम लिखें"
+                placeholder="à¤…à¤ªà¤¨à¥€ à¤à¤œà¥‡à¤‚à¤¸à¥€ à¤•à¤¾ à¤¨à¤¾à¤® à¤²à¤¿à¤–à¥‡à¤‚"
                 value={form.agency_name}
                 onChange={(e) => update("agency_name", e.target.value)}
                 required
@@ -250,13 +250,13 @@ export default function Register({ onLogin }) {
           )}
 
           <div style={fieldStyle}>
-            <label style={labelStyle}>मोबाइल नंबर *</label>
+            <label style={labelStyle}>à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° *</label>
             <input
               style={inputStyle}
               type="tel"
               inputMode="numeric"
               maxLength={10}
-              placeholder="10 अंकों का मोबाइल नंबर"
+              placeholder="10 à¤…à¤‚à¤•à¥‹à¤‚ à¤•à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤°"
               value={form.mobile}
               onChange={(e) =>
                 update("mobile", e.target.value.replace(/\D/g, "").slice(0, 10))
@@ -266,11 +266,11 @@ export default function Register({ onLogin }) {
           </div>
 
           <div style={fieldStyle}>
-            <label style={labelStyle}>पासवर्ड *</label>
+            <label style={labelStyle}>à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ *</label>
             <input
               style={inputStyle}
               type="password"
-              placeholder="कम से कम 6 अक्षर"
+              placeholder="à¤•à¤® à¤¸à¥‡ à¤•à¤® 6 à¤…à¤•à¥à¤·à¤°"
               value={form.password}
               onChange={(e) => update("password", e.target.value)}
               required
@@ -279,14 +279,14 @@ export default function Register({ onLogin }) {
           </div>
 
           <div style={fieldStyle}>
-            <label style={labelStyle}>जिला चुनें *</label>
+            <label style={labelStyle}>à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚ *</label>
             <select
               style={inputStyle}
               value={form.district}
               onChange={(e) => update("district", e.target.value)}
               required
             >
-              <option value="">मध्य प्रदेश का जिला चुनें</option>
+              <option value="">à¤®à¤§à¥à¤¯ à¤ªà¥à¤°à¤¦à¥‡à¤¶ à¤•à¤¾ à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚</option>
               {districtList.map((district) => (
                 <option key={district} value={district}>
                   {district}
@@ -296,7 +296,7 @@ export default function Register({ onLogin }) {
           </div>
 
           <div style={fieldStyle}>
-            <label style={labelStyle}>ब्लॉक / तहसील चुनें *</label>
+            <label style={labelStyle}>à¤¬à¥à¤²à¥‰à¤• / à¤¤à¤¹à¤¸à¥€à¤² à¤šà¥à¤¨à¥‡à¤‚ *</label>
             <select
               style={inputStyle}
               value={form.block}
@@ -305,7 +305,7 @@ export default function Register({ onLogin }) {
               required
             >
               <option value="">
-                {form.district ? "ब्लॉक / तहसील चुनें" : "पहले जिला चुनें"}
+                {form.district ? "à¤¬à¥à¤²à¥‰à¤• / à¤¤à¤¹à¤¸à¥€à¤² à¤šà¥à¤¨à¥‡à¤‚" : "à¤ªà¤¹à¤²à¥‡ à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚"}
               </option>
               {blockList.map((block) => (
                 <option key={block} value={block}>
@@ -317,14 +317,14 @@ export default function Register({ onLogin }) {
 
           <div style={fieldStyle}>
             <label style={labelStyle}>
-              {role === "agent" ? "ऑफिस का पूरा पता *" : "पूरा पता *"}
+              {role === "agent" ? "à¤‘à¤«à¤¿à¤¸ à¤•à¤¾ à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾ *" : "à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾ *"}
             </label>
             <textarea
               style={{ ...inputStyle, minHeight: "90px", resize: "vertical" }}
               placeholder={
                 role === "agent"
-                  ? "अपनी एजेंसी / ऑफिस का पता लिखें"
-                  : "गाँव, मोहल्ला और मकान नंबर लिखें"
+                  ? "à¤…à¤ªà¤¨à¥€ à¤à¤œà¥‡à¤‚à¤¸à¥€ / à¤‘à¤«à¤¿à¤¸ à¤•à¤¾ à¤ªà¤¤à¤¾ à¤²à¤¿à¤–à¥‡à¤‚"
+                  : "à¤—à¤¾à¤à¤µ, à¤®à¥‹à¤¹à¤²à¥à¤²à¤¾ à¤”à¤° à¤®à¤•à¤¾à¤¨ à¤¨à¤‚à¤¬à¤° à¤²à¤¿à¤–à¥‡à¤‚"
               }
               value={form.address}
               onChange={(e) => update("address", e.target.value)}
@@ -334,7 +334,7 @@ export default function Register({ onLogin }) {
 
           {role === "customer" && (
             <div style={fieldStyle}>
-              <label style={labelStyle}>अपनी सेवा चुनें *</label>
+              <label style={labelStyle}>à¤…à¤ªà¤¨à¥€ à¤¸à¥‡à¤µà¤¾ à¤šà¥à¤¨à¥‡à¤‚ *</label>
 
               <label style={{
                 display: "flex",
@@ -352,7 +352,7 @@ export default function Register({ onLogin }) {
                   checked={form.service === "drilling"}
                   onChange={(e) => update("service", e.target.value)}
                 />
-                नया बोरवेल (New Borewell)
+                à¤¨à¤¯à¤¾ à¤¬à¥‹à¤°à¤µà¥‡à¤² (New Borewell)
               </label>
 
               <label style={{
@@ -370,7 +370,7 @@ export default function Register({ onLogin }) {
                   checked={form.service === "repairing"}
                   onChange={(e) => update("service", e.target.value)}
                 />
-                बोरवेल रिपेयरिंग (Repairing)
+                à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤°à¤¿à¤ªà¥‡à¤¯à¤°à¤¿à¤‚à¤— (Repairing)
               </label>
             </div>
           )}
@@ -404,10 +404,10 @@ export default function Register({ onLogin }) {
             }}
           >
             {loading
-              ? "कृपया प्रतीक्षा करें..."
+              ? "à¤•à¥ƒà¤ªà¤¯à¤¾ à¤ªà¥à¤°à¤¤à¥€à¤•à¥à¤·à¤¾ à¤•à¤°à¥‡à¤‚..."
               : role === "agent"
-                ? "एजेंट अकाउंट बनाएँ"
-                : "ग्राहक अकाउंट बनाएँ"}
+                ? "à¤à¤œà¥‡à¤‚à¤Ÿ à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤¬à¤¨à¤¾à¤à¤"
+                : "à¤—à¥à¤°à¤¾à¤¹à¤• à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤¬à¤¨à¤¾à¤à¤"}
           </button>
 
         </form>
@@ -418,7 +418,7 @@ export default function Register({ onLogin }) {
           marginTop: "20px",
           marginBottom: 0,
         }}>
-          पहले से अकाउंट है?{" "}
+          à¤ªà¤¹à¤²à¥‡ à¤¸à¥‡ à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤¹à¥ˆ?{" "}
           <button
             type="button"
             onClick={onLogin}
@@ -430,7 +430,7 @@ export default function Register({ onLogin }) {
               cursor: "pointer",
             }}
           >
-            लॉगिन करें
+            à¤²à¥‰à¤—à¤¿à¤¨ à¤•à¤°à¥‡à¤‚
           </button>
         </p>
 

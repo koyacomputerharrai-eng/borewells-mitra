@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { DISTRICTS, BLOCKS } from './areas.js';
 import CustomerRegistration from './CustomerRegistration';
 import './CustomerRegistration.css';
@@ -16,13 +16,11 @@ import {
   Gauge, LocateFixed, MessageCircle
 } from 'lucide-react';
 
-const API = window.location.hostname === "localhost"
-  ? "http://localhost:4000/api"
-  : "https://borewells-mitra-api.onrender.com/api";
+const API = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "http://localhost:4000/api" : "/api";
 
 const SERVICES = [
-  { value: 'Drilling', label: 'नया बोरवेल' },
-  { value: 'Repairing', label: 'बोरवेल रिपेयरिंग' }
+  { value: 'Drilling', label: 'à¤¨à¤¯à¤¾ à¤¬à¥‹à¤°à¤µà¥‡à¤²' },
+  { value: 'Repairing', label: 'à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤°à¤¿à¤ªà¥‡à¤¯à¤°à¤¿à¤‚à¤—' }
 ];
 
 const EMPTY_BOOKING = {
@@ -53,20 +51,20 @@ async function api(path, options = {}) {
 
   if (!response.ok) {
     throw new Error(
-      data.message || data.error || 'अनुरोध पूरा नहीं हुआ।'
+      data.message || data.error || 'à¤…à¤¨à¥à¤°à¥‹à¤§ à¤ªà¥‚à¤°à¤¾ à¤¨à¤¹à¥€à¤‚ à¤¹à¥à¤†à¥¤'
     );
   }
 
   return data;
 }
 
-// सभी Dashboard के लिए सही पेज
+// à¤¸à¤­à¥€ Dashboard à¤•à¥‡ à¤²à¤¿à¤ à¤¸à¤¹à¥€ à¤ªà¥‡à¤œ
 function dashboardPage(role) {
   if (role === 'admin') return 'admin';
   if (role === 'agent') return 'agent';
   return 'dashboard';
 }
-// सभी Pages के URL
+// à¤¸à¤­à¥€ Pages à¤•à¥‡ URL
 const PAGE_URLS = {
   home: '/',
   rates: '/rates',
@@ -81,7 +79,7 @@ const PAGE_URLS = {
   admin: '/admin-dashboard'
 };
 
-// URL से Page पहचानना
+// URL à¤¸à¥‡ Page à¤ªà¤¹à¤šà¤¾à¤¨à¤¨à¤¾
 function getPageFromURL() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/';
 
@@ -194,7 +192,7 @@ export default function App() {
     behavior: 'smooth'
   });
 }
-// Browser Back और Forward URL Control
+// Browser Back à¤”à¤° Forward URL Control
 useEffect(() => {
   function handlePopState() {
     setPage(getPageFromURL());
@@ -214,7 +212,7 @@ useEffect(() => {
     }));
   };
 
-  // लॉगिन होने पर सही Dashboard खोलें
+  // à¤²à¥‰à¤—à¤¿à¤¨ à¤¹à¥‹à¤¨à¥‡ à¤ªà¤° à¤¸à¤¹à¥€ Dashboard à¤–à¥‹à¤²à¥‡à¤‚
   useEffect(() => {
     if (!user) return;
 
@@ -231,7 +229,7 @@ useEffect(() => {
     }
   }, [user, page]);
 
-  // District और Block के अनुसार Rate List
+  // District à¤”à¤° Block à¤•à¥‡ à¤…à¤¨à¥à¤¸à¤¾à¤° Rate List
   useEffect(() => {
     if (!area.district || !area.block) {
       setRates([]);
@@ -279,7 +277,7 @@ useEffect(() => {
     };
   }, [area.district, area.block]);
 
-  // सार्वजनिक एजेंट लिस्ट
+  // à¤¸à¤¾à¤°à¥à¤µà¤œà¤¨à¤¿à¤• à¤à¤œà¥‡à¤‚à¤Ÿ à¤²à¤¿à¤¸à¥à¤Ÿ
   async function loadPublicAgents() {
     setAgentsLoading(true);
 
@@ -311,7 +309,7 @@ useEffect(() => {
     }
   }, [page]);
 
-  // Customer और Admin डेटा
+  // Customer à¤”à¤° Admin à¤¡à¥‡à¤Ÿà¤¾
   useEffect(() => {
     if (!user || !['dashboard', 'admin'].includes(page)) return;
 
@@ -357,7 +355,7 @@ useEffect(() => {
     loadDashboardData();
   }, [page, user?.id]);
 
-  // LOGIN और REGISTRATION
+  // LOGIN à¤”à¤° REGISTRATION
   async function submitAuth(e) {
     e.preventDefault();
     setBusy(true);
@@ -432,7 +430,7 @@ useEffect(() => {
 
       localStorage.setItem('bm_token', result.token);
 
-      // AgentDashboard के पुराने token key से भी compatibility
+      // AgentDashboard à¤•à¥‡ à¤ªà¥à¤°à¤¾à¤¨à¥‡ token key à¤¸à¥‡ à¤­à¥€ compatibility
       localStorage.setItem('bmm-token', result.token);
 
       localStorage.setItem(
@@ -442,7 +440,7 @@ useEffect(() => {
 
       setUser(result.user);
 
-      flash('लॉगिन सफल हुआ।');
+      flash('à¤²à¥‰à¤—à¤¿à¤¨ à¤¸à¤«à¤² à¤¹à¥à¤†à¥¤');
 
       go(dashboardPage(result.user?.role));
 
@@ -464,7 +462,7 @@ useEffect(() => {
 
     go('home');
 
-    flash('आप लॉगआउट हो गए हैं।');
+    flash('à¤†à¤ª à¤²à¥‰à¤—à¤†à¤‰à¤Ÿ à¤¹à¥‹ à¤—à¤ à¤¹à¥ˆà¤‚à¥¤');
   }
 
   // BOOKING SUBMIT
@@ -510,7 +508,7 @@ useEffect(() => {
       !payload.block ||
       !payload.service
     ) {
-      flash('नाम, मोबाइल, जिला, ब्लॉक और सेवा भरना आवश्यक है।');
+      flash('à¤¨à¤¾à¤®, à¤®à¥‹à¤¬à¤¾à¤‡à¤², à¤œà¤¿à¤²à¤¾, à¤¬à¥à¤²à¥‰à¤• à¤”à¤° à¤¸à¥‡à¤µà¤¾ à¤­à¤°à¤¨à¤¾ à¤†à¤µà¤¶à¥à¤¯à¤• à¤¹à¥ˆà¥¤');
       return;
     }
 
@@ -524,7 +522,7 @@ useEffect(() => {
 
       if (!result.success) {
         throw new Error(
-          result.message || 'बुकिंग दर्ज नहीं हो सकी।'
+          result.message || 'à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¦à¤°à¥à¤œ à¤¨à¤¹à¥€à¤‚ à¤¹à¥‹ à¤¸à¤•à¥€à¥¤'
         );
       }
 
@@ -532,10 +530,10 @@ useEffect(() => {
         setAdminBooking({ ...EMPTY_BOOKING });
 
         flash(
-          `बुकिंग दर्ज हुई। ID: ${
+          `à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¦à¤°à¥à¤œ à¤¹à¥à¤ˆà¥¤ ID: ${
             result.bookingCode ||
             result.bookingId ||
-            'उपलब्ध नहीं'
+            'à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚'
           }`
         );
 
@@ -547,14 +545,14 @@ useEffect(() => {
             (
               result.bookingId
                 ? `KB${String(result.bookingId).padStart(6, '0')}`
-                : 'ID उपलब्ध नहीं'
+                : 'ID à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚'
             ),
 
           status: result.status || 'Pending',
 
           message:
             result.message ||
-            'आपकी बुकिंग सफलतापूर्वक दर्ज हो गई है।',
+            'à¤†à¤ªà¤•à¥€ à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤¦à¤°à¥à¤œ à¤¹à¥‹ à¤—à¤ˆ à¤¹à¥ˆà¥¤',
 
           booking: result.booking || payload
         });
@@ -583,7 +581,7 @@ useEffect(() => {
   // GPS LOCATION
   function locate() {
     if (!navigator.geolocation) {
-      return flash('इस ब्राउज़र में GPS लोकेशन उपलब्ध नहीं है।');
+      return flash('à¤‡à¤¸ à¤¬à¥à¤°à¤¾à¤‰à¤œà¤¼à¤° à¤®à¥‡à¤‚ GPS à¤²à¥‹à¤•à¥‡à¤¶à¤¨ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤');
     }
 
     navigator.geolocation.getCurrentPosition(
@@ -595,7 +593,7 @@ useEffect(() => {
         }));
       },
 
-      () => flash('लोकेशन अनुमति दें और दोबारा प्रयास करें।')
+      () => flash('à¤²à¥‹à¤•à¥‡à¤¶à¤¨ à¤…à¤¨à¥à¤®à¤¤à¤¿ à¤¦à¥‡à¤‚ à¤”à¤° à¤¦à¥‹à¤¬à¤¾à¤°à¤¾ à¤ªà¥à¤°à¤¯à¤¾à¤¸ à¤•à¤°à¥‡à¤‚à¥¤')
     );
   }
 
@@ -622,7 +620,7 @@ useEffect(() => {
         officeAddress: ''
       });
 
-      flash('एजेंट अकाउंट बनाया गया।');
+      flash('à¤à¤œà¥‡à¤‚à¤Ÿ à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤¬à¤¨à¤¾à¤¯à¤¾ à¤—à¤¯à¤¾à¥¤');
 
       await loadPublicAgents();
 
@@ -649,7 +647,7 @@ useEffect(() => {
           : result.bookings || []
       );
 
-      flash('बुकिंग अपडेट हुई।');
+      flash('à¤¬à¥à¤•à¤¿à¤‚à¤— à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤¹à¥à¤ˆà¥¤');
 
     } catch (error) {
       flash(error.message);
@@ -673,7 +671,7 @@ useEffect(() => {
       setRates(list);
       setRateDraft(list);
 
-      flash('रेट सेव हो गए।');
+      flash('à¤°à¥‡à¤Ÿ à¤¸à¥‡à¤µ à¤¹à¥‹ à¤—à¤à¥¤');
 
     } catch (error) {
       flash(error.message);
@@ -681,13 +679,13 @@ useEffect(() => {
   }
 
   const nav = [
-    ['home', 'होम'],
-    ['rates', 'रेट लिस्ट'],
-    ['agent-contact', 'एजेंट संपर्क'],
-    ['calculator', 'कैलकुलेटर'],
-    ['booking', 'बुकिंग करें'],
-    ['booking-status', 'बुकिंग स्टेटस'],
-    ['rules', 'नियम एवं शर्तें']
+    ['home', 'à¤¹à¥‹à¤®'],
+    ['rates', 'à¤°à¥‡à¤Ÿ à¤²à¤¿à¤¸à¥à¤Ÿ'],
+    ['agent-contact', 'à¤à¤œà¥‡à¤‚à¤Ÿ à¤¸à¤‚à¤ªà¤°à¥à¤•'],
+    ['calculator', 'à¤•à¥ˆà¤²à¤•à¥à¤²à¥‡à¤Ÿà¤°'],
+    ['booking', 'à¤¬à¥à¤•à¤¿à¤‚à¤— à¤•à¤°à¥‡à¤‚'],
+    ['booking-status', 'à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¸à¥à¤Ÿà¥‡à¤Ÿà¤¸'],
+    ['rules', 'à¤¨à¤¿à¤¯à¤® à¤à¤µà¤‚ à¤¶à¤°à¥à¤¤à¥‡à¤‚']
   ];
 
   return (
@@ -708,7 +706,7 @@ useEffect(() => {
 
             <span>
               <b>Borewells Mitra</b>
-              <small>आपके पानी का भरोसेमंद साथी</small>
+              <small>à¤†à¤ªà¤•à¥‡ à¤ªà¤¾à¤¨à¥€ à¤•à¤¾ à¤­à¤°à¥‹à¤¸à¥‡à¤®à¤‚à¤¦ à¤¸à¤¾à¤¥à¥€</small>
             </span>
           </button>
 
@@ -728,7 +726,7 @@ useEffect(() => {
               <button
                 onClick={() => go(dashboardPage(user.role))}
               >
-                मेरा डैशबोर्ड
+                à¤®à¥‡à¤°à¤¾ à¤¡à¥ˆà¤¶à¤¬à¥‹à¤°à¥à¤¡
               </button>
             )}
 
@@ -742,7 +740,7 @@ useEffect(() => {
                 }}
               >
                 <LogIn size={16} />
-                लॉगिन / रजिस्टर
+                à¤²à¥‰à¤—à¤¿à¤¨ / à¤°à¤œà¤¿à¤¸à¥à¤Ÿà¤°
               </button>
             ) : (
               <button
@@ -750,7 +748,7 @@ useEffect(() => {
                 onClick={logout}
               >
                 <LogOut size={16} />
-                लॉगआउट
+                à¤²à¥‰à¤—à¤†à¤‰à¤Ÿ
               </button>
             )}
 
@@ -771,7 +769,7 @@ useEffect(() => {
       {notice && (
         <div className="notice" role="status">
           {notice}
-          <button onClick={() => setNotice('')}>×</button>
+          <button onClick={() => setNotice('')}>Ã—</button>
         </div>
       )}
 
@@ -811,8 +809,8 @@ useEffect(() => {
 
             <SectionTitle
               eyebrow="BOOK A SERVICE"
-              title="बोरवेल बुकिंग फॉर्म"
-              subtitle="बिना लॉगिन किए अपनी बोरवेल बुकिंग दर्ज करें।"
+              title="à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤¬à¥à¤•à¤¿à¤‚à¤— à¤«à¥‰à¤°à¥à¤®"
+              subtitle="à¤¬à¤¿à¤¨à¤¾ à¤²à¥‰à¤—à¤¿à¤¨ à¤•à¤¿à¤ à¤…à¤ªà¤¨à¥€ à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚à¥¤"
             />
 
             {bookingSuccess ? (
@@ -826,7 +824,7 @@ useEffect(() => {
                       BOOKING SUCCESSFUL
                     </span>
 
-                    <h2>बुकिंग सफलतापूर्वक दर्ज हुई!</h2>
+                    <h2>à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤¦à¤°à¥à¤œ à¤¹à¥à¤ˆ!</h2>
                   </div>
 
                   <span className="status-chip">
@@ -840,28 +838,28 @@ useEffect(() => {
                 <div className="booking-status-details">
 
                   <p>
-                    <b>आपकी Booking ID:</b>
+                    <b>à¤†à¤ªà¤•à¥€ Booking ID:</b>
                     <strong>{bookingSuccess.bookingCode}</strong>
                   </p>
 
                   <p>
-                    <b>बुकिंग स्थिति:</b>
+                    <b>à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¸à¥à¤¥à¤¿à¤¤à¤¿:</b>
                     <span>{bookingSuccess.status}</span>
                   </p>
 
                   <p>
-                    <b>सेवा:</b>
+                    <b>à¤¸à¥‡à¤µà¤¾:</b>
                     <span>
-                      {bookingSuccess.booking?.service || '—'}
+                      {bookingSuccess.booking?.service || 'â€”'}
                     </span>
                   </p>
 
                   <p>
-                    <b>जिला / ब्लॉक:</b>
+                    <b>à¤œà¤¿à¤²à¤¾ / à¤¬à¥à¤²à¥‰à¤•:</b>
                     <span>
-                      {bookingSuccess.booking?.district || '—'}
+                      {bookingSuccess.booking?.district || 'â€”'}
                       {' / '}
-                      {bookingSuccess.booking?.block || '—'}
+                      {bookingSuccess.booking?.block || 'â€”'}
                     </span>
                   </p>
 
@@ -879,14 +877,14 @@ useEffect(() => {
                       go(user ? dashboardPage(user.role) : 'booking-status');
                     }}
                   >
-                    {user ? 'मेरा डैशबोर्ड देखें' : 'बुकिंग स्टेटस देखें'}
+                    {user ? 'à¤®à¥‡à¤°à¤¾ à¤¡à¥ˆà¤¶à¤¬à¥‹à¤°à¥à¤¡ à¤¦à¥‡à¤–à¥‡à¤‚' : 'à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¸à¥à¤Ÿà¥‡à¤Ÿà¤¸ à¤¦à¥‡à¤–à¥‡à¤‚'}
                   </button>
 
                   <button
                     className="btn outline"
                     onClick={() => setBookingSuccess(null)}
                   >
-                    नई बुकिंग करें
+                    à¤¨à¤ˆ à¤¬à¥à¤•à¤¿à¤‚à¤— à¤•à¤°à¥‡à¤‚
                   </button>
 
                 </div>
@@ -916,8 +914,8 @@ useEffect(() => {
                 >
                   <LocateFixed size={17} />
                   {booking.latitude
-                    ? 'लोकेशन मिल गई'
-                    : 'मेरी GPS लोकेशन जोड़ें'}
+                    ? 'à¤²à¥‹à¤•à¥‡à¤¶à¤¨ à¤®à¤¿à¤² à¤—à¤ˆ'
+                    : 'à¤®à¥‡à¤°à¥€ GPS à¤²à¥‹à¤•à¥‡à¤¶à¤¨ à¤œà¥‹à¤¡à¤¼à¥‡à¤‚'}
                 </button>
 
                 {booking.latitude && (
@@ -933,8 +931,8 @@ useEffect(() => {
                   className="btn primary full-btn"
                 >
                   {busy
-                    ? 'भेज रहे हैं…'
-                    : 'बुकिंग सबमिट करें'}
+                    ? 'à¤­à¥‡à¤œ à¤°à¤¹à¥‡ à¤¹à¥ˆà¤‚â€¦'
+                    : 'à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¸à¤¬à¤®à¤¿à¤Ÿ à¤•à¤°à¥‡à¤‚'}
                 </button>
 
               </form>
@@ -952,10 +950,10 @@ useEffect(() => {
               eyebrow="YOUR ACCOUNT"
               title={
                 authMode === 'login'
-                  ? 'लॉगिन करें'
-                  : 'अपना अकाउंट बनाएँ'
+                  ? 'à¤²à¥‰à¤—à¤¿à¤¨ à¤•à¤°à¥‡à¤‚'
+                  : 'à¤…à¤ªà¤¨à¤¾ à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤¬à¤¨à¤¾à¤à¤'
               }
-              subtitle="Borewells Mitra से जुड़ें और अपनी सेवाओं का लाभ लें।"
+              subtitle="Borewells Mitra à¤¸à¥‡ à¤œà¥à¤¡à¤¼à¥‡à¤‚ à¤”à¤° à¤…à¤ªà¤¨à¥€ à¤¸à¥‡à¤µà¤¾à¤“à¤‚ à¤•à¤¾ à¤²à¤¾à¤­ à¤²à¥‡à¤‚à¥¤"
             />
 
             <div className="auth-switch">
@@ -965,7 +963,7 @@ useEffect(() => {
                 className={authMode === 'login' ? 'selected' : ''}
                 onClick={() => setAuthMode('login')}
               >
-                लॉगिन
+                à¤²à¥‰à¤—à¤¿à¤¨
               </button>
 
               <button
@@ -973,7 +971,7 @@ useEffect(() => {
                 className={authMode === 'register' ? 'selected' : ''}
                 onClick={() => setAuthMode('register')}
               >
-                रजिस्टर
+                à¤°à¤œà¤¿à¤¸à¥à¤Ÿà¤°
               </button>
 
             </div>
@@ -982,42 +980,42 @@ useEffect(() => {
 
               <div className="form-card auth-card registration-success">
 
-                <h2>पंजीकरण सफल हुआ!</h2>
+                <h2>à¤ªà¤‚à¤œà¥€à¤•à¤°à¤£ à¤¸à¤«à¤² à¤¹à¥à¤†!</h2>
 
                 <p>
-                  आपका अकाउंट सफलतापूर्वक बन गया है।
-                  अपनी User ID सुरक्षित रखें।
+                  à¤†à¤ªà¤•à¤¾ à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤¬à¤¨ à¤—à¤¯à¤¾ à¤¹à¥ˆà¥¤
+                  à¤…à¤ªà¤¨à¥€ User ID à¤¸à¥à¤°à¤•à¥à¤·à¤¿à¤¤ à¤°à¤–à¥‡à¤‚à¥¤
                 </p>
 
                 <div className="registration-user-id">
-                  <span>आपकी User ID</span>
+                  <span>à¤†à¤ªà¤•à¥€ User ID</span>
                   <strong>{registrationSuccess.userId}</strong>
                 </div>
 
                 <p>
-                  <strong>नाम:</strong>
+                  <strong>à¤¨à¤¾à¤®:</strong>
                   {' '}
                   {registrationSuccess.name}
                 </p>
 
                 <p>
-                  <strong>मोबाइल:</strong>
+                  <strong>à¤®à¥‹à¤¬à¤¾à¤‡à¤²:</strong>
                   {' '}
                   {registrationSuccess.mobile}
                 </p>
 
                 <p>
-                  <strong>अकाउंट:</strong>
+                  <strong>à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ:</strong>
                   {' '}
                   {registrationSuccess.role === 'agent'
-                    ? 'एजेंट'
-                    : 'ग्राहक'}
+                    ? 'à¤à¤œà¥‡à¤‚à¤Ÿ'
+                    : 'à¤—à¥à¤°à¤¾à¤¹à¤•'}
                 </p>
 
                 <p className="muted">
-                  स्थिति: Pending — एडमिन की मंज़ूरी के बाद
-                  आपका अकाउंट सक्रिय होगा। उसके बाद User ID
-                  या मोबाइल नंबर और पासवर्ड से लॉगिन करें।
+                  à¤¸à¥à¤¥à¤¿à¤¤à¤¿: Pending â€” à¤à¤¡à¤®à¤¿à¤¨ à¤•à¥€ à¤®à¤‚à¤œà¤¼à¥‚à¤°à¥€ à¤•à¥‡ à¤¬à¤¾à¤¦
+                  à¤†à¤ªà¤•à¤¾ à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤¸à¤•à¥à¤°à¤¿à¤¯ à¤¹à¥‹à¤—à¤¾à¥¤ à¤‰à¤¸à¤•à¥‡ à¤¬à¤¾à¤¦ User ID
+                  à¤¯à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° à¤”à¤° à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤¸à¥‡ à¤²à¥‰à¤—à¤¿à¤¨ à¤•à¤°à¥‡à¤‚à¥¤
                 </p>
 
                 <button
@@ -1034,7 +1032,7 @@ useEffect(() => {
                     }));
                   }}
                 >
-                  लॉगिन करें
+                  à¤²à¥‰à¤—à¤¿à¤¨ à¤•à¤°à¥‡à¤‚
                 </button>
 
                 <button
@@ -1042,7 +1040,7 @@ useEffect(() => {
                   className="btn full-btn"
                   onClick={() => setRegistrationSuccess(null)}
                 >
-                  वापस
+                  à¤µà¤¾à¤ªà¤¸
                 </button>
 
               </div>
@@ -1058,7 +1056,7 @@ useEffect(() => {
                   <>
 
                     <label>
-                      पूरा नाम *
+                      à¤ªà¥‚à¤°à¤¾ à¤¨à¤¾à¤® *
 
                       <input
                         required
@@ -1070,12 +1068,12 @@ useEffect(() => {
                             e.target.value
                           )
                         }
-                        placeholder="अपना पूरा नाम लिखें"
+                        placeholder="à¤…à¤ªà¤¨à¤¾ à¤ªà¥‚à¤°à¤¾ à¤¨à¤¾à¤® à¤²à¤¿à¤–à¥‡à¤‚"
                       />
                     </label>
 
                     <label>
-                      मोबाइल नंबर *
+                      à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° *
 
                       <input
                         required
@@ -1092,12 +1090,12 @@ useEffect(() => {
                               .slice(0, 10)
                           )
                         }
-                        placeholder="10 अंकों का मोबाइल नंबर"
+                        placeholder="10 à¤…à¤‚à¤•à¥‹à¤‚ à¤•à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤°"
                       />
                     </label>
 
                     <label>
-                      अकाउंट प्रकार *
+                      à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤ªà¥à¤°à¤•à¤¾à¤° *
 
                       <select
                         value={authForm.role}
@@ -1109,9 +1107,9 @@ useEffect(() => {
                           )
                         }
                       >
-                        <option value="customer">ग्राहक</option>
+                        <option value="customer">à¤—à¥à¤°à¤¾à¤¹à¤•</option>
                         <option value="agent">
-                          एजेंट (मंज़ूरी आवश्यक)
+                          à¤à¤œà¥‡à¤‚à¤Ÿ (à¤®à¤‚à¤œà¤¼à¥‚à¤°à¥€ à¤†à¤µà¤¶à¥à¤¯à¤•)
                         </option>
                       </select>
                     </label>
@@ -1126,7 +1124,7 @@ useEffect(() => {
                       <>
 
                         <label>
-                          पूरा पता *
+                          à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾ *
 
                           <textarea
                             required
@@ -1139,12 +1137,12 @@ useEffect(() => {
                                 e.target.value
                               )
                             }
-                            placeholder="गाँव, वार्ड, मोहल्ला और पूरा पता"
+                            placeholder="à¤—à¤¾à¤à¤µ, à¤µà¤¾à¤°à¥à¤¡, à¤®à¥‹à¤¹à¤²à¥à¤²à¤¾ à¤”à¤° à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾"
                           />
                         </label>
 
                         <label>
-                          कौन-सी सेवा चाहिए? *
+                          à¤•à¥Œà¤¨-à¤¸à¥€ à¤¸à¥‡à¤µà¤¾ à¤šà¤¾à¤¹à¤¿à¤? *
 
                           <select
                             required
@@ -1158,11 +1156,11 @@ useEffect(() => {
                             }
                           >
                             <option value="New Borewell">
-                              नया बोरवेल
+                              à¤¨à¤¯à¤¾ à¤¬à¥‹à¤°à¤µà¥‡à¤²
                             </option>
 
                             <option value="Repairing">
-                              बोरवेल रिपेयरिंग
+                              à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤°à¤¿à¤ªà¥‡à¤¯à¤°à¤¿à¤‚à¤—
                             </option>
 
                           </select>
@@ -1175,7 +1173,7 @@ useEffect(() => {
                       <>
 
                         <label>
-                          एजेंसी का नाम *
+                          à¤à¤œà¥‡à¤‚à¤¸à¥€ à¤•à¤¾ à¤¨à¤¾à¤® *
 
                           <input
                             required
@@ -1187,12 +1185,12 @@ useEffect(() => {
                                 e.target.value
                               )
                             }
-                            placeholder="अपनी एजेंसी का नाम"
+                            placeholder="à¤…à¤ªà¤¨à¥€ à¤à¤œà¥‡à¤‚à¤¸à¥€ à¤•à¤¾ à¤¨à¤¾à¤®"
                           />
                         </label>
 
                         <label>
-                          ऑफिस का पूरा पता *
+                          à¤‘à¤«à¤¿à¤¸ à¤•à¤¾ à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾ *
 
                           <textarea
                             required
@@ -1205,7 +1203,7 @@ useEffect(() => {
                                 e.target.value
                               )
                             }
-                            placeholder="ऑफिस का पूरा पता"
+                            placeholder="à¤‘à¤«à¤¿à¤¸ à¤•à¤¾ à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾"
                           />
                         </label>
 
@@ -1218,7 +1216,7 @@ useEffect(() => {
 
                 {authMode === 'login' && (
                   <label>
-                    User ID या मोबाइल नंबर *
+                    User ID à¤¯à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° *
 
                     <input
                       required
@@ -1236,7 +1234,7 @@ useEffect(() => {
                 )}
 
                 <label>
-                  पासवर्ड *
+                  à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ *
 
                   <input
                     required
@@ -1254,8 +1252,8 @@ useEffect(() => {
                     }
                     placeholder={
                       authMode === 'register'
-                        ? 'कम से कम 8 अक्षर'
-                        : 'अपना पासवर्ड लिखें'
+                        ? 'à¤•à¤® à¤¸à¥‡ à¤•à¤® 8 à¤…à¤•à¥à¤·à¤°'
+                        : 'à¤…à¤ªà¤¨à¤¾ à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤²à¤¿à¤–à¥‡à¤‚'
                     }
                   />
                 </label>
@@ -1265,17 +1263,17 @@ useEffect(() => {
                   className="btn primary full-btn"
                 >
                   {busy
-                    ? 'कृपया प्रतीक्षा करें…'
+                    ? 'à¤•à¥ƒà¤ªà¤¯à¤¾ à¤ªà¥à¤°à¤¤à¥€à¤•à¥à¤·à¤¾ à¤•à¤°à¥‡à¤‚â€¦'
                     : authMode === 'login'
-                      ? 'लॉगिन करें'
-                      : 'रजिस्टर करें'}
+                      ? 'à¤²à¥‰à¤—à¤¿à¤¨ à¤•à¤°à¥‡à¤‚'
+                      : 'à¤°à¤œà¤¿à¤¸à¥à¤Ÿà¤° à¤•à¤°à¥‡à¤‚'}
                 </button>
 
                 <p className="switch-auth">
 
                   {authMode === 'login'
-                    ? 'नया अकाउंट चाहिए?'
-                    : 'पहले से अकाउंट है?'}
+                    ? 'à¤¨à¤¯à¤¾ à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤šà¤¾à¤¹à¤¿à¤?'
+                    : 'à¤ªà¤¹à¤²à¥‡ à¤¸à¥‡ à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤¹à¥ˆ?'}
 
                   <button
                     type="button"
@@ -1290,16 +1288,16 @@ useEffect(() => {
                     }}
                   >
                     {authMode === 'login'
-                      ? 'रजिस्टर करें'
-                      : 'लॉगिन करें'}
+                      ? 'à¤°à¤œà¤¿à¤¸à¥à¤Ÿà¤° à¤•à¤°à¥‡à¤‚'
+                      : 'à¤²à¥‰à¤—à¤¿à¤¨ à¤•à¤°à¥‡à¤‚'}
                   </button>
 
                 </p>
 
                 {authMode === 'register' && (
                   <p className="muted tiny">
-                    एजेंट अकाउंट एडमिन की मंज़ूरी के बाद
-                    सक्रिय होगा। पासवर्ड कम से कम 8 अक्षर का रखें।
+                    à¤à¤œà¥‡à¤‚à¤Ÿ à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤à¤¡à¤®à¤¿à¤¨ à¤•à¥€ à¤®à¤‚à¤œà¤¼à¥‚à¤°à¥€ à¤•à¥‡ à¤¬à¤¾à¤¦
+                    à¤¸à¤•à¥à¤°à¤¿à¤¯ à¤¹à¥‹à¤—à¤¾à¥¤ à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤•à¤® à¤¸à¥‡ à¤•à¤® 8 à¤…à¤•à¥à¤·à¤° à¤•à¤¾ à¤°à¤–à¥‡à¤‚à¥¤
                   </p>
                 )}
 
@@ -1318,31 +1316,31 @@ useEffect(() => {
 
               <SectionTitle
                 eyebrow="MY ACCOUNT"
-                title={`नमस्ते, ${user?.name || 'यूज़र'}!`}
-                subtitle="यहाँ अपनी बुकिंग और अकाउंट की जानकारी देखें।"
+                title={`à¤¨à¤®à¤¸à¥à¤¤à¥‡, ${user?.name || 'à¤¯à¥‚à¤œà¤¼à¤°'}!`}
+                subtitle="à¤¯à¤¹à¤¾à¤ à¤…à¤ªà¤¨à¥€ à¤¬à¥à¤•à¤¿à¤‚à¤— à¤”à¤° à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤•à¥€ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ à¤¦à¥‡à¤–à¥‡à¤‚à¥¤"
               />
 
               <div className="stats-grid">
 
                 <Stat
                   icon={<ClipboardList />}
-                  title="मेरी बुकिंग"
+                  title="à¤®à¥‡à¤°à¥€ à¤¬à¥à¤•à¤¿à¤‚à¤—"
                   value={bookings.length}
                 />
 
                 <Stat
                   icon={<Users />}
-                  title="अकाउंट प्रकार"
+                  title="à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤ªà¥à¤°à¤•à¤¾à¤°"
                   value={roleLabel(user?.role)}
                 />
 
                 <Stat
                   icon={<ShieldCheck />}
-                  title="अकाउंट स्थिति"
+                  title="à¤…à¤•à¤¾à¤‰à¤‚à¤Ÿ à¤¸à¥à¤¥à¤¿à¤¤à¤¿"
                   value={
                     ['pending', 'pending_approval'].includes(user?.status)
-                      ? 'मंज़ूरी बाकी'
-                      : 'सक्रिय'
+                      ? 'à¤®à¤‚à¤œà¤¼à¥‚à¤°à¥€ à¤¬à¤¾à¤•à¥€'
+                      : 'à¤¸à¤•à¥à¤°à¤¿à¤¯'
                   }
                 />
 
@@ -1350,13 +1348,13 @@ useEffect(() => {
 
               <div className="section-heading">
 
-                <h2>मेरी बुकिंग</h2>
+                <h2>à¤®à¥‡à¤°à¥€ à¤¬à¥à¤•à¤¿à¤‚à¤—</h2>
 
                 <button
                   className="btn primary"
                   onClick={() => go('booking')}
                 >
-                  + नई बुकिंग
+                  + à¤¨à¤ˆ à¤¬à¥à¤•à¤¿à¤‚à¤—
                 </button>
 
               </div>
@@ -1368,7 +1366,7 @@ useEffect(() => {
           ) : (
 
             <section className="section container">
-              <Empty text="यह डैशबोर्ड केवल ग्राहक के लिए है।" />
+              <Empty text="à¤¯à¤¹ à¤¡à¥ˆà¤¶à¤¬à¥‹à¤°à¥à¤¡ à¤•à¥‡à¤µà¤² à¤—à¥à¤°à¤¾à¤¹à¤• à¤•à¥‡ à¤²à¤¿à¤ à¤¹à¥ˆà¥¤" />
             </section>
 
           )
@@ -1387,7 +1385,7 @@ useEffect(() => {
 
             <section className="section container">
               <div className="login-prompt">
-                <p>यह पेज केवल एजेंट लॉगिन के बाद खुलेगा।</p>
+                <p>à¤¯à¤¹ à¤ªà¥‡à¤œ à¤•à¥‡à¤µà¤² à¤à¤œà¥‡à¤‚à¤Ÿ à¤²à¥‰à¤—à¤¿à¤¨ à¤•à¥‡ à¤¬à¤¾à¤¦ à¤–à¥à¤²à¥‡à¤—à¤¾à¥¤</p>
 
                 <button
                   className="btn primary"
@@ -1396,7 +1394,7 @@ useEffect(() => {
                     go('auth');
                   }}
                 >
-                  एजेंट लॉगिन
+                  à¤à¤œà¥‡à¤‚à¤Ÿ à¤²à¥‰à¤—à¤¿à¤¨
                 </button>
               </div>
             </section>
@@ -1420,7 +1418,7 @@ useEffect(() => {
               <div className="login-prompt">
 
                 <p>
-                  यह पेज केवल एडमिन लॉगिन के बाद खुलेगा।
+                  à¤¯à¤¹ à¤ªà¥‡à¤œ à¤•à¥‡à¤µà¤² à¤à¤¡à¤®à¤¿à¤¨ à¤²à¥‰à¤—à¤¿à¤¨ à¤•à¥‡ à¤¬à¤¾à¤¦ à¤–à¥à¤²à¥‡à¤—à¤¾à¥¤
                 </p>
 
                 <button
@@ -1430,7 +1428,7 @@ useEffect(() => {
                     go('auth');
                   }}
                 >
-                  एडमिन लॉगिन
+                  à¤à¤¡à¤®à¤¿à¤¨ à¤²à¥‰à¤—à¤¿à¤¨
                 </button>
 
               </div>
@@ -1454,23 +1452,23 @@ useEffect(() => {
 
             <span>
               <b>Borewells Mitra</b>
-              <small>मध्य प्रदेश में बोरवेल सेवाओं का मंच</small>
+              <small>à¤®à¤§à¥à¤¯ à¤ªà¥à¤°à¤¦à¥‡à¤¶ à¤®à¥‡à¤‚ à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤¸à¥‡à¤µà¤¾à¤“à¤‚ à¤•à¤¾ à¤®à¤‚à¤š</small>
             </span>
 
           </div>
 
           <p>
             <MapPin size={15} />
-            मध्य प्रदेश, भारत
+            à¤®à¤§à¥à¤¯ à¤ªà¥à¤°à¤¦à¥‡à¤¶, à¤­à¤¾à¤°à¤¤
           </p>
 
           <p>
             <Phone size={15} />
-            संपर्क विवरण एडमिन द्वारा जोड़ा जाना है
+            à¤¸à¤‚à¤ªà¤°à¥à¤• à¤µà¤¿à¤µà¤°à¤£ à¤à¤¡à¤®à¤¿à¤¨ à¤¦à¥à¤µà¤¾à¤°à¤¾ à¤œà¥‹à¤¡à¤¼à¤¾ à¤œà¤¾à¤¨à¤¾ à¤¹à¥ˆ
           </p>
 
           <small>
-            © {new Date().getFullYear()} Borewells Mitra
+            Â© {new Date().getFullYear()} Borewells Mitra
           </small>
 
         </div>
@@ -1490,7 +1488,7 @@ function AgentList({ agents = [], loading = false, limit }) {
   if (loading) {
     return (
       <div className="empty">
-        <p>एजेंटों की सूची लोड हो रही है...</p>
+        <p>à¤à¤œà¥‡à¤‚à¤Ÿà¥‹à¤‚ à¤•à¥€ à¤¸à¥‚à¤šà¥€ à¤²à¥‹à¤¡ à¤¹à¥‹ à¤°à¤¹à¥€ à¤¹à¥ˆ...</p>
       </div>
     );
   }
@@ -1504,7 +1502,7 @@ function AgentList({ agents = [], loading = false, limit }) {
       <div className="empty">
         <Users size={28} />
         <p>
-          अभी आपके क्षेत्र के लिए कोई स्वीकृत और सक्रिय एजेंट उपलब्ध नहीं है।
+          à¤…à¤­à¥€ à¤†à¤ªà¤•à¥‡ à¤•à¥à¤·à¥‡à¤¤à¥à¤° à¤•à¥‡ à¤²à¤¿à¤ à¤•à¥‹à¤ˆ à¤¸à¥à¤µà¥€à¤•à¥ƒà¤¤ à¤”à¤° à¤¸à¤•à¥à¤°à¤¿à¤¯ à¤à¤œà¥‡à¤‚à¤Ÿ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤
         </p>
       </div>
     );
@@ -1535,18 +1533,18 @@ function AgentList({ agents = [], loading = false, limit }) {
                   BOREWELLS MITRA AGENT
                 </span>
 
-                <h3>{agent.name || 'एजेंट'}</h3>
+                <h3>{agent.name || 'à¤à¤œà¥‡à¤‚à¤Ÿ'}</h3>
               </div>
 
               <span className="agent-active-label">
-                सक्रिय एजेंट
+                à¤¸à¤•à¥à¤°à¤¿à¤¯ à¤à¤œà¥‡à¤‚à¤Ÿ
               </span>
 
             </div>
 
             {agent.agency_name && (
               <p className="agent-agency">
-                <b>एजेंसी:</b>
+                <b>à¤à¤œà¥‡à¤‚à¤¸à¥€:</b>
                 {' '}
                 {agent.agency_name}
               </p>
@@ -1558,7 +1556,7 @@ function AgentList({ agents = [], loading = false, limit }) {
                 <MapPin size={16} />
 
                 <span>
-                  {agent.district || 'जिला उपलब्ध नहीं'}
+                  {agent.district || 'à¤œà¤¿à¤²à¤¾ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚'}
                   {agent.block ? `, ${agent.block}` : ''}
                 </span>
               </p>
@@ -1573,7 +1571,7 @@ function AgentList({ agents = [], loading = false, limit }) {
               <p>
                 <Phone size={16} />
                 <span>
-                  {agent.mobile || 'मोबाइल नंबर उपलब्ध नहीं'}
+                  {agent.mobile || 'à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚'}
                 </span>
               </p>
 
@@ -1588,7 +1586,7 @@ function AgentList({ agents = [], loading = false, limit }) {
                   href={`tel:${mobile}`}
                 >
                   <Phone size={16} />
-                  कॉल करें
+                  à¤•à¥‰à¤² à¤•à¤°à¥‡à¤‚
                 </a>
 
                 <a
@@ -1606,7 +1604,7 @@ function AgentList({ agents = [], loading = false, limit }) {
             ) : (
 
               <p className="muted tiny">
-                संपर्क के लिए सही मोबाइल नंबर उपलब्ध नहीं है।
+                à¤¸à¤‚à¤ªà¤°à¥à¤• à¤•à¥‡ à¤²à¤¿à¤ à¤¸à¤¹à¥€ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤
               </p>
 
             )}
@@ -1654,13 +1652,13 @@ function BookingStatus() {
         setResult(data.booking);
       } else {
         setError(
-          data.message || 'बुकिंग की जानकारी नहीं मिली।'
+          data.message || 'à¤¬à¥à¤•à¤¿à¤‚à¤— à¤•à¥€ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤²à¥€à¥¤'
         );
       }
 
     } catch (error) {
       setError(
-        error.message || 'बुकिंग खोजने में समस्या हुई।'
+        error.message || 'à¤¬à¥à¤•à¤¿à¤‚à¤— à¤–à¥‹à¤œà¤¨à¥‡ à¤®à¥‡à¤‚ à¤¸à¤®à¤¸à¥à¤¯à¤¾ à¤¹à¥à¤ˆà¥¤'
       );
     } finally {
       setLoading(false);
@@ -1668,7 +1666,7 @@ function BookingStatus() {
   }
 
   function formatDate(date) {
-    if (!date) return 'उपलब्ध नहीं';
+    if (!date) return 'à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚';
 
     const parsed = new Date(
       String(date).replace(' ', 'T')
@@ -1692,8 +1690,8 @@ function BookingStatus() {
 
       <SectionTitle
         eyebrow="TRACK YOUR BOOKING"
-        title="अपनी बुकिंग का स्टेटस देखें"
-        subtitle="अपनी Booking ID और रजिस्टर्ड मोबाइल नंबर दर्ज करें।"
+        title="à¤…à¤ªà¤¨à¥€ à¤¬à¥à¤•à¤¿à¤‚à¤— à¤•à¤¾ à¤¸à¥à¤Ÿà¥‡à¤Ÿà¤¸ à¤¦à¥‡à¤–à¥‡à¤‚"
+        subtitle="à¤…à¤ªà¤¨à¥€ Booking ID à¤”à¤° à¤°à¤œà¤¿à¤¸à¥à¤Ÿà¤°à¥à¤¡ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚à¥¤"
       />
 
       <form
@@ -1710,12 +1708,12 @@ function BookingStatus() {
             onChange={e =>
               setBookingId(e.target.value.toUpperCase())
             }
-            placeholder="उदाहरण: KB000001"
+            placeholder="à¤‰à¤¦à¤¾à¤¹à¤°à¤£: KB000001"
           />
         </label>
 
         <label>
-          रजिस्टर्ड मोबाइल नंबर *
+          à¤°à¤œà¤¿à¤¸à¥à¤Ÿà¤°à¥à¤¡ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° *
 
           <input
             required
@@ -1729,7 +1727,7 @@ function BookingStatus() {
                 e.target.value.replace(/\D/g, '').slice(0, 10)
               )
             }
-            placeholder="10 अंकों का मोबाइल नंबर"
+            placeholder="10 à¤…à¤‚à¤•à¥‹à¤‚ à¤•à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤°"
           />
         </label>
 
@@ -1739,8 +1737,8 @@ function BookingStatus() {
           className="btn primary full-btn"
         >
           {loading
-            ? 'बुकिंग खोज रहे हैं...'
-            : 'बुकिंग स्टेटस देखें'}
+            ? 'à¤¬à¥à¤•à¤¿à¤‚à¤— à¤–à¥‹à¤œ à¤°à¤¹à¥‡ à¤¹à¥ˆà¤‚...'
+            : 'à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¸à¥à¤Ÿà¥‡à¤Ÿà¤¸ à¤¦à¥‡à¤–à¥‡à¤‚'}
         </button>
 
         {error && (
@@ -1771,37 +1769,37 @@ function BookingStatus() {
           <div className="booking-status-details">
 
             <p>
-              <b>ग्राहक का नाम:</b>
+              <b>à¤—à¥à¤°à¤¾à¤¹à¤• à¤•à¤¾ à¤¨à¤¾à¤®:</b>
               <span>{result.customerName}</span>
             </p>
 
             <p>
-              <b>सेवा:</b>
+              <b>à¤¸à¥‡à¤µà¤¾:</b>
               <span>{result.service}</span>
             </p>
 
             <p>
-              <b>जिला:</b>
+              <b>à¤œà¤¿à¤²à¤¾:</b>
               <span>{result.district}</span>
             </p>
 
             <p>
-              <b>ब्लॉक:</b>
+              <b>à¤¬à¥à¤²à¥‰à¤•:</b>
               <span>{result.block}</span>
             </p>
 
             <p>
-              <b>बुकिंग तारीख:</b>
+              <b>à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¤à¤¾à¤°à¥€à¤–:</b>
               <span>{formatDate(result.bookingDate)}</span>
             </p>
 
             <p>
-              <b>भुगतान स्थिति:</b>
+              <b>à¤­à¥à¤—à¤¤à¤¾à¤¨ à¤¸à¥à¤¥à¤¿à¤¤à¤¿:</b>
 
               <span>
                 {result.paymentVerified
-                  ? 'भुगतान सत्यापित'
-                  : 'अभी सत्यापित नहीं'}
+                  ? 'à¤­à¥à¤—à¤¤à¤¾à¤¨ à¤¸à¤¤à¥à¤¯à¤¾à¤ªà¤¿à¤¤'
+                  : 'à¤…à¤­à¥€ à¤¸à¤¤à¥à¤¯à¤¾à¤ªà¤¿à¤¤ à¤¨à¤¹à¥€à¤‚'}
               </span>
             </p>
 
@@ -1809,25 +1807,25 @@ function BookingStatus() {
 
           <div className="divider"></div>
 
-          <h3>नियुक्त एजेंट की जानकारी</h3>
+          <h3>à¤¨à¤¿à¤¯à¥à¤•à¥à¤¤ à¤à¤œà¥‡à¤‚à¤Ÿ à¤•à¥€ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€</h3>
 
           {result.agent ? (
 
             <div className="agent-contact-details">
 
               <p>
-                <b>एजेंट का नाम:</b>
-                {result.agent.name || 'उपलब्ध नहीं'}
+                <b>à¤à¤œà¥‡à¤‚à¤Ÿ à¤•à¤¾ à¤¨à¤¾à¤®:</b>
+                {result.agent.name || 'à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚'}
               </p>
 
               <p>
-                <b>मोबाइल नंबर:</b>
-                {result.agent.mobile || 'उपलब्ध नहीं'}
+                <b>à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤°:</b>
+                {result.agent.mobile || 'à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚'}
               </p>
 
               {result.agent.agencyName && (
                 <p>
-                  <b>एजेंसी:</b>
+                  <b>à¤à¤œà¥‡à¤‚à¤¸à¥€:</b>
                   {result.agent.agencyName}
                 </p>
               )}
@@ -1838,7 +1836,7 @@ function BookingStatus() {
                   href={`tel:${result.agent.mobile}`}
                 >
                   <Phone size={16} />
-                  एजेंट को कॉल करें
+                  à¤à¤œà¥‡à¤‚à¤Ÿ à¤•à¥‹ à¤•à¥‰à¤² à¤•à¤°à¥‡à¤‚
                 </a>
               )}
 
@@ -1847,8 +1845,8 @@ function BookingStatus() {
           ) : (
 
             <p className="muted">
-              अभी इस बुकिंग पर एजेंट नियुक्त नहीं हुआ है।
-              एडमिन द्वारा एजेंट नियुक्त होने पर जानकारी यहाँ दिखाई देगी।
+              à¤…à¤­à¥€ à¤‡à¤¸ à¤¬à¥à¤•à¤¿à¤‚à¤— à¤ªà¤° à¤à¤œà¥‡à¤‚à¤Ÿ à¤¨à¤¿à¤¯à¥à¤•à¥à¤¤ à¤¨à¤¹à¥€à¤‚ à¤¹à¥à¤† à¤¹à¥ˆà¥¤
+              à¤à¤¡à¤®à¤¿à¤¨ à¤¦à¥à¤µà¤¾à¤°à¤¾ à¤à¤œà¥‡à¤‚à¤Ÿ à¤¨à¤¿à¤¯à¥à¤•à¥à¤¤ à¤¹à¥‹à¤¨à¥‡ à¤ªà¤° à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ à¤¯à¤¹à¤¾à¤ à¤¦à¤¿à¤–à¤¾à¤ˆ à¤¦à¥‡à¤—à¥€à¥¤
             </p>
 
           )}
@@ -1863,7 +1861,7 @@ function BookingStatus() {
               setMobile('');
             }}
           >
-            दूसरी बुकिंग खोजें
+            à¤¦à¥‚à¤¸à¤°à¥€ à¤¬à¥à¤•à¤¿à¤‚à¤— à¤–à¥‹à¤œà¥‡à¤‚
           </button>
 
         </div>
@@ -1888,7 +1886,7 @@ function RegistrationAreaFields({ area, setArea }) {
     <>
 
       <label>
-        जिला चुनें *
+        à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚ *
 
         <select
           required
@@ -1900,7 +1898,7 @@ function RegistrationAreaFields({ area, setArea }) {
             })
           }
         >
-          <option value="">-- जिला चुनें --</option>
+          <option value="">-- à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚ --</option>
 
           {DISTRICTS.map(district => (
             <option key={district} value={district}>
@@ -1912,7 +1910,7 @@ function RegistrationAreaFields({ area, setArea }) {
       </label>
 
       <label>
-        तहसील / ब्लॉक चुनें *
+        à¤¤à¤¹à¤¸à¥€à¤² / à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚ *
 
         <select
           required
@@ -1925,7 +1923,7 @@ function RegistrationAreaFields({ area, setArea }) {
             }))
           }
         >
-          <option value="">-- तहसील / ब्लॉक चुनें --</option>
+          <option value="">-- à¤¤à¤¹à¤¸à¥€à¤² / à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚ --</option>
 
           {blocks.map(block => (
             <option key={block} value={block}>
@@ -1950,7 +1948,7 @@ function AreaFields({ area, setArea }) {
     <div className="area-select">
 
       <label>
-        जिला चुनें *
+        à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚ *
 
         <select
           value={area.district}
@@ -1962,7 +1960,7 @@ function AreaFields({ area, setArea }) {
             });
           }}
         >
-          <option value="">-- जिला चुनें --</option>
+          <option value="">-- à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚ --</option>
 
           {DISTRICTS.map(district => (
             <option key={district} value={district}>
@@ -1974,7 +1972,7 @@ function AreaFields({ area, setArea }) {
       </label>
 
       <label>
-        ब्लॉक चुनें *
+        à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚ *
 
         <select
           value={area.block}
@@ -1986,7 +1984,7 @@ function AreaFields({ area, setArea }) {
             }));
           }}
         >
-          <option value="">-- ब्लॉक चुनें --</option>
+          <option value="">-- à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚ --</option>
 
           {blocks.map(block => (
             <option key={block} value={block}>
@@ -2011,19 +2009,19 @@ function BookingFields({ value, onChange, area, setArea }) {
     <div className="form-grid">
 
       <label>
-        ग्राहक का नाम *
+        à¤—à¥à¤°à¤¾à¤¹à¤• à¤•à¤¾ à¤¨à¤¾à¤® *
 
         <input
           type="text"
           required
           value={value.name}
           onChange={e => onChange('name', e.target.value)}
-          placeholder="अपना पूरा नाम लिखें"
+          placeholder="à¤…à¤ªà¤¨à¤¾ à¤ªà¥‚à¤°à¤¾ à¤¨à¤¾à¤® à¤²à¤¿à¤–à¥‡à¤‚"
         />
       </label>
 
       <label>
-        मोबाइल नंबर *
+        à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤° *
 
         <input
           type="tel"
@@ -2038,12 +2036,12 @@ function BookingFields({ value, onChange, area, setArea }) {
               e.target.value.replace(/\D/g, '').slice(0, 10)
             )
           }
-          placeholder="10 अंकों का मोबाइल नंबर"
+          placeholder="10 à¤…à¤‚à¤•à¥‹à¤‚ à¤•à¤¾ à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤°"
         />
       </label>
 
       <label>
-        जिला चुनें *
+        à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚ *
 
         <select
           required
@@ -2056,7 +2054,7 @@ function BookingFields({ value, onChange, area, setArea }) {
             });
           }}
         >
-          <option value="">-- जिला चुनें --</option>
+          <option value="">-- à¤œà¤¿à¤²à¤¾ à¤šà¥à¤¨à¥‡à¤‚ --</option>
 
           {DISTRICTS.map(district => (
             <option key={district} value={district}>
@@ -2068,7 +2066,7 @@ function BookingFields({ value, onChange, area, setArea }) {
       </label>
 
       <label>
-        ब्लॉक चुनें *
+        à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚ *
 
         <select
           required
@@ -2081,7 +2079,7 @@ function BookingFields({ value, onChange, area, setArea }) {
             }));
           }}
         >
-          <option value="">-- ब्लॉक चुनें --</option>
+          <option value="">-- à¤¬à¥à¤²à¥‰à¤• à¤šà¥à¤¨à¥‡à¤‚ --</option>
 
           {blocks.map(block => (
             <option key={block} value={block}>
@@ -2093,28 +2091,28 @@ function BookingFields({ value, onChange, area, setArea }) {
       </label>
 
       <label className="full">
-        पूरा पता *
+        à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾ *
 
         <textarea
           required
           rows="3"
           value={value.address}
           onChange={e => onChange('address', e.target.value)}
-          placeholder="गाँव, मोहल्ला, पोस्ट और पिन कोड सहित पूरा पता लिखें"
+          placeholder="à¤—à¤¾à¤à¤µ, à¤®à¥‹à¤¹à¤²à¥à¤²à¤¾, à¤ªà¥‹à¤¸à¥à¤Ÿ à¤”à¤° à¤ªà¤¿à¤¨ à¤•à¥‹à¤¡ à¤¸à¤¹à¤¿à¤¤ à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾ à¤²à¤¿à¤–à¥‡à¤‚"
         />
       </label>
 
       <label className="full">
-        सेवा चुनें *
+        à¤¸à¥‡à¤µà¤¾ à¤šà¥à¤¨à¥‡à¤‚ *
 
         <select
           required
           value={value.service}
           onChange={e => onChange('service', e.target.value)}
         >
-          <option value="">-- सेवा चुनें --</option>
-          <option value="Drilling">नया बोरवेल</option>
-          <option value="Repairing">बोरवेल रिपेयरिंग</option>
+          <option value="">-- à¤¸à¥‡à¤µà¤¾ à¤šà¥à¤¨à¥‡à¤‚ --</option>
+          <option value="Drilling">à¤¨à¤¯à¤¾ à¤¬à¥‹à¤°à¤µà¥‡à¤²</option>
+          <option value="Repairing">à¤¬à¥‹à¤°à¤µà¥‡à¤² à¤°à¤¿à¤ªà¥‡à¤¯à¤°à¤¿à¤‚à¤—</option>
         </select>
       </label>
 
@@ -2172,7 +2170,7 @@ function BookingList({ bookings = [] }) {
                 booking.id ||
                 'Booking'}
 
-              {' · '}
+              {' Â· '}
 
               {(booking.createdAt || booking.created_at)
                 ? new Date(
@@ -2197,7 +2195,7 @@ function BookingList({ bookings = [] }) {
 
   ) : (
 
-    <Empty text="अभी आपकी कोई बुकिंग नहीं है।" />
+    <Empty text="à¤…à¤­à¥€ à¤†à¤ªà¤•à¥€ à¤•à¥‹à¤ˆ à¤¬à¥à¤•à¤¿à¤‚à¤— à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤" />
 
   );
 }
@@ -2213,9 +2211,9 @@ function Empty({ text }) {
 
 function roleLabel(role) {
   return ({
-    admin: 'एडमिन',
-    customer: 'ग्राहक',
-    agent: 'एजेंट',
-    referrer: 'रेफरल पार्टनर'
-  })[role] || 'यूज़र';
+    admin: 'à¤à¤¡à¤®à¤¿à¤¨',
+    customer: 'à¤—à¥à¤°à¤¾à¤¹à¤•',
+    agent: 'à¤à¤œà¥‡à¤‚à¤Ÿ',
+    referrer: 'à¤°à¥‡à¤«à¤°à¤² à¤ªà¤¾à¤°à¥à¤Ÿà¤¨à¤°'
+  })[role] || 'à¤¯à¥‚à¤œà¤¼à¤°';
 }
